@@ -33,7 +33,7 @@ const Hero = () => {
             {/* Content Overlay - Centered and elegant */}
             <motion.div
                 style={{ y: y1, opacity }}
-                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-16 md:pt-20"
+                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-20 md:pt-28"
             >
                 <motion.div
                     initial="hidden"
@@ -48,7 +48,7 @@ const Hero = () => {
                             }
                         }
                     }}
-                    className="space-y-8 max-w-5xl"
+                    className="space-y-4 max-w-4xl"
                 >
                     {/* Top Tagline */}
                     <motion.div
@@ -56,68 +56,50 @@ const Hero = () => {
                         className="flex items-center justify-center gap-4"
                     >
                         <div className="w-12 h-[1px] bg-black/60"></div>
-                        <h2 className="text-black/80 font-serif tracking-[0.3em] uppercase text-sm font-semibold">
+                        <h2 className="text-black/80 font-serif tracking-[0.3em] uppercase text-xs font-semibold">
                             Est. 2026
                         </h2>
                         <div className="w-12 h-[1px] bg-black/60"></div>
                     </motion.div>
 
                     {/* Main Heading - The "Wow" Factor with 3D Reveal */}
-                    <div className="relative perspective-1000">
+                    <div className="relative perspective-1000 mt-2 md:mt-4">
                         <motion.h1
                             variants={titleVariants}
-                            className="flex justify-center pb-4"
+                            className="flex justify-center pb-2"
                         >
-                            <img src="/logo.png" alt="Asia By Gram" className="w-[250px] md:w-[400px] lg:w-[480px] h-auto object-contain mx-auto drop-shadow-2xl" />
+                            <img src="/logo.png" alt="Asia By Gram" className="w-[180px] md:w-[240px] lg:w-[280px] h-auto object-contain mx-auto drop-shadow-2xl" />
                         </motion.h1>
                     </div>
 
                     {/* Subheading / Description */}
                     <motion.p
                         variants={{ hidden: { opacity: 0, y: 30, filter: "blur(10px)" }, visible: { opacity: 1, y: 0, filter: "blur(0)" } }}
-                        className="text-zinc-600 text-lg md:text-2xl font-serif italic max-w-2xl mx-auto leading-relaxed"
+                        className="text-zinc-600 text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-8"
                     >
                         "A culinary journey through the soul of Asia, crafted with passion and served with elegance in the heart of Hyderabad."
                     </motion.p>
 
-                    {/* CTA Buttons */}
+                    {/* Action Bar - Centered below content */}
                     <motion.div
-                        variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                        className="flex flex-col md:flex-row items-center justify-center gap-6 pt-8"
+                        variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                        className="flex w-[90%] md:w-[500px] h-14 shadow-2xl mx-auto rounded-sm overflow-hidden"
                     >
-                        <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)" }}
-                            whileTap={{ scale: 0.95 }}
+                        <div
                             onClick={() => navigate('/menu')}
-                            className="px-12 py-5 bg-black text-white hover:bg-zinc-900 font-sans font-medium uppercase tracking-widest text-sm transition-all rounded-sm flex items-center gap-3 group shadow-xl relative overflow-hidden"
+                            className="flex-1 bg-black text-white hover:bg-zinc-900 transition-colors flex items-center justify-center gap-3 cursor-pointer group"
                         >
-                            <span className="relative z-10">Explore Menu</span>
-                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform relative z-10" />
-                            <div className="absolute inset-0 bg-zinc-800 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
-                        </motion.button>
-
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            <span className="font-asian font-bold uppercase tracking-[0.2em] text-xs">Explore Menu</span>
+                            <ArrowRight className="group-hover:translate-x-2 transition-transform" size={14} />
+                        </div>
+                        <div
                             onClick={() => document.getElementById('visit')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="px-12 py-5 border border-black/20 hover:border-black text-black font-sans font-medium uppercase tracking-widest text-sm transition-all rounded-sm backdrop-blur-sm bg-white/5"
+                            className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 text-black hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
                         >
-                            Book a Table
-                        </motion.button>
+                            <span className="font-asian font-bold uppercase tracking-[0.2em] text-xs">Book a Table</span>
+                        </div>
                     </motion.div>
                 </motion.div>
-            </motion.div>
-
-            {/* Scroll Indicator - Minimal */}
-            <motion.div
-                style={{ opacity }}
-                animate={{ y: [0, 10, 0] }}
-                transition={{ delay: 2, duration: 2, repeat: Infinity }}
-                className="absolute bottom-12 left-1/2 -translate-x-1/2 text-black/40 flex flex-col items-center gap-2 cursor-pointer z-20"
-                onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-                <span className="text-[10px] uppercase tracking-widest mb-2 rotating-text">Scroll</span>
-                <div className="w-[1px] h-16 bg-gradient-to-b from-black/0 via-black/40 to-black/0"></div>
             </motion.div>
         </section>
     );

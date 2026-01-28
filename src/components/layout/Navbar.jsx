@@ -22,9 +22,9 @@ const Navbar = () => {
         { name: 'Home', path: '/' },
         { name: 'About', path: '#about' },
         { name: 'Menu', path: '#menu' },
-        { name: 'Experience', path: '#experience' },
+        { name: 'Social Feeds', path: '#social-feeds' },
         { name: 'Gallery', path: '#gallery' },
-        { name: 'Contact', path: '#contact' },
+        { name: 'Contact', path: '#visit' },
     ];
 
     return (
@@ -42,30 +42,29 @@ const Navbar = () => {
                     {/* Logo */}
 
 
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center gap-10">
+                    {/* Desktop Nav - Left Aligned */}
+                    <div className="hidden md:flex items-center gap-8">
                         {navLinks.map((link) => (
                             <a
                                 key={link.name}
                                 href={link.path}
-                                className="text-sm font-medium tracking-[0.15em] uppercase text-zinc-600 hover:text-black transition-colors relative group"
+                                className="text-sm font-medium tracking-[0.15em] uppercase text-zinc-600 hover:text-black transition-colors"
                             >
                                 {link.name}
-                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             </a>
                         ))}
                     </div>
 
-                    {/* Actions */}
-                    <div className="hidden md:flex items-center gap-6">
-                        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-zinc-600 hover:text-primary transition-colors">
-                            <Instagram size={20} />
+                    {/* Actions - Right Aligned */}
+                    <div className="hidden md:flex items-center gap-8">
+                        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-zinc-600 hover:text-black transition-colors">
+                            <Instagram size={22} strokeWidth={1.5} />
                         </a>
                         <button
                             onClick={openReservation}
-                            className="bg-primary hover:bg-gold-500 text-black px-8 py-3 rounded-none skew-x-[-10deg] font-asian font-bold uppercase tracking-widest text-xs transition-all transform hover:shadow-lg border border-black/5"
+                            className="bg-[#FFC107] hover:bg-[#FFD54F] text-black px-10 py-3 skew-x-[-12deg] font-asian font-bold uppercase tracking-[0.2em] text-xs transition-transform hover:shadow-lg hover:-translate-y-1"
                         >
-                            <span className="block skew-x-[10deg]">Book a Table</span>
+                            <span className="block skew-x-[12deg]">Book a Table</span>
                         </button>
                     </div>
 

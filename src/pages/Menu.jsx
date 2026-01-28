@@ -10,7 +10,7 @@ const Menu = () => {
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const categories = ['All', 'Signature Bowls', 'Starters', 'Seafood Specialties', 'Beverages', 'Mocktails', 'Steam Boat'];
+    const categories = ['All', 'Signature Bowls', 'Starters', 'Seafood Specials', 'Beverages', 'Mocktails', 'Steam Boat'];
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuData.filter(dish => {
@@ -36,10 +36,10 @@ const Menu = () => {
                             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
                             Back to Home
                         </button>
-                        <h1 className="text-5xl md:text-6xl font-asian font-bold text-white uppercase tracking-tighter">
+                        <h1 className="text-5xl md:text-6xl font-asian font-bold text-black uppercase tracking-tighter">
                             Our <span className="text-primary italic">Menu</span>
                         </h1>
-                        <p className="text-zinc-500 mt-4 max-w-lg">
+                        <p className="text-zinc-600 mt-4 max-w-lg">
                             Explore our curated selection of authentic Asian delicacies, hand-crafted with the finest ingredients.
                         </p>
                     </div>
@@ -52,7 +52,7 @@ const Menu = () => {
                                 placeholder="Search dishes..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-zinc-900 border border-white/5 rounded-full pl-12 pr-6 py-3 text-white focus:outline-none focus:border-primary transition-all w-full sm:w-64"
+                                className="bg-white/50 backdrop-blur-sm border border-black/10 rounded-full pl-12 pr-6 py-3 text-black placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all w-full sm:w-64"
                             />
                         </div>
                     </div>
@@ -67,8 +67,8 @@ const Menu = () => {
                                 key={option}
                                 onClick={() => setSelectedDietary(option)}
                                 className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-[0.2em] transition-all border ${selectedDietary === option
-                                    ? 'bg-white text-black border-white'
-                                    : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'
+                                    ? 'bg-black text-white border-black'
+                                    : 'bg-transparent text-zinc-500 border-black/10 hover:border-black/30 text-black'
                                     }`}
                             >
                                 {option}
@@ -77,14 +77,14 @@ const Menu = () => {
                     </div>
 
                     {/* Categories Scroll */}
-                    <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide no-scrollbar border-b border-white/5">
+                    <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide no-scrollbar border-b border-black/5">
                         {categories.map(category => (
                             <button
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
                                 className={`px-2 py-4 text-sm font-bold uppercase tracking-widest transition-all whitespace-nowrap relative ${selectedCategory === category
                                     ? 'text-primary font-bold'
-                                    : 'text-zinc-500 hover:text-white'
+                                    : 'text-zinc-500 hover:text-black'
                                     }`}
                             >
                                 {category}

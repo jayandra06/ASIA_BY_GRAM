@@ -40,7 +40,7 @@
     "name": "Whole lobster with Indie fries and salad",
     "description": "Premium Asian specialty crafted with the finest seafood and authentic spices.",
     "price": "₹1199",
-    "category": "Seafood Specialties",
+    "category": "Seafood Specials",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
   },
@@ -49,7 +49,7 @@
     "name": "Diced fried octopus with quinoa salad",
     "description": "Premium Asian specialty crafted with the finest seafood and authentic spices.",
     "price": "₹699",
-    "category": "Seafood Specialties",
+    "category": "Seafood Specials",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
   },
@@ -58,7 +58,7 @@
     "name": "Asian Pyaala cooked with sea food comes with spicy schezwan sauce",
     "description": "Premium Asian specialty crafted with the finest seafood and authentic spices.",
     "price": "₹499",
-    "category": "Seafood Specialties",
+    "category": "Seafood Specials",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
   },
@@ -67,7 +67,7 @@
     "name": "Whole lobster  (add-on)",
     "description": "Premium Asian specialty crafted with the finest seafood and authentic spices.",
     "price": "₹900",
-    "category": "Seafood Specialties",
+    "category": "Seafood Specials",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
   },

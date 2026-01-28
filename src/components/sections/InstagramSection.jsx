@@ -16,7 +16,7 @@ const InstagramSection = () => {
     const [selectedItem, setSelectedItem] = useState(null);
 
     return (
-        <section className="py-24 bg-transparent relative">
+        <section id="social-feeds" className="py-24 bg-transparent relative">
             <div className="container mx-auto px-6 md:px-12">
                 <div className="flex flex-col items-center justify-center text-center mb-16 space-y-4">
                     <div>

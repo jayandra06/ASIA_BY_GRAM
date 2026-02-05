@@ -122,7 +122,13 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
                                     <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
                                         {dish.image && (
                                             <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                                                <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+                                                <img
+                                                    src={dish.image}
+                                                    alt={dish.name}
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                />
                                             </div>
                                         )}
                                         <div className="flex-1 flex flex-col justify-between">
@@ -311,6 +317,8 @@ const Menu = () => {
                                             src={dish.image || DEFAULT_IMAGE}
                                             alt={dish.name}
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            loading="lazy"
+                                            decoding="async"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 

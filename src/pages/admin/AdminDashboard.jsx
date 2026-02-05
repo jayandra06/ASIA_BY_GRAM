@@ -178,14 +178,17 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
         handleChange(id, 'image', newUrl);
         setImageEditModal({ open: false, itemId: null, currentUrl: '' });
     };
-
     const handleBatchImageUpload = (e) => {
         const file = e.target.files[0];
         if (!file || !imageEditModal.itemId) return;
 
+        const metadata = {
+            cacheControl: 'public,max-age=31536000',
+        };
+
         setUploading(true);
         const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        const uploadTask = uploadBytesResumable(storageRef, file, metadata);
 
         uploadTask.on('state_changed',
             (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
@@ -508,9 +511,14 @@ const MenuManagement = () => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        const metadata = {
+            cacheControl: 'public,max-age=31536000',
+        };
+
         setUploading(true);
         const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        const uploadTask = uploadBytesResumable(storageRef, file, metadata);
         uploadTask.on('state_changed',
             (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
             (error) => { console.error("Upload failed", error); setUploading(false); },

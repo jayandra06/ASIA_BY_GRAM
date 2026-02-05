@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,205 +9,131 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import QuatrefoilBackground from '../../components/ui/QuatrefoilBackground';
 import SparticlesEffect from '../../components/ui/SparticlesEffect';
 
-// Placeholder Component for Menu Management
-const MenuManagement = () => {
-    const [items, setItems] = useState([]); // In real app, fetch from backend
-    const [activeTab, setActiveTab] = useState('all');
+const CategoryManagement = () => {
+    const [categories, setCategories] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
-    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', image: '' });
-    const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [formData, setFormData] = useState({ name: '', subcategories: '' });
 
-    // Mock Data Loading (Replace with API fetch)
     useEffect(() => {
-        // Basic fetch mock
-        fetch('/src/data/menu.json')
-            .then(res => res.json())
-            .then(data => setItems(data))
-            .catch(err => console.error(err));
+        fetchCategories();
     }, []);
 
-    const handleOpenModal = (item = null) => {
-        setUploading(false);
-        setUploadProgress(0);
-        if (item) {
-            setEditingItem(item);
-            setFormData(item);
+    const fetchCategories = async () => {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`);
+            if (res.ok) {
+                const data = await res.json();
+                setCategories(data);
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
+    const handleOpenModal = (category = null) => {
+        if (category) {
+            setEditingCategory(category);
+            setFormData({ name: category.name, subcategories: category.subcategories.join(', ') });
         } else {
-            setEditingItem(null);
-            setFormData({ name: '', price: '', description: '', category: 'Starters', image: '' });
+            setEditingCategory(null);
+            setFormData({ name: '', subcategories: '' });
         }
         setIsModalOpen(true);
     };
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        setUploading(true);
-        const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadProgress(progress);
-            },
-            (error) => {
-                console.error("Upload failed", error);
-                setUploading(false);
-                alert("Image upload failed! Please try again.");
-            },
-            () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    setFormData(prev => ({ ...prev, image: downloadURL }));
-                    setUploading(false);
-                });
-            }
-        );
-    };
-
-    const handeSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (editingItem) {
-            // Update logic
-            setItems(items.map(i => i.id === editingItem.id ? { ...formData, id: i.id } : i));
-        } else {
-            // Add logic
-            setItems([...items, { ...formData, id: `new-${Date.now()}` }]);
+        const subcategoriesArray = formData.subcategories.split(',').map(s => s.trim()).filter(s => s !== '');
+
+        try {
+            const method = editingCategory ? 'PUT' : 'POST';
+            const url = editingCategory
+                ? `${import.meta.env.VITE_API_URL}/api/categories/${editingCategory._id}`
+                : `${import.meta.env.VITE_API_URL}/api/categories`;
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ name: formData.name, subcategories: subcategoriesArray })
+            });
+
+            if (res.ok) {
+                fetchCategories();
+                setIsModalOpen(false);
+            } else {
+                alert("Failed to save category");
+            }
+        } catch (error) {
+            console.error("Error saving category:", error);
         }
-        setIsModalOpen(false);
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this item?')) {
-            setItems(items.filter(i => i.id !== id));
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure? This might affect menu items using this category.')) return;
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) fetchCategories();
+        } catch (error) {
+            console.error("Error deleting category:", error);
         }
     };
-
-    const categories = ['all', ...new Set(items.map(item => item.category))];
 
     return (
-        <div className="p-6 space-y-6 relative">
+        <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Menu Management</h2>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="bg-primary text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-zinc-800 hover:text-white transition-colors">
-                    <Plus size={18} /> Add New Item
+                <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Category Management</h2>
+                <button onClick={() => handleOpenModal()} className="bg-primary text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-zinc-800 hover:text-white transition-colors">
+                    <Plus size={18} /> Add Category
                 </button>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
-                {categories.map(cat => (
-                    <button
-                        key={cat}
-                        onClick={() => setActiveTab(cat)}
-                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === cat ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}
-                    >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                ))}
-            </div>
-
-            {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => (
-                    <motion.div
-                        layout
-                        key={item.id}
-                        className="bg-white border border-zinc-200 rounded-xl overflow-hidden group hover:border-primary/50 shadow-sm hover:shadow-md transition-all"
-                    >
-                        <div className="h-48 overflow-hidden relative">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                            <div className="absolute top-2 right-2 flex gap-2 translate-y-[-100%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                                <button onClick={() => handleOpenModal(item)} className="p-2 bg-white/90 backdrop-blur-md rounded-full text-zinc-900 hover:bg-primary hover:text-black transition-colors shadow-sm"><Edit2 size={14} /></button>
-                                <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-500/90 backdrop-blur-md rounded-full text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 size={14} /></button>
+                {categories.map(cat => (
+                    <div key={cat._id} className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="font-bold text-lg text-zinc-900">{cat.name}</h3>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleOpenModal(cat)} className="p-1 text-zinc-400 hover:text-primary transition-colors"><Edit2 size={16} /></button>
+                                <button onClick={() => handleDelete(cat._id)} className="p-1 text-zinc-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                             </div>
                         </div>
-                        <div className="p-4 space-y-2">
-                            <div className="flex justify-between items-start gap-2">
-                                <h3 className="font-bold text-lg text-zinc-900 leading-tight">{item.name}</h3>
-                                <span className="bg-primary/20 text-primary-dark text-xs font-bold px-2 py-1 rounded whitespace-nowrap">{item.price}</span>
-                            </div>
-                            <p className="text-zinc-500 text-sm line-clamp-2">{item.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {cat.subcategories && cat.subcategories.map((sub, idx) => (
+                                <span key={idx} className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full">{sub}</span>
+                            ))}
+                            {(!cat.subcategories || cat.subcategories.length === 0) && <span className="text-xs text-zinc-400 italic">No subcategories</span>}
                         </div>
-                    </motion.div>
+                    </div>
                 ))}
             </div>
 
-            {/* Edit/Add Modal */}
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="bg-white border border-zinc-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
-                        >
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white border border-zinc-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
                             <div className="p-6 border-b border-zinc-200 flex justify-between items-center bg-gray-50">
-                                <h3 className="font-bold text-zinc-900 text-lg">{editingItem ? 'Edit Item' : 'Add New Item'}</h3>
+                                <h3 className="font-bold text-zinc-900 text-lg">{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
                                 <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-zinc-900"><X size={20} /></button>
                             </div>
-                            <form onSubmit={handeSubmit} className="p-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-zinc-500 uppercase font-bold">Name</label>
-                                        <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-zinc-500 uppercase font-bold">Price</label>
-                                        <input type="text" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                                    </div>
+                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">Category Name</label>
+                                    <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1" />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs text-zinc-500 uppercase font-bold">Category</label>
-                                    <input type="text" required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-zinc-500 uppercase font-bold">Image</label>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleImageUpload}
-                                                className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/20 file:text-primary-dark hover:file:bg-primary/30"
-                                            />
-                                        </div>
-
-                                        {uploading && (
-                                            <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                                <div className="bg-primary h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
-                                            </div>
-                                        )}
-
-                                        {formData.image && (
-                                            <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-200 group">
-                                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                                                    className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-zinc-500 uppercase font-bold">Description</label>
-                                    <textarea rows="3" required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none" />
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">Subcategories (comma separated)</label>
+                                    <input type="text" value={formData.subcategories} onChange={e => setFormData({ ...formData, subcategories: e.target.value })} placeholder="e.g. Veg, Non-Veg, Chicken, Prawns" className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 outline-none focus:border-primary focus:ring-1" />
                                 </div>
                                 <div className="pt-4 flex gap-3">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-zinc-900 rounded-lg font-bold transition-colors">Cancel</button>
-                                    <button type="submit" disabled={uploading} className="flex-1 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {uploading ? 'Uploading...' : 'Save Changes'}
-                                    </button>
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-zinc-900 rounded-lg font-bold">Cancel</button>
+                                    <button type="submit" className="flex-1 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg font-bold">Save</button>
                                 </div>
                             </form>
                         </motion.div>
@@ -218,8 +144,427 @@ const MenuManagement = () => {
     );
 };
 
-// Real Table Allocation Component
+// Menu Management Component (Merged)
+const MenuManagement = () => {
+    const [subTab, setSubTab] = useState('items'); // 'items' or 'categories'
+
+    // items state
+    const [items, setItems] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [activeTab, setActiveTab] = useState('all');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: 'Veg' });
+    const [bulkFormData, setBulkFormData] = useState({ category: '', subcategory: '', price: '' });
+    const [uploading, setUploading] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    useEffect(() => {
+        fetchItems();
+        fetchCategories();
+    }, []);
+
+    // Refresh categories when switching back to items tab
+    useEffect(() => {
+        if (subTab === 'items') {
+            fetchCategories();
+        }
+    }, [subTab]);
+
+    const fetchItems = async () => { /* ... */
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
+            if (res.ok) setItems(await res.json());
+        } catch (error) { console.error("Error fetching menu:", error); }
+    };
+
+    const fetchCategories = async () => { /* ... */
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`);
+            if (res.ok) setCategories(await res.json());
+        } catch (error) { console.error("Error fetching categories:", error); }
+    };
+
+    // ... (Keep existing handlers: handleOpenModal, handleImageUpload, handleSubmit, handleDelete etc)
+    const handleOpenModal = (item = null) => {
+        setUploading(false);
+        setUploadProgress(0);
+        if (item) {
+            setEditingItem(item);
+            setFormData(item);
+        } else {
+            setEditingItem(null);
+            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: 'Veg' });
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        uploadTask.on('state_changed',
+            (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
+            (error) => { console.error("Upload failed", error); setUploading(false); },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    setFormData(prev => ({ ...prev, image: downloadURL }));
+                    setUploading(false);
+                });
+            }
+        );
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const method = editingItem ? 'PUT' : 'POST';
+            const url = editingItem ? `${import.meta.env.VITE_API_URL}/api/menu/${editingItem.id}` : `${import.meta.env.VITE_API_URL}/api/menu`;
+            const token = localStorage.getItem('token');
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(formData)
+            });
+            if (res.ok) {
+                fetchItems();
+                setIsModalOpen(false);
+            } else { alert("Failed to save item"); }
+        } catch (error) { console.error("Error saving item:", error); }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this item?')) return;
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) fetchItems();
+        } catch (error) { console.error(error); }
+    };
+
+    const handleSelect = (id) => {
+        const newSelected = new Set(selectedItems);
+        if (newSelected.has(id)) newSelected.delete(id);
+        else newSelected.add(id);
+        setSelectedItems(newSelected);
+    };
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedItems.size} items?`)) return;
+        for (const id of selectedItems) {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/menu/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+        }
+        fetchItems();
+        setSelectedItems(new Set());
+    };
+    const handleBulkUpdate = async (e) => {
+        e.preventDefault();
+        const updates = {};
+        if (bulkFormData.category) updates.category = bulkFormData.category;
+        if (bulkFormData.subcategory) updates.subcategory = bulkFormData.subcategory;
+        if (bulkFormData.price) updates.price = bulkFormData.price;
+        if (Object.keys(updates).length === 0) return alert("No changes to apply.");
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/bulk`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ ids: Array.from(selectedItems), updates })
+            });
+            if (res.ok) {
+                fetchItems();
+                setIsBulkModalOpen(false);
+                setBulkFormData({ category: '', subcategory: '', price: '' });
+                setSelectedItems(new Set());
+                alert("Bulk update successful!");
+            }
+        } catch (error) { console.error(error); }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setImporting(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Import Successful!\nUpdated: ${data.stats.updated}\nCreated: ${data.stats.created}`);
+                fetchItems();
+            } else {
+                alert(`Import Failed: ${data.error}`);
+            }
+        } catch (error) {
+            console.error("Import error:", error);
+            alert("Failed to import file");
+        } finally {
+            setImporting(false);
+            e.target.value = ''; // Reset input
+        }
+    };
+
+    const handleDownloadTemplate = async () => {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/template`);
+            if (!res.ok) throw new Error("Failed to download");
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'menu_template.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Download error:", error);
+            alert("Failed to download template");
+        }
+    };
+
+    const activeCategoryData = categories.find(c => c.name === formData.category);
+    const bulkCategoryData = categories.find(c => c.name === bulkFormData.category);
+
+    return (
+        <div className="p-6 space-y-6 relative">
+            {/* Header & Main Tabs */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Menu Management</h2>
+
+                {/* View Switcher */}
+                <div className="bg-zinc-100 p-1 rounded-lg flex gap-1">
+                    <button
+                        onClick={() => setSubTab('items')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${subTab === 'items' ? 'bg-white shadow text-black' : 'text-zinc-500 hover:text-zinc-900'}`}
+                    >
+                        Menu Items
+                    </button>
+                    <button
+                        onClick={() => setSubTab('categories')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${subTab === 'categories' ? 'bg-white shadow text-black' : 'text-zinc-500 hover:text-zinc-900'}`}
+                    >
+                        Categories
+                    </button>
+                </div>
+
+                {subTab === 'items' && (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleDownloadTemplate}
+                            className="bg-white border border-zinc-200 text-zinc-700 px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-zinc-50 transition-colors"
+                            title="Download Excel Template"
+                        >
+                            <Download size={18} /> <span className="hidden md:inline">Template</span>
+                        </button>
+                        <label className={`cursor-pointer bg-white border border-zinc-200 text-zinc-700 px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-zinc-50 transition-colors ${importing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                            <Upload size={18} />
+                            {importing ? 'Importing...' : 'Import'}
+                            <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} disabled={importing} className="hidden" />
+                        </label>
+                        <button
+                            onClick={() => handleOpenModal()}
+                            className="bg-primary text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-zinc-800 hover:text-white transition-colors">
+                            <Plus size={18} /> Add
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {subTab === 'categories' ? (
+                <CategoryManagement />
+            ) : (
+                <>
+                    {/* Bulk Action Bar */}
+                    {selectedItems.size > 0 && (
+                        <div className="bg-zinc-900 text-white p-4 rounded-xl flex items-center justify-between shadow-lg animate-in slide-in-from-top-2">
+                            <span className="font-bold ml-2">{selectedItems.size} items selected</span>
+                            <div className="flex gap-2">
+                                <button onClick={() => setIsBulkModalOpen(true)} className="bg-primary text-black px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-white transition-colors">Bulk Update</button>
+                                <button onClick={handleBulkDelete} className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors">Delete Selected</button>
+                                <button onClick={() => setSelectedItems(new Set())} className="text-zinc-400 hover:text-white px-3 py-1.5 text-sm">Cancel</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Filter Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === 'all' ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}
+                        >
+                            All Items
+                        </button>
+                        {categories.map(cat => (
+                            <button
+                                key={cat._id}
+                                onClick={() => setActiveTab(cat.name)}
+                                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === cat.name ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}
+                            >
+                                {cat.name}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => (
+                            <motion.div
+                                layout
+                                key={item.id}
+                                onClick={() => handleSelect(item.id)}
+                                className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(item.id) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}
+                            >
+                                {/* Selection Checkbox Overlay */}
+                                <div className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedItems.has(item.id) ? 'bg-primary border-primary' : 'bg-white/80 border-gray-300'}`}>
+                                    {selectedItems.has(item.id) && <Check size={14} className="text-black" />}
+                                </div>
+
+                                <div className="h-48 overflow-hidden relative">
+                                    <img src={item.image || '/logo.png'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    <div className="absolute top-2 right-2 flex gap-2 translate-y-[-100%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                                        <button onClick={() => handleOpenModal(item)} className="p-2 bg-white/90 backdrop-blur-md rounded-full text-zinc-900 hover:bg-primary hover:text-black transition-colors shadow-sm"><Edit2 size={14} /></button>
+                                        <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-500/90 backdrop-blur-md rounded-full text-white hover:bg-red-600 transition-colors shadow-sm"><Trash2 size={14} /></button>
+                                    </div>
+                                </div>
+                                <div className="p-4 space-y-1">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <h3 className="font-bold text-lg text-zinc-900 leading-tight">{item.name}</h3>
+                                        <span className="bg-primary/20 text-primary-dark text-xs font-bold px-2 py-1 rounded whitespace-nowrap">{item.price}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
+                                        <span>{item.category}</span>
+                                        {item.subcategory && <span>ΓÇó {item.subcategory}</span>}
+                                    </div>
+                                    <p className="text-zinc-500 text-sm line-clamp-2">{item.description}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Add/Edit Modal */}
+                    <AnimatePresence>
+                        {isModalOpen && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white border border-zinc-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+                                    <div className="p-6 border-b border-zinc-200 flex justify-between items-center bg-gray-50">
+                                        <h3 className="font-bold text-zinc-900 text-lg">{editingItem ? 'Edit Item' : 'Add New Item'}</h3>
+                                        <button onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+                                    </div>
+                                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-zinc-500 uppercase font-bold">Category</label>
+                                                <select required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value, subcategory: '' })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2">
+                                                    <option value="">Select Category</option>
+                                                    {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-zinc-500 uppercase font-bold">Sub Category (Optional)</label>
+                                                <select value={formData.subcategory} onChange={e => setFormData({ ...formData, subcategory: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2">
+                                                    <option value="">None</option>
+                                                    {activeCategoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">Name</label>
+                                            <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-zinc-500 uppercase font-bold">Price</label>
+                                                <input type="text" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-zinc-500 uppercase font-bold">Dietary</label>
+                                                <select value={formData.dietary} onChange={e => setFormData({ ...formData, dietary: e.target.value })} className="w-full border rounded-lg px-3 py-2">
+                                                    <option value="Veg">Veg</option>
+                                                    <option value="Non-Veg">Non-Veg</option>
+                                                    <option value="Vegan">Vegan</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">Image</label>
+                                            <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/20 file:text-primary-dark hover:file:bg-primary/30" />
+                                            {uploading && <div className="w-full bg-gray-200 rounded-full h-1 mt-2"><div className="bg-primary h-1 rounded-full" style={{ width: `${uploadProgress}%` }}></div></div>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">Description</label>
+                                            <textarea rows="3" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+                                        </div>
+                                        <button type="submit" disabled={uploading} className="w-full py-3 bg-primary text-black rounded-lg font-bold">{uploading ? 'Uploading...' : 'Save Item'}</button>
+                                    </form>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Bulk Update Modal */}
+                    <AnimatePresence>
+                        {isBulkModalOpen && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white border border-zinc-200 rounded-2xl w-full max-w-md shadow-2xl">
+                                    <div className="p-6 border-b border-zinc-200 flex justify-between items-center bg-gray-50">
+                                        <h3 className="font-bold text-zinc-900 text-lg">Bulk Update ({selectedItems.size} items)</h3>
+                                        <button onClick={() => setIsBulkModalOpen(false)}><X size={20} /></button>
+                                    </div>
+                                    <form onSubmit={handleBulkUpdate} className="p-6 space-y-4">
+                                        <p className="text-sm text-zinc-500">Only fields you fill in will be updated.</p>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">New Category</label>
+                                            <select value={bulkFormData.category} onChange={e => setBulkFormData({ ...bulkFormData, category: e.target.value, subcategory: '' })} className="w-full border rounded-lg px-3 py-2">
+                                                <option value="">No Change</option>
+                                                {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">New Subcategory</label>
+                                            <select value={bulkFormData.subcategory} onChange={e => setBulkFormData({ ...bulkFormData, subcategory: e.target.value })} className="w-full border rounded-lg px-3 py-2">
+                                                <option value="">No Change</option>
+                                                {bulkCategoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-zinc-500 uppercase font-bold">New Price</label>
+                                            <input type="text" value={bulkFormData.price} onChange={e => setBulkFormData({ ...bulkFormData, price: e.target.value })} placeholder="No Change" className="w-full border rounded-lg px-3 py-2" />
+                                        </div>
+                                        <button type="submit" className="w-full py-3 bg-primary text-black rounded-lg font-bold">Update All Selected</button>
+                                    </form>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+                </>
+            )}
+        </div>
+    );
+};
+
 const TableAllocation = () => {
+    // ... (Keep existing TableAllocation)
+
     const [reservations, setReservations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const { token } = useAuth(); // Assuming useAuth provides token, otherwise use localStorage directly if needed
@@ -423,6 +768,11 @@ const QRCodeManagement = () => {
         window.print();
     };
 
+    const copyToClipboard = (url) => {
+        navigator.clipboard.writeText(url);
+        alert("URL copied to clipboard!");
+    };
+
     return (
         <div className="p-6 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
@@ -468,12 +818,20 @@ const QRCodeManagement = () => {
                         <div className="text-center w-full">
                             <h3 className="font-bold text-xl text-zinc-900">TABLE {table.number}</h3>
                             <p className="text-xs text-zinc-400 mt-1 truncate max-w-[150px] mx-auto mb-3">{table.url}</p>
-                            <button
-                                onClick={() => deleteTable(table.number)}
-                                className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors"
-                            >
-                                Remove
-                            </button>
+                            <div className="flex gap-2 justify-center w-full">
+                                <button
+                                    onClick={() => copyToClipboard(table.url)}
+                                    className="text-xs text-primary hover:text-black hover:bg-primary/20 px-3 py-1 rounded transition-colors flex items-center gap-1 font-bold border border-primary/20"
+                                >
+                                    <Copy size={12} /> Copy
+                                </button>
+                                <button
+                                    onClick={() => deleteTable(table.number)}
+                                    className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors flex items-center gap-1 border border-red-100"
+                                >
+                                    <Trash2 size={12} /> Remove
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

@@ -22,7 +22,7 @@ const ReservationModal = ({ isOpen, onClose }) => {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reservations`, {
+            const response = await fetch('http://localhost:5000/api/reservations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

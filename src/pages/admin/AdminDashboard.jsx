@@ -229,7 +229,7 @@ const TableAllocation = () => {
 
     const fetchReservations = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/reservations', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservations`, {
                 headers: {
                     'Authorization': `Bearer ${getToken()}`
                 }
@@ -249,7 +249,7 @@ const TableAllocation = () => {
 
     const updateStatus = async (id, newStatus) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/reservations/${id}/status`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservations/${id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ const QRCodeManagement = () => {
 
     const fetchTables = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/tables');
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tables`);
             if (res.ok) {
                 const data = await res.json();
                 setTables(data);
@@ -381,7 +381,7 @@ const QRCodeManagement = () => {
 
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:5000/api/tables/generate', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tables/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ count: parseInt(count) })
@@ -405,7 +405,7 @@ const QRCodeManagement = () => {
         if (!window.confirm(`Are you sure you want to delete Table ${number}?`)) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/tables/${number}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tables/${number}`, {
                 method: 'DELETE'
             });
             if (res.ok) {

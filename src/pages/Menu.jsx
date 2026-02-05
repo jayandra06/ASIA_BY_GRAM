@@ -167,9 +167,11 @@ const Menu = () => {
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchMenu = async () => {
+            setLoading(true);
             try {
                 const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
                 if (res.ok) {
@@ -178,6 +180,8 @@ const Menu = () => {
                 }
             } catch (error) {
                 console.error("Error fetching menu:", error);
+            } finally {
+                setLoading(false);
             }
         };
         fetchMenu();
@@ -193,6 +197,15 @@ const Menu = () => {
     }, []);
 
     // If table number exists OR detection checks mobile width, show Mobile Menu
+    if (loading && (tableNumber || isMobile)) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs animate-pulse">Loading Menu...</p>
+            </div>
+        );
+    }
+
     if (tableNumber || isMobile) {
         return <MobileMenu tableNumber={tableNumber} menuItems={menuItems} />;
     }
@@ -297,7 +310,28 @@ const Menu = () => {
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     <AnimatePresence mode="popLayout">
-                        {filteredDishes.length > 0 ? (
+                        {loading ? (
+                            // Loading Skeletons
+                            Array.from({ length: 9 }).map((_, i) => (
+                                <div key={`skeleton-${i}`} className="animate-pulse bg-white border border-primary/10 rounded-2xl h-[400px] flex flex-col">
+                                    <div className="h-56 bg-zinc-100 rounded-t-2xl" />
+                                    <div className="p-6 space-y-4 flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-2 flex-1">
+                                                <div className="h-3 w-16 bg-zinc-100 rounded-full" />
+                                                <div className="h-6 w-3/4 bg-zinc-100 rounded" />
+                                            </div>
+                                            <div className="h-6 w-12 bg-zinc-100 rounded" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="h-3 w-full bg-zinc-100 rounded" />
+                                            <div className="h-3 w-2/3 bg-zinc-100 rounded" />
+                                        </div>
+                                        <div className="mt-auto h-4 w-full bg-zinc-50 rounded" />
+                                    </div>
+                                </div>
+                            ))
+                        ) : filteredDishes.length > 0 ? (
                             filteredDishes.map((dish, index) => (
                                 <motion.div
                                     key={dish.id}

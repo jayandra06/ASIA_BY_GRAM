@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import dns from 'dns';
+import compression from 'compression';
 
 dns.setServers(['8.8.8.8', '1.1.1.1']); // Set public DNS to resolve Atlas SRV records
 import authRoutes from './routes/auth.js';
@@ -28,6 +29,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(compression());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/asia_by_gram')

@@ -5,7 +5,7 @@ const menuSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
     price: { type: String, required: true }, // Keeping as string for "₹468" format, though number is better usually.
-    category: { type: String, required: true },
+    category: { type: String, required: true, index: true },
     subcategory: { type: String },
     dietary: { type: String, enum: ['Veg', 'Non-Veg', 'Vegan'], default: 'Veg' },
     image: { type: String }

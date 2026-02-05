@@ -7,9 +7,11 @@ const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf
 const MenuSection = () => {
     const navigate = useNavigate();
     const [dishes, setDishes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchFeatured = async () => {
+            setLoading(true);
             try {
                 const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
                 if (res.ok) {
@@ -19,6 +21,8 @@ const MenuSection = () => {
                 }
             } catch (error) {
                 console.error("Error fetching featured menu:", error);
+            } finally {
+                setLoading(false);
             }
         };
         fetchFeatured();
@@ -47,7 +51,27 @@ const MenuSection = () => {
                     }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
-                    {dishes.map((dish) => (
+                    {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <div key={`feat-skeleton-${i}`} className="animate-pulse bg-white border border-primary/10 rounded-2xl h-[450px] flex flex-col">
+                                <div className="h-64 bg-zinc-100 rounded-t-2xl" />
+                                <div className="p-8 space-y-4 flex-1">
+                                    <div className="flex justify-between">
+                                        <div className="space-y-2 flex-1">
+                                            <div className="h-2 w-12 bg-zinc-100 rounded" />
+                                            <div className="h-6 w-3/4 bg-zinc-100 rounded" />
+                                        </div>
+                                        <div className="h-6 w-12 bg-zinc-100 rounded" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="h-3 w-full bg-zinc-100 rounded" />
+                                        <div className="h-3 w-3/4 bg-zinc-100 rounded" />
+                                    </div>
+                                    <div className="mt-auto h-4 w-full bg-zinc-50 rounded" />
+                                </div>
+                            </div>
+                        ))
+                    ) : dishes.map((dish) => (
                         <motion.div
                             key={dish.id}
                             variants={{

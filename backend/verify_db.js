@@ -15,16 +15,18 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 async function verify() {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
-        const items = await Menu.find({ name: /Vegan tofu wraps/i });
-        console.log(`Found ${items.length} items`);
+        const items = await Menu.find({ image: { $exists: true, $ne: null } }).limit(5);
+        console.log(`Found ${items.length} items with images`);
         items.forEach((item, idx) => {
             console.log(`--- ITEM ${idx + 1} ---`);
             console.log('ID:', item.id);
             console.log('Name:', item.name);
-            console.log('Description:', item.description);
-            console.log('Price:', item.price);
-            console.log('Category:', item.category);
+            console.log('Image:', item.image);
         });
+
+        const totalItems = await Menu.countDocuments();
+        const itemsWithoutImage = await Menu.countDocuments({ $or: [{ image: { $exists: false } }, { image: null }, { image: '' }] });
+        console.log(`Total items: ${totalItems}, Items without image: ${itemsWithoutImage}`);
     } catch (err) {
         console.error(err);
     } finally {

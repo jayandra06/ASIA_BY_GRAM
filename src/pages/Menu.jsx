@@ -5,13 +5,13 @@ import { ArrowLeft, Search, Filter, ChevronRight, ChevronLeft } from 'lucide-rea
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Mobile Menu Component (Only for QR Code Users)
-const MobileMenu = ({ tableNumber }) => {
+const MobileMenu = ({ tableNumber, menuItems = [] }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
     const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
-    const filteredDishes = menuData.filter(dish => {
+    const filteredDishes = menuItems.filter(dish => {
         // Filter by Category
         if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) return false;
 
@@ -154,6 +154,8 @@ const MobileMenu = ({ tableNumber }) => {
     );
 };
 
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
+
 const Menu = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -164,6 +166,22 @@ const Menu = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [menuItems, setMenuItems] = useState([]);
+
+    useEffect(() => {
+        const fetchMenu = async () => {
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setMenuItems(data);
+                }
+            } catch (error) {
+                console.error("Error fetching menu:", error);
+            }
+        };
+        fetchMenu();
+    }, []);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -176,13 +194,13 @@ const Menu = () => {
 
     // If table number exists OR detection checks mobile width, show Mobile Menu
     if (tableNumber || isMobile) {
-        return <MobileMenu tableNumber={tableNumber} />;
+        return <MobileMenu tableNumber={tableNumber} menuItems={menuItems} />;
     }
 
     const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
-    const filteredDishes = menuData.filter(dish => {
+    const filteredDishes = menuItems.filter(dish => {
         const matchesCategory = selectedCategory === 'All' || dish.category === selectedCategory;
         const matchesDietary = selectedDietary === 'All' ||
             (selectedDietary === 'Veg' && (dish.dietary === 'Veg' || dish.dietary === 'Vegan')) ||
@@ -291,41 +309,51 @@ const Menu = () => {
                                         opacity: { duration: 0.4 },
                                         layout: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
                                     }}
-                                    className="group relative p-8 rounded-2xl bg-white border border-primary hover:border-gold-500 transition-all duration-500 shadow-[0_0_30px_rgba(255,193,7,0.15)] hover:shadow-[0_0_40px_rgba(255,193,7,0.3)] overflow-hidden"
+                                    className="group relative rounded-2xl bg-white border border-primary/20 hover:border-gold-500 transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_rgba(255,193,7,0.2)] overflow-hidden flex flex-col"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    {/* Image Wrapper */}
+                                    <div className="relative h-56 overflow-hidden">
+                                        <img
+                                            src={dish.image || DEFAULT_IMAGE}
+                                            alt={dish.name}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                    <div className="relative z-10">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-3 h-3 rounded-full border ${dish.dietary === 'Non-Veg' ? 'border-red-500 bg-red-500/20' : 'border-green-500 bg-green-500/20'
-                                                        } flex items-center justify-center`}>
-                                                        <div className={`w-1 h-1 rounded-full ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'
-                                                            }`} />
-                                                    </div>
-                                                    <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] bg-yellow-50/50 px-2 py-0.5 rounded-full border border-primary/20">
-                                                        {dish.category || 'Specialty'}
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-2xl font-asian font-bold text-[#FF8F00] uppercase tracking-tight">
-                                                    {dish.name}
-                                                </h3>
-                                            </div>
-                                            <p className="text-xl font-asian font-medium text-primary shadow-sm">{dish.price}</p>
-                                        </div>
-
-                                        <p className="text-zinc-600 text-sm leading-relaxed mb-8 min-h-[3rem] line-clamp-2 drop-shadow-sm font-medium">
-                                            {dish.description || 'A chef curated masterpiece with authentic flavors and fresh ingredients.'}
-                                        </p>
-
-                                        <div className="flex items-center gap-4 text-primary group-hover:text-gold-600 transition-colors border-t border-primary/20 pt-4">
-                                            <div className="h-[1px] flex-1 bg-primary/20" />
-                                            <span className="text-[10px] uppercase tracking-widest font-bold">Asia By Gram</span>
+                                        {/* Dietary Badge on Image */}
+                                        <div className="absolute top-4 right-4 z-20">
+                                            <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'}`} />
                                         </div>
                                     </div>
 
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="p-6 flex flex-col flex-1 relative z-10">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                        <div className="relative z-20 flex-1">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] bg-yellow-50/50 px-2 py-0.5 rounded-full border border-primary/20">
+                                                        {dish.category || 'Specialty'}
+                                                    </span>
+                                                    <h3 className="text-xl font-bold text-zinc-900 uppercase tracking-tight group-hover:text-[#FF8F00] transition-colors mt-1">
+                                                        {dish.name}
+                                                    </h3>
+                                                </div>
+                                                <p className="text-lg font-bold text-primary">{dish.price}</p>
+                                            </div>
+
+                                            <p className="text-zinc-600 text-sm leading-relaxed mb-6 line-clamp-2 font-medium">
+                                                {dish.description || 'A chef curated masterpiece with authentic flavors and fresh ingredients.'}
+                                            </p>
+                                        </div>
+
+                                        <div className="relative z-20 flex items-center gap-4 text-primary group-hover:text-gold-600 transition-colors border-t border-primary/10 pt-4 mt-auto">
+                                            <div className="h-[1px] flex-1 bg-primary/10" />
+                                            <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">Asia By Gram</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="absolute top-1/2 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </motion.div>
                             ))
                         ) : (

@@ -231,6 +231,30 @@ router.patch('/bulk', verifyToken, async (req, res) => {
     }
 });
 
+// Batch Update menu items (Multiple DIFFERENT updates)
+router.post('/batch', verifyToken, async (req, res) => {
+    try {
+        const { updates } = req.body; // Array of { id, updates }
+
+        if (!updates || !Array.isArray(updates) || updates.length === 0) {
+            return res.status(400).json({ error: 'No updates provided' });
+        }
+
+        const bulkOps = updates.map(u => ({
+            updateOne: {
+                filter: { id: u.id },
+                update: { $set: u.updates }
+            }
+        }));
+
+        const result = await Menu.bulkWrite(bulkOps);
+
+        res.json({ message: `Batch updated ${result.modifiedCount} items`, result });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
 // Delete menu item (Admin only)
 router.delete('/:id', verifyToken, async (req, res) => {
     try {

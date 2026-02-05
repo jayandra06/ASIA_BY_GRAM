@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -136,6 +136,309 @@ const CategoryManagement = () => {
                                     <button type="submit" className="flex-1 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg font-bold">Save</button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+// Bulk Menu Editor Component
+const BulkMenuEditor = ({ items, categories, onRefresh }) => {
+    const [localItems, setLocalItems] = useState([]);
+    const [saving, setSaving] = useState(false);
+    const [search, setSearch] = useState('');
+    const [imageEditModal, setImageEditModal] = useState({ open: false, itemId: null, currentUrl: '' });
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    useEffect(() => {
+        setLocalItems(items.map(item => ({ ...item })));
+    }, [items]);
+
+    const handleChange = (id, field, value) => {
+        setLocalItems(prev => prev.map(item => {
+            if (item.id === id) {
+                const updated = { ...item, [field]: value };
+                if (field === 'category') {
+                    const newCat = categories.find(c => c.name === value);
+                    // Reset subcategory if it's not valid for the new category
+                    if (!newCat?.subcategories?.includes(item.subcategory)) {
+                        updated.subcategory = '';
+                    }
+                }
+                return updated;
+            }
+            return item;
+        }));
+    };
+
+    const handleImageChange = (id, newUrl) => {
+        handleChange(id, 'image', newUrl);
+        setImageEditModal({ open: false, itemId: null, currentUrl: '' });
+    };
+
+    const handleBatchImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file || !imageEditModal.itemId) return;
+
+        setUploading(true);
+        const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
+            (error) => { console.error("Upload failed", error); setUploading(false); },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    handleImageChange(imageEditModal.itemId, downloadURL);
+                    setUploading(false);
+                });
+            }
+        );
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const updates = localItems
+                .filter(item => {
+                    const original = items.find(o => o.id === item.id);
+                    return JSON.stringify(item) !== JSON.stringify(original);
+                })
+                .map(item => ({
+                    id: item.id,
+                    updates: {
+                        name: item.name,
+                        price: item.price,
+                        description: item.description,
+                        category: item.category,
+                        subcategory: item.subcategory,
+                        dietary: item.dietary,
+                        image: item.image
+                    }
+                }));
+
+            if (updates.length === 0) {
+                alert("No changes to save.");
+                setSaving(false);
+                return;
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu/batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ updates })
+            });
+
+            if (res.ok) {
+                alert("Bulk update successful!");
+                onRefresh();
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error || 'Failed to save updates'}`);
+            }
+        } catch (error) {
+            console.error("Bulk save error:", error);
+            alert("An error occurred during save.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const filteredItems = localItems.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.category.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="relative w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search items..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                </div>
+                <div className="flex gap-3">
+                    <span className="text-sm text-zinc-500 self-center">
+                        {localItems.filter(item => {
+                            const original = items.find(o => o.id === item.id);
+                            return JSON.stringify(item) !== JSON.stringify(original);
+                        }).length} changes pending
+                    </span>
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="bg-zinc-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center gap-2"
+                    >
+                        {saving ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Save size={18} />}
+                        Save All Changes
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-zinc-50 border-b border-zinc-200">
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider w-16 text-center">Image</th>
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider min-w-[200px]">Item Details</th>
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider w-32">Category</th>
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider w-32">Subcategory</th>
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider w-24">Price</th>
+                                <th className="px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider w-28">Dietary</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                            {filteredItems.map(item => {
+                                const categoryData = categories.find(c => c.name === item.category);
+                                return (
+                                    <tr key={item.id} className="hover:bg-zinc-50/50 transition-colors">
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                onClick={() => setImageEditModal({ open: true, itemId: item.id, currentUrl: item.image })}
+                                                className="w-12 h-12 rounded-lg overflow-hidden border-2 border-zinc-100 relative group active:scale-95 transition-all shadow-sm"
+                                            >
+                                                <img src={item.image || '/logo.png'} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Edit2 size={12} className="text-white" />
+                                                </div>
+                                            </button>
+                                        </td>
+                                        <td className="px-4 py-3 space-y-2">
+                                            <input
+                                                type="text"
+                                                value={item.name}
+                                                onChange={e => handleChange(item.id, 'name', e.target.value)}
+                                                className="w-full bg-transparent border-b border-transparent hover:border-zinc-200 focus:border-primary outline-none font-bold text-zinc-900 transition-all text-sm"
+                                            />
+                                            <textarea
+                                                value={item.description}
+                                                onChange={e => handleChange(item.id, 'description', e.target.value)}
+                                                placeholder="Description..."
+                                                className="w-full bg-zinc-50/50 border border-transparent hover:border-zinc-200 focus:border-primary focus:bg-white outline-none text-[11px] text-zinc-500 resize-none h-6 focus:h-24 transition-all rounded px-2 py-1 leading-normal"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <select
+                                                value={item.category}
+                                                onChange={e => handleChange(item.id, 'category', e.target.value)}
+                                                className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30"
+                                            >
+                                                {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                            </select>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <select
+                                                value={item.subcategory || ''}
+                                                onChange={e => handleChange(item.id, 'subcategory', e.target.value)}
+                                                className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30"
+                                            >
+                                                <option value="">None</option>
+                                                {categoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <input
+                                                type="text"
+                                                value={item.price}
+                                                onChange={e => handleChange(item.id, 'price', e.target.value)}
+                                                className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30 font-bold text-primary"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex bg-zinc-50 border border-zinc-200 rounded p-0.5 overflow-hidden">
+                                                {['Veg', 'Non-Veg', 'Vegan'].map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => handleChange(item.id, 'dietary', type)}
+                                                        className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : 'bg-green-600 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
+                                                    >
+                                                        {type === 'Non-Veg' ? 'NV' : type === 'Vegan' ? 'VN' : 'V'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Image Editor Modal */}
+            <AnimatePresence>
+                {imageEditModal.open && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-zinc-200"
+                        >
+                            <div className="p-4 border-b border-zinc-100 flex justify-between items-center">
+                                <h3 className="font-bold text-zinc-900">Edit Dish Image</h3>
+                                <button onClick={() => setImageEditModal({ open: false, itemId: null, currentUrl: '' })} className="text-zinc-400 hover:text-zinc-900"><X size={20} /></button>
+                            </div>
+                            <div className="p-6">
+                                <div className="space-y-6">
+                                    <div className="aspect-video rounded-xl overflow-hidden border-4 border-zinc-100 shadow-inner bg-zinc-50 relative">
+                                        <img src={imageEditModal.currentUrl || '/logo.png'} className="w-full h-full object-cover" />
+                                        {uploading && (
+                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-3">
+                                                <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                                                <span className="text-white font-bold text-sm">{Math.round(uploadProgress)}%</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Image URL</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={imageEditModal.currentUrl}
+                                                    onChange={e => setImageEditModal(prev => ({ ...prev, currentUrl: e.target.value }))}
+                                                    className="flex-1 bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                                                    placeholder="Enter URL here..."
+                                                />
+                                                <button
+                                                    onClick={() => handleImageChange(imageEditModal.itemId, imageEditModal.currentUrl)}
+                                                    className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-zinc-800"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-100"></div></div>
+                                            <div className="relative flex justify-center text-[10px]"><span className="bg-white px-2 text-zinc-400 font-bold uppercase tracking-widest">or upload from device</span></div>
+                                        </div>
+
+                                        <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                            <div className="flex flex-col items-center justify-center pt-1">
+                                                <Upload className="text-zinc-400 mb-1" size={24} />
+                                                <p className="text-sm font-bold text-zinc-600">Click to upload photo</p>
+                                                <p className="text-[10px] text-zinc-400">PNG, JPG, JPEG (Max 10MB)</p>
+                                            </div>
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleBatchImageUpload} disabled={uploading} />
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 )}
@@ -360,6 +663,12 @@ const MenuManagement = () => {
                         Menu Items
                     </button>
                     <button
+                        onClick={() => setSubTab('bulk')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${subTab === 'bulk' ? 'bg-white shadow text-black' : 'text-zinc-500 hover:text-zinc-900'}`}
+                    >
+                        Bulk Edit
+                    </button>
+                    <button
                         onClick={() => setSubTab('categories')}
                         className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${subTab === 'categories' ? 'bg-white shadow text-black' : 'text-zinc-500 hover:text-zinc-900'}`}
                     >
@@ -392,6 +701,12 @@ const MenuManagement = () => {
 
             {subTab === 'categories' ? (
                 <CategoryManagement />
+            ) : subTab === 'bulk' ? (
+                <BulkMenuEditor
+                    items={items}
+                    categories={categories}
+                    onRefresh={fetchItems}
+                />
             ) : (
                 <>
                     {/* Bulk Action Bar */}

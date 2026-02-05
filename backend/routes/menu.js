@@ -41,45 +41,51 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
                 let priceStr = price.toString().trim();
                 if (!priceStr.startsWith('₹')) priceStr = `₹${priceStr}`;
 
-                const id = `item-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
+                // Deduplicate by name within the same sheet
+                const existingIndex = items.findIndex(i => i.name.toLowerCase() === name.trim().toLowerCase());
 
-                let dietary = "Veg";
-                const lowerName = name.toLowerCase();
-                if (lowerName.includes('chicken') || lowerName.includes('prawn') || lowerName.includes('fish') || lowerName.includes('squid') || lowerName.includes('octopus') || lowerName.includes('lamb') || lowerName.includes('egg') || lowerName.includes('non-veg')) {
-                    dietary = "Non-Veg";
-                }
-
-                items.push({
-                    id,
+                const itemData = {
                     name: name.trim(),
                     description: desc.trim() || `${category} ${subcategory ? '(' + subcategory + ')' : ''} item`,
                     price: priceStr,
                     category: category.trim(),
                     subcategory: subcategory.trim(),
-                    dietary,
+                    dietary: "Veg",
                     image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
-                });
+                };
+
+                const lowerName = name.toLowerCase();
+                if (lowerName.includes('chicken') || lowerName.includes('prawn') || lowerName.includes('fish') || lowerName.includes('squid') || lowerName.includes('octopus') || lowerName.includes('lamb') || lowerName.includes('egg') || lowerName.includes('non-veg')) {
+                    itemData.dietary = "Non-Veg";
+                }
+
+                if (existingIndex > -1) {
+                    // Update existing with better data
+                    if (desc) items[existingIndex].description = desc.trim();
+                    // Update price if it was a placeholder or different
+                    items[existingIndex].price = priceStr;
+                } else {
+                    // Generate a STABLE ID based on name and category to avoid duplicates on re-import
+                    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                    itemData.id = `item-${slug}`;
+                    items.push(itemData);
+                }
             };
 
-            // 1. Starters Column (Col 5 and 6) & Other Parallel Columns
-            // Based on inspection, we scan rows and look for data in specific column pairs
-            for (let i = 0; i < rawData.length; i++) {
+            // Section 1: Matrix Section (Rows 0-59)
+            for (let i = 0; i < 60 && i < rawData.length; i++) {
                 const row = rawData[i];
                 if (!row) continue;
+                if (row[5] && row[6]) addItem(menuItems, row[5], row[6], "Starters");
+                if (row[7] && row[8]) addItem(menuItems, row[7], row[8], "Beverages");
+            }
 
-                // Starters / General Items (Col 5 = Name, Col 6 = Price)
-                if (row[5] && row[6]) {
-                    addItem(menuItems, row[5], row[6], "Starters");
-                }
-
-                // Seafood / Specials (Col 1 = Name, Col 2 = Price)
-                if (row[1] && row[2]) {
-                    addItem(menuItems, row[1], row[2], "Specials");
-                }
-
-                // Beverages (Col 7 = Name, Col 8 = Price)
-                if (row[7] && row[8]) {
-                    addItem(menuItems, row[7], row[8], "Beverages");
+            // Section 2: List Section (Rows 60+)
+            for (let i = 60; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!row) continue;
+                if (row[1] && row[4] && !isNaN(parseFloat(row[4]))) {
+                    addItem(menuItems, row[1], row[4], "Starters", "", row[2] || "");
                 }
             }
         }

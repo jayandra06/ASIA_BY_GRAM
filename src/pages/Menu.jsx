@@ -1,18 +1,185 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import menuData from '../data/menu.json';
-import { ArrowLeft, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+
+// Mobile Menu Component (Only for QR Code Users)
+const MobileMenu = ({ tableNumber }) => {
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedDietary, setSelectedDietary] = useState('All');
+    const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
+    const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
+
+    const filteredDishes = menuData.filter(dish => {
+        // Filter by Category
+        if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) return false;
+
+        // Filter by Dietary
+        if (selectedDietary === 'All') return true;
+        if (selectedDietary === 'Veg' && (dish.dietary === 'Veg' || dish.dietary === 'Vegan')) return true;
+        if (selectedDietary === 'Non-Veg' && dish.dietary === 'Non-Veg') return true;
+
+        return false;
+    });
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+            {/* Header */}
+            <div className="bg-[#FDC55E] pt-8 pb-6 px-6 rounded-b-[2rem] shadow-sm flex flex-col items-center relative z-10">
+                <div className="bg-white/90 p-2 rounded-full shadow-lg mb-3">
+                    <img src="/logo.png" alt="Asia By Gram" className="w-16 h-16 object-contain" />
+                </div>
+                <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Asia By Gram</h1>
+                <p className="text-sm text-zinc-800/80 font-medium mb-1">Taste the Best of Asia</p>
+                {tableNumber && (
+                    <div className="bg-black/10 px-3 py-1 rounded-full mt-2">
+                        <p className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Table {tableNumber}</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 p-6">
+                <AnimatePresence mode="wait">
+                    {!selectedCategory ? (
+                        <motion.div
+                            key="categories"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-3"
+                        >
+                            {/* Dietary Filters */}
+                            <div className="flex gap-2 mb-6 justify-center">
+                                {dietaryOptions.map(option => (
+                                    <button
+                                        key={option}
+                                        onClick={() => setSelectedDietary(option)}
+                                        className={`flex-1 max-w-[100px] py-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${selectedDietary === option
+                                            ? 'bg-zinc-900 text-white border-zinc-900 shadow-md'
+                                            : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+                                            }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <h2 className="text-lg font-bold text-zinc-900 mb-4 px-1">Menu Categories</h2>
+                            <div className="grid gap-3">
+                                {categories.map((cat, i) => (
+                                    <motion.button
+                                        key={cat}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className="w-full bg-white p-4 rounded-xl shadow-sm border border-zinc-100 flex items-center justify-between group active:scale-[0.98] transition-all"
+                                    >
+                                        <span className="font-bold text-zinc-800 text-left">{cat}</span>
+                                        <div className="bg-gray-50 p-1.5 rounded-full text-zinc-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                                            <ChevronRight size={16} />
+                                        </div>
+                                    </motion.button>
+                                ))}
+                            </div>
+
+                            {/* Review Button */}
+                            <div className="pt-6 pb-10">
+                                <a
+                                    href="https://g.page/r/Cd0d32QitG9SEAE/review"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full bg-blue-600 text-white p-4 rounded-xl shadow-lg flex items-center justify-center gap-2 font-bold hover:bg-blue-700 transition-colors active:scale-[0.98]"
+                                >
+                                    <span>Rate your experience</span>
+                                    <div className="flex">★★★★★</div>
+                                </a>
+                                <p className="text-center text-xs text-zinc-400 mt-2">Tap to leave a Google Review</p>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="items"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="space-y-4"
+                        >
+                            <div className="flex items-center gap-2 mb-4">
+                                <button
+                                    onClick={() => setSelectedCategory(null)}
+                                    className="p-2 -ml-2 text-zinc-500 hover:text-zinc-900 transition-colors"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <h2 className="text-xl font-bold text-zinc-900">{selectedCategory}</h2>
+                            </div>
+
+                            <div className="grid gap-4 pb-20">
+                                {filteredDishes.map(dish => (
+                                    <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
+                                        {dish.image && (
+                                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                                                <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
+                                                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'}`} />
+                                                </div>
+                                                <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
+                                            </div>
+                                            <div className="flex justify-between items-end mt-3">
+                                                <span className="font-bold text-primary-dark">{dish.price}</span>
+                                                <button
+                                                    onClick={() => alert(`Added ${dish.name} to order`)}
+                                                    className="bg-zinc-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-black transition-colors"
+                                                >
+                                                    ADD
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+};
 
 const Menu = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const tableNumber = searchParams.get('table');
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Default Desktop View State
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const categories = ['All', 'Signature Bowls', 'Starters', 'Seafood Specials', 'Beverages', 'Mocktails', 'Steam Boat'];
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // If table number exists OR detection checks mobile width, show Mobile Menu
+    if (tableNumber || isMobile) {
+        return <MobileMenu tableNumber={tableNumber} />;
+    }
+
+    const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuData.filter(dish => {

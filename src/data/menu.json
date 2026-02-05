@@ -1,27 +1,18 @@
 [
   {
     "id": "item-vegan-tofu-wraps",
-    "name": "Vegan tofu wraps",
+    "name": "Vegan Tofu Wraps",
     "description": "Starters item",
-    "price": "₹319",
+    "price": "₹220",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-spicy-veggie-sausage",
-    "name": "Spicy veggie sausage",
+    "id": "item-korean-chicken-bites",
+    "name": "Korean Chicken Bites",
     "description": "Starters item",
     "price": "₹349",
-    "category": "Starters",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-korean-chicken-bites",
-    "name": "Korean chicken bites",
-    "description": "Starters item",
-    "price": "₹429",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
@@ -30,7 +21,7 @@
     "id": "item-tapokki-korean-rice-cake",
     "name": "Tapokki Korean Rice Cake",
     "description": "Starters item",
-    "price": "₹349",
+    "price": "₹249",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
@@ -39,23 +30,23 @@
     "id": "item-indie-fries",
     "name": "Indie Fries",
     "description": "Starters item",
-    "price": "₹399",
+    "price": "₹199",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
     "id": "item-kim-chi-mild",
-    "name": "Kim-chi Mild",
+    "name": "Kim-Chi Mild",
     "description": "Starters item",
-    "price": "₹269",
+    "price": "₹299",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
     "id": "item-kim-chi-double-spice",
-    "name": "Kim-chi Double Spice",
+    "name": "Kim-Chi Double Spice",
     "description": "Starters item",
     "price": "₹299",
     "category": "Starters",
@@ -66,25 +57,25 @@
     "id": "item-crispy-honey-potato",
     "name": "Crispy Honey Potato",
     "description": "Starters item",
-    "price": "₹349",
+    "price": "₹299",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
     "id": "item-tai-pai-chicken",
-    "name": "Tai Pai Chicken",
+    "name": "Tai-Pai Chicken",
     "description": "Starters item",
-    "price": "₹429",
+    "price": "₹349",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-hong-kong-chilli-chicken",
-    "name": "Hong Kong Chilli Chicken",
+    "id": "item-hong-kong-chilly-chicken",
+    "name": "Hong Kong Chilly Chicken",
     "description": "Starters item",
-    "price": "₹429",
+    "price": "₹349",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
@@ -93,70 +84,61 @@
     "id": "item-dragon-chicken",
     "name": "Dragon Chicken",
     "description": "Starters item",
-    "price": "₹429",
+    "price": "₹349",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-crispy-prawn-with-sweet-chilli-sauce",
-    "name": "Crispy Prawn with Sweet Chilli Sauce",
+    "id": "item-crispy-queen-sweet-chilly-prawn",
+    "name": "Crispy Queen Sweet Chilly Prawn",
     "description": "Starters item",
-    "price": "₹699",
+    "price": "₹369",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
     "id": "item-crispy-fired-chicken-with-honey-sauce",
-    "name": "Crispy Fired Chicken with Honey Sauce",
+    "name": "Crispy Fired Chicken With Honey Sauce",
     "description": "Starters item",
-    "price": "₹459",
+    "price": "₹349",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-crispy-chicken-momo",
-    "name": "Crispy Chicken Momo",
-    "description": "Starters item",
-    "price": "₹299",
-    "category": "Starters",
+    "id": "item-chicken-momos-6pcs",
+    "name": "Chicken Momos 6pcs",
+    "description": "Fried Momos item",
+    "price": "₹199",
+    "category": "Fried Momos",
     "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-veg-manchuria",
-    "name": "Veg Manchuria",
+    "id": "item-veg-manchuria-6pcs",
+    "name": "Veg Manchuria 6pcs",
     "description": "Starters item",
-    "price": "₹279",
+    "price": "₹249",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-shanghai-roll-veg",
-    "name": "Shanghai Roll veg",
+    "id": "item-veg-spring-roll-8pcs",
+    "name": "Veg Spring Roll 8pcs",
     "description": "Starters item",
-    "price": "₹319",
+    "price": "₹149",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-veg-spring-roll",
-    "name": "Veg Spring Roll",
+    "id": "item-chicken-spring-roll-8pcs",
+    "name": "Chicken Spring Roll 8pcs",
     "description": "Starters item",
-    "price": "₹299",
-    "category": "Starters",
-    "dietary": "Veg",
-    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-chicken-spring-roll",
-    "name": "Chicken Spring Roll",
-    "description": "Starters item",
-    "price": "₹329",
+    "price": "₹199",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
@@ -165,7 +147,7 @@
     "id": "item-won-ton-chicken",
     "name": "Won-Ton Chicken",
     "description": "Starters item",
-    "price": "₹399",
+    "price": "₹199",
     "category": "Starters",
     "dietary": "Non-Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
@@ -174,117 +156,585 @@
     "id": "item-won-ton-veg",
     "name": "Won-Ton Veg",
     "description": "Starters item",
+    "price": "₹149",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-vegan-protein-finger-fries-10pcs",
+    "name": "Vegan Protein Finger Fries 10pcs",
+    "description": "Starters item",
+    "price": "₹219",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-vegan-spicy-sausage",
+    "name": "Vegan Spicy Sausage",
+    "description": "Starters item",
+    "price": "₹320",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-spritz",
+    "name": "Spritz",
+    "description": "Beverages item",
+    "price": "₹89",
+    "category": "Beverages",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-build-your-bowl-1-5-per-gram",
+    "name": "Build Your Bowl 1.5 Per Gram",
+    "description": "Main Course item",
+    "price": "₹1500",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-boba",
+    "name": "Boba",
+    "description": "Beverages item",
+    "price": "₹349",
+    "category": "Beverages",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-asian-pyaala",
+    "name": "Asian Pyaala",
+    "description": "Main Course item",
+    "price": "₹700",
+    "category": "Main Course",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-whole-lobster-served-with-special-sauce",
+    "name": "Whole Lobster Served With Special Sauce",
+    "description": "Main Course item",
+    "price": "₹1199",
+    "category": "Main Course",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-all-you-can-eat-buffet-899",
+    "name": "All You Can Eat Buffet @899",
+    "description": "Main Course item",
+    "price": "₹899",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-royal-spiced-ginger",
+    "name": "Royal Spiced Ginger",
+    "description": "Beverages item",
+    "price": "₹120",
+    "category": "Beverages",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-water-regular",
+    "name": "Water Regular",
+    "description": "Beverages item",
+    "price": "₹30",
+    "category": "Beverages",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-kids-ramen-bowl",
+    "name": "Kids Ramen Bowl",
+    "description": "Main Course item",
+    "price": "₹299",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-dragon-mushroom",
+    "name": "Dragon Mushroom",
+    "description": "Starters item",
+    "price": "₹319",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-ramen-bowl",
+    "name": "Ramen Bowl",
+    "description": "Main Course item",
+    "price": "₹0",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-ramen-bowl-chicken",
+    "name": "Ramen Bowl (Chicken)",
+    "description": "Main Course item",
+    "price": "₹699",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-ramen-bowl-sea-food",
+    "name": "Ramen Bowl (Sea Food)",
+    "description": "Main Course item",
+    "price": "₹899",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-ramen-bowl-veg",
+    "name": "Ramen Bowl (Veg)",
+    "description": "Main Course item",
+    "price": "₹599",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-crispy-fish-fillet",
+    "name": "Crispy Fish Fillet",
+    "description": "Main Course item",
+    "price": "₹399",
+    "category": "Main Course",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chocolate-bao",
+    "name": "Chocolate Bao",
+    "description": "Desserts item",
+    "price": "₹145",
+    "category": "Desserts",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1563729768-74915bd6c754?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-water-bottle",
+    "name": "Water Bottle",
+    "description": "Beverages item",
+    "price": "₹40",
+    "category": "Beverages",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-noodle-bowl",
+    "name": "Chicken Noodle Bowl",
+    "description": "Main Course item",
+    "price": "₹585",
+    "category": "Main Course",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-steam-boat-1-5-per-gram",
+    "name": "Steam Boat 1.5 Per Gram",
+    "description": "Main Course item",
+    "price": "₹1.5",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-appollo-fish",
+    "name": "Appollo Fish",
+    "description": "Starters item",
+    "price": "₹375",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-puket-fish",
+    "name": "Puket Fish",
+    "description": "Starters item",
+    "price": "₹375",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-gobi-65",
+    "name": "Gobi 65",
+    "description": "Starters item",
     "price": "₹299",
     "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "item-whole-lobster-with-indie-fries-and-salad",
-    "name": "Whole lobster with Indie fries and salad",
-    "description": "Premium seafood special",
-    "price": "₹1199",
-    "category": "Seafood Specials",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-diced-fried-octopus-with-quinoa-salad",
-    "name": "Diced fried octopus with quinoa salad",
-    "description": "Premium seafood special",
-    "price": "₹699",
-    "category": "Seafood Specials",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-asian-pyaala-cooked-with-sea-food-comes-with-spicy-schezwan-sauce",
-    "name": "Asian Pyaala cooked with sea food comes with spicy schezwan sauce",
-    "description": "Premium seafood special",
-    "price": "₹499",
-    "category": "Seafood Specials",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-whole-lobster-add-on",
-    "name": "Whole lobster  (add-on)",
-    "description": "Premium seafood special",
-    "price": "₹900",
-    "category": "Seafood Specials",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1534604973900-c41ab4cdd90b?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-boba-various-flavors",
-    "name": "Boba (Various Flavors)",
-    "description": "Choice of Mango, Kiwi, Watermelon, Green Apple, Litchi, Passion Fruit, Coffee, Chocolate.",
-    "price": "₹350",
-    "category": "Beverages",
-    "dietary": "Veg",
-    "image": "https://images.unsplash.com/photo-1596067337341-3657788c0a87?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-coconut-water-330ml",
-    "name": "Coconut Water (330ml)",
-    "description": "Refreshing coconut water",
-    "price": "₹160",
-    "category": "Beverages",
-    "dietary": "Veg",
-    "image": "https://images.unsplash.com/photo-1526318896980-cf78c088247c?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    "id": "item-spitz",
-    "name": "Spitz",
-    "description": "Beverages item",
-    "price": "₹89",
-    "category": "Beverages",
+    "id": "item-mushroom-65",
+    "name": "Mushroom 65",
+    "description": "Starters item",
+    "price": "₹299",
+    "category": "Starters",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "bowl-veggie",
-    "name": "Veggie Noodle Bowl",
-    "description": "Broth: Coconut , Mushroom , Corn , Tomato. Ingredients: Veggie balls, Lotus root,Bamboo shoot,Bok-Choi,Bean sprouts. Noodles: Udon Noodles",
-    "price": "₹468",
-    "category": "Signature Bowls",
+    "id": "item-panner-65",
+    "name": "Panner 65",
+    "description": "Starters item",
+    "price": "₹299",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-potato-65",
+    "name": "Potato 65",
+    "description": "Starters item",
+    "price": "₹299",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-65",
+    "name": "Chicken 65",
+    "description": "Starters item",
+    "price": "₹399",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-spicy-vegan-scrambled-egg",
+    "name": "Spicy Vegan Scrambled Egg",
+    "description": "Starters item",
+    "price": "₹275",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-spicy-vegan-shawarma",
+    "name": "Spicy Vegan Shawarma",
+    "description": "Shawarma item",
+    "price": "₹220",
+    "category": "Shawarma",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1529006557810-274b9b2eb783?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-mussels-tossed-in-spicy-tomato-sauce",
+    "name": "Mussels Tossed In Spicy Tomato Sauce",
+    "description": "Starters item",
+    "price": "₹399",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-cashew-meat-shawarma",
+    "name": "Cashew Meat Shawarma",
+    "description": "Shawarma item",
+    "price": "₹220",
+    "category": "Shawarma",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1529006557810-274b9b2eb783?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-crispy-baby-corn",
+    "name": "Crispy Baby Corn",
+    "description": "Starters item",
+    "price": "₹219",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-thai-chilli-lotus-stem",
+    "name": "Thai Chilli Lotus Stem",
+    "description": "Starters item",
+    "price": "₹249",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-555",
+    "name": "Chicken 555",
+    "description": "Starters item",
+    "price": "₹349",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-lollipop",
+    "name": "Chicken Lollipop",
+    "description": "Starters item",
+    "price": "₹349",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-crispy-chicken-platter",
+    "name": "Crispy Chicken Platter",
+    "description": "Platters item",
+    "price": "₹800",
+    "category": "Platters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1544025162-d7669d4dd50b?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-tossed-chicken-platter",
+    "name": "Tossed Chicken Platter",
+    "description": "Platters item",
+    "price": "₹800",
+    "category": "Platters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1544025162-d7669d4dd50b?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-tossed-sea-food-platter",
+    "name": "Tossed Sea Food Platter",
+    "description": "Platters item",
+    "price": "₹1099",
+    "category": "Platters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1544025162-d7669d4dd50b?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-crispy-sea-food-platter",
+    "name": "Crispy Sea Food Platter",
+    "description": "Platters item",
+    "price": "₹1099",
+    "category": "Platters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1544025162-d7669d4dd50b?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-vegan-keema-roti",
+    "name": "Vegan Keema Roti",
+    "description": "Shawarma item",
+    "price": "₹220",
+    "category": "Shawarma",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1529006557810-274b9b2eb783?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-cron-cheese-momos",
+    "name": "Cron Cheese Momos",
+    "description": "Fried Momos item",
+    "price": "₹189",
+    "category": "Fried Momos",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-masala-paneer-momos",
+    "name": "Masala Paneer Momos",
+    "description": "Fried Momos item",
+    "price": "₹189",
+    "category": "Fried Momos",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-cheese-momos",
+    "name": "Chicken Cheese Momos",
+    "description": "Fried Momos item",
+    "price": "₹189",
+    "category": "Fried Momos",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-tikka-momos",
+    "name": "Chicken Tikka Momos",
+    "description": "Fried Momos item",
+    "price": "₹189",
+    "category": "Fried Momos",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-oyster-mushroom-steak",
+    "name": "Oyster Mushroom Steak",
+    "description": "Starters item",
+    "price": "₹349",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-sea-food-shawarma",
+    "name": "Sea Food Shawarma",
+    "description": "Shawarma item",
+    "price": "₹349",
+    "category": "Shawarma",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1529006557810-274b9b2eb783?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-egg-munchuria",
+    "name": "Egg Munchuria",
+    "description": "Starters item",
+    "price": "₹220",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-chicken-meat-balls",
+    "name": "Chicken Meat Balls",
+    "description": "Starters item",
+    "price": "₹220",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-prawn-meat-balls",
+    "name": "Prawn Meat Balls",
+    "description": "Starters item",
+    "price": "₹220",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-crab-meat-balls",
+    "name": "Crab Meat Balls",
+    "description": "Starters item",
+    "price": "₹220",
+    "category": "Starters",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-vegan-protien-munchuria",
+    "name": "Vegan Protien Munchuria",
+    "description": "Starters item",
+    "price": "₹299",
+    "category": "Starters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-tossed-crispy-chicken-momo",
+    "name": "Tossed Crispy Chicken Momo",
+    "description": "Fried Momos item",
+    "price": "₹199",
+    "category": "Fried Momos",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-tossed-cron-cheese-momos",
+    "name": "Tossed Cron Cheese Momos",
+    "description": "Fried Momos item",
+    "price": "₹199",
+    "category": "Fried Momos",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-tossed-chicken-tikka-momos",
+    "name": "Tossed Chicken Tikka Momos",
+    "description": "Fried Momos item",
+    "price": "₹199",
+    "category": "Fried Momos",
+    "dietary": "Non-Veg",
+    "image": "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-momos-platter-tossed",
+    "name": "Momos Platter Tossed",
+    "description": "Platters item",
+    "price": "₹549",
+    "category": "Platters",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1544025162-d7669d4dd50b?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-classic-ramen-bowl",
+    "name": "Classic Ramen Bowl",
+    "description": "Main Course item",
+    "price": "₹0",
+    "category": "Main Course",
     "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "bowl-vegan",
-    "name": "Vegan Noodle Bowl",
-    "description": "Broth: Coconut , Mushroom , Corn , Tomato. Ingredients: Plant Based meat ,Soya Manchurian balls, Bok-Choi,Beans sprouts, Baby corn. Noodles: Rice Noodles",
-    "price": "₹468",
-    "category": "Signature Bowls",
-    "dietary": "Vegan",
+    "id": "item-classic-ramen-bowl-veg",
+    "name": "Classic Ramen Bowl (Veg)",
+    "description": "Main Course item",
+    "price": "₹490",
+    "category": "Main Course",
+    "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "bowl-chicken",
-    "name": "Chicken Noodle Bowl",
-    "description": "Broth: Prawns , Chicken , Coconut , Mushroom , Corn , Tomato. Ingredients: Chicken strips, Chicken meat balls,Fried chicken momos,small omlettes. Noodles: Buckwheat Noodles",
-    "price": "₹585",
-    "category": "Signature Bowls",
-    "dietary": "Non-Veg",
+    "id": "item-classic-ramen-bowl-chicken",
+    "name": "Classic Ramen Bowl (Chicken)",
+    "description": "Main Course item",
+    "price": "₹599",
+    "category": "Main Course",
+    "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "bowl-seafood",
-    "name": "Seafood Noodle Bowl",
-    "description": "Broth: Prawns , Chicken , Coconut , Mushroom , Corn , Tomato. Ingredients: Fish balls, Crab meat balls, Prawn sticks, Squid slices, Mussels. Noodles: Sticky rice Noodles",
-    "price": "₹585",
-    "category": "Signature Bowls",
-    "dietary": "Non-Veg",
+    "id": "item-shoyu-ramen-bowl",
+    "name": "Shoyu Ramen Bowl",
+    "description": "Main Course item",
+    "price": "₹599",
+    "category": "Main Course",
+    "dietary": "Veg",
     "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
   },
   {
-    "id": "steamboat-generic",
-    "name": "Asian Steam Boat (Hot Pot)",
-    "description": "Authentic interactive hot pot. Min 800gms for 2. Includes curated broth and your choice of fresh artisanal noodles.",
-    "price": "₹1.80/gm",
-    "category": "Steam Boat",
-    "dietary": "Non-Veg",
-    "image": "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=800"
+    "id": "item-miso-ramen-bowl",
+    "name": "Miso Ramen Bowl",
+    "description": "Main Course item",
+    "price": "₹0",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-miso-ramen-bowl-veg",
+    "name": "Miso Ramen Bowl (Veg)",
+    "description": "Main Course item",
+    "price": "₹699",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-miso-ramen-bowl-chicken",
+    "name": "Miso Ramen Bowl (Chicken)",
+    "description": "Main Course item",
+    "price": "₹599",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    "id": "item-miso-ramen-bowl-sea-food",
+    "name": "Miso Ramen Bowl (Sea Food)",
+    "description": "Main Course item",
+    "price": "₹499",
+    "category": "Main Course",
+    "dietary": "Veg",
+    "image": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
   }
 ]

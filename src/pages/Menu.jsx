@@ -135,12 +135,6 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
                                             </div>
                                             <div className="flex justify-between items-end mt-3">
                                                 <span className="font-bold text-primary-dark">{dish.price}</span>
-                                                <button
-                                                    onClick={() => alert(`Added ${dish.name} to order`)}
-                                                    className="bg-zinc-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-black transition-colors"
-                                                >
-                                                    ADD
-                                                </button>
                                             </div>
                                         </div>
                                     </div>

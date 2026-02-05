@@ -22,7 +22,7 @@ const InstagramSection = () => {
                     <div>
                         <h2 className="text-primary font-bold tracking-widest uppercase text-3xl md:text-4xl mb-4">Social Feed</h2>
                         <h3 className="text-3xl md:text-4xl font-asian font-bold text-black flex items-center justify-center gap-3">
-                            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-primary transition-colors">
+                            <a href="https://www.instagram.com/p/DQieC8XCb8B/" target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-primary transition-colors">
                                 <Instagram className="text-primary" /> @AsiaByGram
                             </a>
                         </h3>
@@ -72,7 +72,7 @@ const InstagramSection = () => {
 
                     {/* "Follow Us" Card to fill the 8th slot */}
                     <motion.a
-                        href="https://instagram.com"
+                        href="https://www.instagram.com/p/DQieC8XCb8B/"
                         target="_blank"
                         rel="noreferrer"
                         initial={{ opacity: 0, scale: 0.9 }}

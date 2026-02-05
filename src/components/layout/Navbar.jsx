@@ -57,7 +57,7 @@ const Navbar = () => {
 
                     {/* Actions - Right Aligned */}
                     <div className="hidden md:flex items-center gap-8">
-                        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-zinc-600 hover:text-black transition-colors">
+                        <a href="https://www.instagram.com/p/DQieC8XCb8B/" target="_blank" rel="noreferrer" className="text-zinc-600 hover:text-black transition-colors">
                             <Instagram size={22} strokeWidth={1.5} />
                         </a>
                         <button

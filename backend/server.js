@@ -2,10 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import dns from 'dns';
+
+dns.setServers(['8.8.8.8', '1.1.1.1']); // Set public DNS to resolve Atlas SRV records
 import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
 import reservationRoutes from './routes/reservations.js';
 import tableRoutes from './routes/tables.js';
+import categoryRoutes from './routes/categories.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,6 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check
 app.get('/', (req, res) => {

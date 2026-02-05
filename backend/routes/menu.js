@@ -1,11 +1,11 @@
 import express from 'express';
 import Menu from '../models/Menu.js';
+import Category from '../models/Category.js';
 import { verifyToken } from '../middleware/auth.js';
-
-const router = express.Router();
 import multer from 'multer';
 import * as XLSX from 'xlsx';
 
+const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Bulk Upload via Excel (Admin only)
@@ -18,53 +18,115 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet);
 
-        if (!data || data.length === 0) {
+        // Try reading with default headers first
+        const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        if (!rawData || rawData.length === 0) {
             return res.status(400).json({ error: 'Excel sheet is empty' });
         }
 
-        let updatedCount = 0;
-        let createdCount = 0;
-        const errors = [];
+        let menuItems = [];
 
-        for (const item of data) {
-            // Basic validation
-            if (!item.name || !item.price || !item.category) {
-                errors.push(`Skipping item "${item.name || 'Unknown'}": Missing required fields`);
-                continue;
-            }
+        // Detection logic: Is it the multi-column "Asian Menu" or the "Standard Template"?
+        const isStandardTemplate = rawData[0] && (rawData[0].includes('name') && rawData[0].includes('category'));
 
-            // Ensure ID exists for upsert, or generate one if creating new without ID
-            const filter = item.id ? { id: item.id } : { name: item.name }; // Fallback to name if no ID for duplicate check
+        if (isStandardTemplate) {
+            // Standard format handling
+            menuItems = XLSX.utils.sheet_to_json(sheet);
+        } else {
+            // Multi-column "Asian Menu" handling (Custom parsing logic)
+            const addItem = (items, name, price, category, subcategory = "", desc = "") => {
+                if (!name || !price || isNaN(parseFloat(price.toString().replace(/[^0-9.]/g, '')))) return;
 
-            // If no ID provided in excel, we can't really "upsert" by ID reliably unless we assume name uniqueness. 
-            // Better strategy: If ID is present, update/upsert by ID. If not, create new.
-            // Let's stick to: ID is key. 
+                let priceStr = price.toString().trim();
+                if (!priceStr.startsWith('₹')) priceStr = `₹${priceStr}`;
 
-            if (item.id) {
-                const result = await Menu.updateOne(
-                    { id: item.id },
-                    { $set: item },
-                    { upsert: true }
-                );
-                if (result.upsertedCount > 0) createdCount++;
-                else updatedCount++;
-            } else {
-                // If no ID, generate one (simple timestamp based for now, or shortid if we had it)
-                // Assuming the frontend/db handles ID generation or we do it here. 
-                // The current model requires 'id' as a string.
-                item.id = item.id || `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const newItem = new Menu(item);
-                await newItem.save();
-                createdCount++;
+                const id = `item-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}-${Math.random().toString(36).substr(2, 4)}`;
+
+                let dietary = "Veg";
+                const lowerName = name.toLowerCase();
+                if (lowerName.includes('chicken') || lowerName.includes('prawn') || lowerName.includes('fish') || lowerName.includes('squid') || lowerName.includes('octopus') || lowerName.includes('lamb') || lowerName.includes('egg') || lowerName.includes('non-veg')) {
+                    dietary = "Non-Veg";
+                }
+
+                items.push({
+                    id,
+                    name: name.trim(),
+                    description: desc.trim() || `${category} ${subcategory ? '(' + subcategory + ')' : ''} item`,
+                    price: priceStr,
+                    category: category.trim(),
+                    subcategory: subcategory.trim(),
+                    dietary,
+                    image: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800"
+                });
+            };
+
+            // 1. Starters Column (Col 5 and 6) & Other Parallel Columns
+            // Based on inspection, we scan rows and look for data in specific column pairs
+            for (let i = 0; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!row) continue;
+
+                // Starters / General Items (Col 5 = Name, Col 6 = Price)
+                if (row[5] && row[6]) {
+                    addItem(menuItems, row[5], row[6], "Starters");
+                }
+
+                // Seafood / Specials (Col 1 = Name, Col 2 = Price)
+                if (row[1] && row[2]) {
+                    addItem(menuItems, row[1], row[2], "Specials");
+                }
+
+                // Beverages (Col 7 = Name, Col 8 = Price)
+                if (row[7] && row[8]) {
+                    addItem(menuItems, row[7], row[8], "Beverages");
+                }
             }
         }
 
+        // Processing & Database Sync
+        let updatedCount = 0;
+        let createdCount = 0;
+        const categoryMap = new Map(); // name -> Set of subcategories
+
+        for (const item of menuItems) {
+            if (!item.name || !item.price || !item.category) continue;
+
+            // Track Category/Subcategory for sync
+            if (!categoryMap.has(item.category)) {
+                categoryMap.set(item.category, new Set());
+            }
+            if (item.subcategory) {
+                categoryMap.get(item.category).add(item.subcategory);
+            }
+
+            // Upsert Menu Item
+            const filter = item.id ? { id: item.id } : { name: item.name, category: item.category };
+            const result = await Menu.updateOne(
+                filter,
+                { $set: item },
+                { upsert: true }
+            );
+
+            if (result.upsertedCount > 0) createdCount++;
+            else updatedCount++;
+        }
+
+        // Sync Categories collection
+        for (const [catName, subcatsSet] of categoryMap.entries()) {
+            await Category.updateOne(
+                { name: catName },
+                {
+                    $addToSet: { subcategories: { $each: Array.from(subcatsSet) } },
+                    $setOnInsert: { name: catName }
+                },
+                { upsert: true }
+            );
+        }
+
         res.json({
-            message: `Processed ${data.length} rows`,
-            stats: { updated: updatedCount, created: createdCount },
-            errors
+            message: `Processed ${menuItems.length} items`,
+            stats: { updated: updatedCount, created: createdCount, categories: categoryMap.size }
         });
 
     } catch (err) {

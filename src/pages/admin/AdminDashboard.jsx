@@ -1120,36 +1120,39 @@ const QRCodeManagement = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 print:grid-cols-3 print:gap-8">
-                {tables.map(table => (
-                    <div key={table.number} className="bg-white border border-zinc-200 p-6 rounded-xl flex flex-col items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="bg-white p-2 rounded-lg border border-zinc-100">
-                            <QRCodeCanvas
-                                value={table.url}
-                                size={150}
-                                level={"H"}
-                                includeMargin={true}
-                            />
-                        </div>
-                        <div className="text-center w-full">
-                            <h3 className="font-bold text-xl text-zinc-900">TABLE {table.number}</h3>
-                            <p className="text-xs text-zinc-400 mt-1 truncate max-w-[150px] mx-auto mb-3">{table.url}</p>
-                            <div className="flex gap-2 justify-center w-full">
-                                <button
-                                    onClick={() => copyToClipboard(table.url)}
-                                    className="text-xs text-primary hover:text-black hover:bg-primary/20 px-3 py-1 rounded transition-colors flex items-center gap-1 font-bold border border-primary/20"
-                                >
-                                    <Copy size={12} /> Copy
-                                </button>
-                                <button
-                                    onClick={() => deleteTable(table.number)}
-                                    className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors flex items-center gap-1 border border-red-100"
-                                >
-                                    <Trash2 size={12} /> Remove
-                                </button>
+                {tables.map(table => {
+                    const dynamicUrl = `${window.location.origin}/menu?table=${table.number}`;
+                    return (
+                        <div key={table.number} className="bg-white border border-zinc-200 p-6 rounded-xl flex flex-col items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                                <QRCodeCanvas
+                                    value={dynamicUrl}
+                                    size={150}
+                                    level={"H"}
+                                    includeMargin={true}
+                                />
+                            </div>
+                            <div className="text-center w-full">
+                                <h3 className="font-bold text-xl text-zinc-900">TABLE {table.number}</h3>
+                                <p className="text-xs text-zinc-400 mt-1 truncate max-w-[150px] mx-auto mb-3">{dynamicUrl}</p>
+                                <div className="flex gap-2 justify-center w-full">
+                                    <button
+                                        onClick={() => copyToClipboard(dynamicUrl)}
+                                        className="text-xs text-primary hover:text-black hover:bg-primary/20 px-3 py-1 rounded transition-colors flex items-center gap-1 font-bold border border-primary/20"
+                                    >
+                                        <Copy size={12} /> Copy
+                                    </button>
+                                    <button
+                                        onClick={() => deleteTable(table.number)}
+                                        className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors flex items-center gap-1 border border-red-100"
+                                    >
+                                        <Trash2 size={12} /> Remove
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
                 {tables.length === 0 && (
                     <div className="col-span-full py-20 text-center text-zinc-400">
                         No tables generated yet.

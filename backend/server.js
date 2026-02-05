@@ -16,9 +16,19 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/asia_by_gram')
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('Could not connect to MongoDB', err));
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/asia_by_gram';
+console.log('Attempting to connect to MongoDB...', MONGODB_URI.split('@')[1] || MONGODB_URI); // Log redacted URI
+
+mongoose.connect(MONGODB_URI, { family: 4 })
+    .then(() => console.log('✅ Connected to MongoDB Atlas'))
+    .catch((err) => {
+        console.error('❌ Could not connect to MongoDB');
+        console.error('Error details:', err.message);
+        if (err.message.includes('ECONNREFUSED') || err.message.includes('querySrv')) {
+            console.log('\nTIP: This error usually means your local DNS or Firewall is blocking MongoDB Atlas.');
+            console.log('Try switching to a different network or using a VPN.');
+        }
+    });
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -4,7 +4,7 @@ import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, E
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { storage } from '../../firebase';
+import { storage } from '../../firebaseConfig.js';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import QuatrefoilBackground from '../../components/ui/QuatrefoilBackground';
 import SparticlesEffect from '../../components/ui/SparticlesEffect';

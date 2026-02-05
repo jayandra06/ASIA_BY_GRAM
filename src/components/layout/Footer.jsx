@@ -69,9 +69,19 @@ const Footer = () => {
                 </div>
             </div>
 
-            <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center text-black text-sm">
-                <p>&copy; {new Date().getFullYear()} Asia By Gram. All rights reserved.</p>
-                <div className="flex gap-6 mt-4 md:mt-0">
+            <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center text-black text-sm relative">
+                {/* Left: Admin Login */}
+                <div className="w-full md:w-auto flex justify-center md:justify-start">
+                    <a href="/admin/login" className="bg-primary px-3 py-1 rounded text-black font-bold text-xs uppercase hover:bg-primary/80 transition-colors">Admin Login</a>
+                </div>
+
+                {/* Center: Copyright */}
+                <p className="mt-4 md:mt-0 md:absolute md:left-1/2 md:-translate-x-1/2 text-center text-black/60 font-medium">
+                    &copy; {new Date().getFullYear()} Asia By Gram. All rights reserved.
+                </p>
+
+                {/* Right: Links */}
+                <div className="flex items-center gap-6 mt-4 md:mt-0 w-full md:w-auto justify-center md:justify-end">
                     <a href="#" className="hover:text-gray-600">Privacy Policy</a>
                     <a href="#" className="hover:text-gray-600">Terms of Service</a>
                 </div>

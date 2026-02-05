@@ -2,10 +2,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import menuData from '../data/menu.json';
 import { ArrowLeft, Search, Filter } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const Menu = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const tableNumber = searchParams.get('table');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +41,11 @@ const Menu = () => {
                         <h1 className="text-5xl md:text-6xl font-asian font-bold text-black uppercase tracking-tighter">
                             Our <span className="text-primary italic">Menu</span>
                         </h1>
+                        {tableNumber && (
+                            <div className="mt-2 text-2xl font-bold bg-primary/20 text-primary-dark inline-block px-4 py-2 rounded-lg border border-primary/20">
+                                Table #{tableNumber}
+                            </div>
+                        )}
                         <p className="text-zinc-600 mt-4 max-w-lg">
                             Explore our curated selection of authentic Asian delicacies, hand-crafted with the finest ingredients.
                         </p>

@@ -6,6 +6,8 @@ const ReservationModal = ({ isOpen, onClose }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
+        phone: '',
         people: '2',
         date: '',
         time: '',
@@ -15,19 +17,53 @@ const ReservationModal = ({ isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate API call
-        setTimeout(() => {
+
+        try {
+            const response = await fetch('http://localhost:5000/api/reservations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    guests: formData.people,
+                    date: formData.date,
+                    time: formData.time,
+                    specialRequests: formData.requirements
+                }),
+            });
+
+            if (response.ok) {
+                setIsSuccess(true);
+                setTimeout(() => {
+                    onClose();
+                    setIsSuccess(false);
+                    setStep(1);
+                    setFormData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        people: '2',
+                        date: '',
+                        time: '',
+                        requirements: ''
+                    });
+                }, 3000);
+            } else {
+                const errorData = await response.json();
+                alert(`Reservation failed: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Reservation error:', error);
+            alert('Failed to connect to the server. Please try again.');
+        } finally {
             setIsSubmitting(false);
-            setIsSuccess(true);
-            setTimeout(() => {
-                onClose();
-                setIsSuccess(false);
-                setStep(1);
-            }, 3000);
-        }, 1500);
+        }
     };
 
     const handleChange = (e) => {
@@ -64,10 +100,10 @@ const ReservationModal = ({ isOpen, onClose }) => {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                        className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
                     >
                         {/* Header */}
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
+                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50 sticky top-0 z-10 backdrop-blur-md">
                             <div>
                                 <h2 className="text-2xl font-display font-bold text-white">Reserve a Table</h2>
                                 <p className="text-zinc-400 text-sm">Experience the soul of Asia</p>
@@ -149,6 +185,38 @@ const ReservationModal = ({ isOpen, onClose }) => {
                                         </div>
                                     </div>
 
+                                    {/* New Contact Fields */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                                <Send size={14} /> Email Address
+                                            </label>
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                placeholder="john@example.com"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors placeholder:text-zinc-600"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                                <Send size={14} /> Phone Number
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                name="phone"
+                                                placeholder="+91 99999 99999"
+                                                value={formData.phone}
+                                                onChange={handleChange}
+                                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors placeholder:text-zinc-600"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                             <MessageSquare size={14} /> Special Requirements
@@ -189,7 +257,7 @@ const ReservationModal = ({ isOpen, onClose }) => {
                                     </div>
                                     <h3 className="text-2xl font-display font-bold text-white">Reservation Confirmed!</h3>
                                     <p className="text-zinc-400 max-w-xs">
-                                        We've received your request for {formData.people} people on {formData.date}. A confirmation email has been sent.
+                                        We've received your request for {formData.people} people on {formData.date}. A confirmation email has been sent to {formData.email}.
                                     </p>
                                     <button
                                         onClick={onClose}

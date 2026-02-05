@@ -4,6 +4,9 @@ import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import { ModalProvider } from './context/ModalContext';
+import { AuthProvider } from './context/AuthContext';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -39,11 +42,21 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <Router>
-      <ModalProvider>
-        <Layout>
-          <AnimatedRoutes />
-        </Layout>
-      </ModalProvider>
+      <AuthProvider>
+        <ModalProvider>
+          <Routes>
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+            {/* Public Routes wrapped in Main Layout */}
+            <Route path="/*" element={
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            } />
+          </Routes>
+        </ModalProvider>
+      </AuthProvider>
     </Router>
   );
 }

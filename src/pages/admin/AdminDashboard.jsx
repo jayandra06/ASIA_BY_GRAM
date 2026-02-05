@@ -1,11 +1,12 @@
 ﻿import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save, Sparkles } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { storage } from '../../firebaseConfig.js';
+import { storage, database } from '../../firebaseConfig.js';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref as dbRef, push, onValue, off, set } from "firebase/database";
 import QuatrefoilBackground from '../../components/ui/QuatrefoilBackground';
 import SparticlesEffect from '../../components/ui/SparticlesEffect';
 
@@ -152,6 +153,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
     const [imageEditModal, setImageEditModal] = useState({ open: false, itemId: null, currentUrl: '' });
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [generatingAI, setGeneratingAI] = useState(false);
 
     useEffect(() => {
         setLocalItems(items.map(item => ({ ...item })));
@@ -200,6 +202,57 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                 });
             }
         );
+    };
+
+    const handleGenerateAIImage = async () => {
+        const item = localItems.find(i => i.id === imageEditModal.itemId);
+        if (!item) return;
+
+        setGeneratingAI(true);
+        try {
+            // Create a descriptive prompt
+            const prompt = `A professional food photography of ${item.name}, ${item.description || 'a delicious asian dish'}. Elegant plating, 8k resolution, cinematic lighting, restaurant style.`;
+
+            // Push job request to Realtime Database for FireGen
+            const jobRef = push(dbRef(database, 'firegen/requests'));
+            const jobId = jobRef.key;
+
+            await set(jobRef, {
+                prompt: prompt,
+                type: 'image',
+                status: 'pending',
+                createdAt: Date.now()
+            });
+
+            // Listen for result
+            const resultRef = dbRef(database, `firegen/results/${jobId}`);
+            const unsubscribe = onValue(resultRef, (snapshot) => {
+                const result = snapshot.val();
+                if (result && result.status === 'completed' && result.url) {
+                    handleImageChange(item.id, result.url);
+                    setGeneratingAI(false);
+                    off(resultRef);
+                } else if (result && result.status === 'error') {
+                    alert("AI generation failed. Please try again.");
+                    setGeneratingAI(false);
+                    off(resultRef);
+                }
+            });
+
+            // Timeout after 60 seconds
+            setTimeout(() => {
+                off(resultRef);
+                if (generatingAI) {
+                    setGeneratingAI(false);
+                    alert("Generation timed out. FireGen might still be processing.");
+                }
+            }, 60000);
+
+        } catch (error) {
+            console.error("AI Generation error:", error);
+            alert("Failed to start AI generation.");
+            setGeneratingAI(false);
+        }
     };
 
     const handleSave = async () => {
@@ -398,15 +451,39 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                 <div className="space-y-6">
                                     <div className="aspect-video rounded-xl overflow-hidden border-4 border-zinc-100 shadow-inner bg-zinc-50 relative">
                                         <img src={imageEditModal.currentUrl || '/logo.png'} className="w-full h-full object-cover" />
-                                        {uploading && (
+                                        {(uploading || generatingAI) && (
                                             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-3">
                                                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-                                                <span className="text-white font-bold text-sm">{Math.round(uploadProgress)}%</span>
+                                                <span className="text-white font-bold text-sm">
+                                                    {generatingAI ? "AI is cooking..." : `${Math.round(uploadProgress)}%`}
+                                                </span>
                                             </div>
+                                        )}
+                                        {generatingAI && (
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
                                         )}
                                     </div>
 
                                     <div className="space-y-4">
+                                        <button
+                                            onClick={handleGenerateAIImage}
+                                            disabled={generatingAI || uploading}
+                                            className="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50 group overflow-hidden relative"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                            {generatingAI ? (
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <Sparkles size={20} className="animate-pulse" />
+                                            )}
+                                            {generatingAI ? "Generating Masterpiece..." : "Generate with FireGen AI"}
+                                        </button>
+
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-100"></div></div>
+                                            <div className="relative flex justify-center text-[10px]"><span className="bg-white px-2 text-zinc-400 font-bold uppercase tracking-widest">or manually update</span></div>
+                                        </div>
+
                                         <div className="space-y-1">
                                             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Image URL</label>
                                             <div className="flex gap-2">

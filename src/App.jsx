@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
@@ -51,6 +52,19 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
+ vercel/set-up-vercel-web-analytics-in-35kcpc
+            {/* Public Routes wrapped in Main Layout */}
+            <Route path="/*" element={
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            } />
+          </Routes>
+          <Analytics />
+        </ModalProvider>
+      </AuthProvider>
+    </Router>
+
               {/* Public Routes wrapped in Main Layout */}
               <Route path="/*" element={
                 <Layout>
@@ -62,6 +76,7 @@ function App() {
         </AuthProvider>
       </Router>
     </HelmetProvider>
+ main
   );
 }
 

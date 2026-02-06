@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { storage } from '../../firebaseConfig.js';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import imageCompression from 'browser-image-compression';
 import QuatrefoilBackground from '../../components/ui/QuatrefoilBackground';
 import SparticlesEffect from '../../components/ui/SparticlesEffect';
 
@@ -178,28 +179,45 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
         handleChange(id, 'image', newUrl);
         setImageEditModal({ open: false, itemId: null, currentUrl: '' });
     };
-    const handleBatchImageUpload = (e) => {
+    const handleBatchImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file || !imageEditModal.itemId) return;
 
-        const metadata = {
-            cacheControl: 'public,max-age=31536000',
-        };
-
         setUploading(true);
-        const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
-        const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+        setUploadProgress(0);
 
-        uploadTask.on('state_changed',
-            (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
-            (error) => { console.error("Upload failed", error); setUploading(false); },
-            () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    handleImageChange(imageEditModal.itemId, downloadURL);
-                    setUploading(false);
-                });
-            }
-        );
+        try {
+            // Options for compression
+            const options = {
+                maxSizeMB: 0.2, // Max 200KB
+                maxWidthOrHeight: 1200,
+                useWebWorker: true,
+                fileType: 'image/webp' // Convert to WebP
+            };
+
+            const compressedFile = await imageCompression(file, options);
+
+            const metadata = {
+                cacheControl: 'public,max-age=31536000',
+            };
+
+            const storageRef = ref(storage, `menu-items/${file.name.split('.')[0]}-${Date.now()}.webp`);
+            const uploadTask = uploadBytesResumable(storageRef, compressedFile, metadata);
+
+            uploadTask.on('state_changed',
+                (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
+                (error) => { console.error("Upload failed", error); setUploading(false); },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        handleImageChange(imageEditModal.itemId, downloadURL);
+                        setUploading(false);
+                    });
+                }
+            );
+        } catch (error) {
+            console.error("Compression failed", error);
+            setUploading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -508,27 +526,44 @@ const MenuManagement = () => {
         setIsModalOpen(true);
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const metadata = {
-            cacheControl: 'public,max-age=31536000',
-        };
-
         setUploading(true);
-        const storageRef = ref(storage, `menu-items/${file.name}-${Date.now()}`);
-        const uploadTask = uploadBytesResumable(storageRef, file, metadata);
-        uploadTask.on('state_changed',
-            (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
-            (error) => { console.error("Upload failed", error); setUploading(false); },
-            () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    setFormData(prev => ({ ...prev, image: downloadURL }));
-                    setUploading(false);
-                });
-            }
-        );
+        setUploadProgress(0);
+
+        try {
+            const options = {
+                maxSizeMB: 0.2,
+                maxWidthOrHeight: 1200,
+                useWebWorker: true,
+                fileType: 'image/webp'
+            };
+
+            const compressedFile = await imageCompression(file, options);
+
+            const metadata = {
+                cacheControl: 'public,max-age=31536000',
+            };
+
+            const storageRef = ref(storage, `menu-items/${file.name.split('.')[0]}-${Date.now()}.webp`);
+            const uploadTask = uploadBytesResumable(storageRef, compressedFile, metadata);
+
+            uploadTask.on('state_changed',
+                (snapshot) => { setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100); },
+                (error) => { console.error("Upload failed", error); setUploading(false); },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        setFormData(prev => ({ ...prev, image: downloadURL }));
+                        setUploading(false);
+                    });
+                }
+            );
+        } catch (error) {
+            console.error("Compression failed", error);
+            setUploading(false);
+        }
     };
 
     const handleSubmit = async (e) => {

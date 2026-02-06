@@ -193,10 +193,17 @@ router.get('/', async (req, res) => {
 // Add menu item (Admin only)
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const newItem = new Menu(req.body);
+        const itemData = { ...req.body };
+        // Generate a stable ID if missing
+        if (!itemData.id) {
+            const slug = itemData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            itemData.id = `item-${slug}-${Date.now()}`;
+        }
+        const newItem = new Menu(itemData);
         await newItem.save();
         res.status(201).json(newItem);
     } catch (err) {
+        console.error("Create item error:", err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -237,22 +244,37 @@ router.post('/batch', verifyToken, async (req, res) => {
         const { updates } = req.body; // Array of { id, updates }
 
         if (!updates || !Array.isArray(updates) || updates.length === 0) {
+            console.error("Batch update failed: No updates provided in body");
             return res.status(400).json({ error: 'No updates provided' });
         }
 
-        const bulkOps = updates.map(u => ({
-            updateOne: {
-                filter: { id: u.id },
-                update: { $set: u.updates }
+        console.log(`Processing batch update for ${updates.length} items...`);
+
+        const bulkOps = updates.map(u => {
+            if (!u.id) {
+                throw new Error("Missing ID for item update");
             }
-        }));
+            return {
+                updateOne: {
+                    filter: { id: u.id },
+                    update: { $set: u.updates }
+                }
+            };
+        });
 
         const result = await Menu.bulkWrite(bulkOps);
 
-        res.json({ message: `Batch updated ${result.modifiedCount} items`, result });
+        res.json({
+            message: `Batch updated ${result.modifiedCount} items`,
+            stats: {
+                matched: result.matchedCount,
+                modified: result.modifiedCount,
+                upserted: result.upsertedCount
+            }
+        });
     } catch (err) {
-        console.error("Batch update error:", err);
-        res.status(400).json({ error: err.message });
+        console.error("Batch update error detail:", err);
+        res.status(400).json({ error: "Update failed: " + err.message });
     }
 });
 

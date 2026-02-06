@@ -248,6 +248,8 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                 })
                 .filter(u => u !== null);
 
+            console.log("Sending bulk updates:", updates);
+
             if (updates.length === 0) {
                 alert("No changes to save.");
                 setSaving(false);

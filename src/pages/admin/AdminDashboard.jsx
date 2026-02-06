@@ -228,18 +228,25 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                     const original = items.find(o => o.id === item.id);
                     return JSON.stringify(item) !== JSON.stringify(original);
                 })
-                .map(item => ({
-                    id: item.id,
-                    updates: {
-                        name: item.name,
-                        price: item.price,
-                        description: item.description,
-                        category: item.category,
-                        subcategory: item.subcategory,
-                        dietary: item.dietary,
-                        image: item.image
+                .map(item => {
+                    if (!item.id) {
+                        console.warn("Item missing ID in bulk save:", item);
+                        return null;
                     }
-                }));
+                    return {
+                        id: item.id,
+                        updates: {
+                            name: item.name,
+                            price: item.price,
+                            description: item.description,
+                            category: item.category,
+                            subcategory: item.subcategory,
+                            dietary: item.dietary,
+                            image: item.image
+                        }
+                    };
+                })
+                .filter(u => u !== null);
 
             if (updates.length === 0) {
                 alert("No changes to save.");

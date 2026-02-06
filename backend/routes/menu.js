@@ -251,6 +251,7 @@ router.post('/batch', verifyToken, async (req, res) => {
 
         res.json({ message: `Batch updated ${result.modifiedCount} items`, result });
     } catch (err) {
+        console.error("Batch update error:", err);
         res.status(400).json({ error: err.message });
     }
 });

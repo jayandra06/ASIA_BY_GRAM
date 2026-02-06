@@ -171,8 +171,11 @@ const Menu = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
-    const [menuItems, setMenuItems] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [menuItems, setMenuItems] = useState(() => {
+        const cached = localStorage.getItem('abg_full_menu');
+        return cached ? JSON.parse(cached) : [];
+    });
+    const [loading, setLoading] = useState(!localStorage.getItem('abg_full_menu'));
 
     useEffect(() => {
         const fetchMenu = async () => {
@@ -182,6 +185,7 @@ const Menu = () => {
                 if (res.ok) {
                     const data = await res.json();
                     setMenuItems(data);
+                    localStorage.setItem('abg_full_menu', JSON.stringify(data));
                 }
             } catch (error) {
                 console.error("Error fetching menu:", error);

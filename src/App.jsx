@@ -39,25 +39,29 @@ const AnimatedRoutes = () => {
   );
 };
 
+import { HelmetProvider } from 'react-helmet-async';
+
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ModalProvider>
-          <Routes>
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+    <HelmetProvider>
+      <Router>
+        <AuthProvider>
+          <ModalProvider>
+            <Routes>
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-            {/* Public Routes wrapped in Main Layout */}
-            <Route path="/*" element={
-              <Layout>
-                <AnimatedRoutes />
-              </Layout>
-            } />
-          </Routes>
-        </ModalProvider>
-      </AuthProvider>
-    </Router>
+              {/* Public Routes wrapped in Main Layout */}
+              <Route path="/*" element={
+                <Layout>
+                  <AnimatedRoutes />
+                </Layout>
+              } />
+            </Routes>
+          </ModalProvider>
+        </AuthProvider>
+      </Router>
+    </HelmetProvider>
   );
 }
 

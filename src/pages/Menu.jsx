@@ -156,6 +156,8 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
+import { Helmet } from 'react-helmet-async';
+
 const Menu = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -225,6 +227,24 @@ const Menu = () => {
 
     return (
         <div className="min-h-screen bg-transparent pt-32 pb-20 px-6 md:px-12">
+            <Helmet>
+                <title>Menu | Asia By Gram - Authentic Asian Delicacies</title>
+                <meta name="description" content="Explore our curated selection of authentic Asian noodles, broths, and specialties. Hand-crafted with the finest ingredients in Hyderabad." />
+                <meta property="og:title" content="Our Menu | Asia By Gram" />
+                <meta property="og:description" content="View our full menu of authentic Asian delicacies. From hand-pulled noodles to premium broths." />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Menu",
+                        "name": "Asia By Gram Menu",
+                        "mainEntityOfPage": "https://asiabygram.in/menu",
+                        "offers": {
+                            "@type": "Offer",
+                            "availability": "https://schema.org/InStock"
+                        }
+                    })}
+                </script>
+            </Helmet>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">

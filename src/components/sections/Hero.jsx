@@ -85,7 +85,7 @@ const Hero = () => {
                     {/* Subheading / Description */}
                     <motion.p
                         variants={{ hidden: { opacity: 0, y: 30, filter: "blur(10px)" }, visible: { opacity: 1, y: 0, filter: "blur(0)" } }}
-                        className="text-black font-bold text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-8"
+                        className="text-black font-bold text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-[17px]"
                     >
                         "A culinary journey through the soul of Asia, crafted with passion and served with elegance in the heart of Hyderabad."
                     </motion.p>

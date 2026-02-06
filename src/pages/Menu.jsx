@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import menuData from '../data/menu.json';
 import { ArrowLeft, Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -158,7 +159,7 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
-import { Helmet } from 'react-helmet-async';
+
 
 const Menu = () => {
     const navigate = useNavigate();

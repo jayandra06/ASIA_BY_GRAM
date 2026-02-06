@@ -1,4 +1,5 @@
 import Hero from '../components/sections/Hero';
+import { Helmet } from 'react-helmet-async';
 import AboutSection from '../components/sections/AboutSection';
 import MenuSection from '../components/sections/MenuSection';
 import GallerySection from '../components/sections/GallerySection';
@@ -6,7 +7,7 @@ import TestimonialsSection from '../components/sections/TestimonialsSection';
 import InstagramSection from '../components/sections/InstagramSection';
 import LocationSection from '../components/sections/LocationSection';
 
-import { Helmet } from 'react-helmet-async';
+
 
 const Home = () => {
     return (

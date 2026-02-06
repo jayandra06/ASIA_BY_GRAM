@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
@@ -39,7 +40,6 @@ const AnimatedRoutes = () => {
   );
 };
 
-import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
   return (

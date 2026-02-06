@@ -9,7 +9,8 @@ const firebaseConfig = {
     projectId: "leo-ludo-4d550",
     storageBucket: "leo-ludo-4d550.firebasestorage.app",
     messagingSenderId: "410861554958",
-    appId: "1:410861554958:web:246612b9a0a2ddf2601"
+    appId: "1:410861554958:web:246612b9a0a2ddf2601b5f",
+    measurementId: "G-LTRED8QH7S"
 };
 
 const app = initializeApp(firebaseConfig);

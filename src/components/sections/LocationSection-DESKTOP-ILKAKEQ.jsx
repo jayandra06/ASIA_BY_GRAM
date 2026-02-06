@@ -33,8 +33,8 @@ const LocationSection = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-asian font-bold text-black mb-1">Opening Hours</h4>
-                                    <p className="text-zinc-700 drop-shadow-sm">Mon - Thu: 12:00 PM - 10:30 PM</p>
-                                    <p className="text-zinc-700 drop-shadow-sm">Fri - Sun: 12:00 PM - 11:30 PM</p>
+                                    <p className="text-zinc-700 drop-shadow-sm">Mon - Thu: 12:00 PM - 11:30 PM</p>
+                                    <p className="text-zinc-700 drop-shadow-sm">Fri - Sun: 12:00 PM - 12:30 PM</p>
                                 </div>
                             </div>
 

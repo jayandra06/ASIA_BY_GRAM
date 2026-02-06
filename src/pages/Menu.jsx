@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import menuData from '../data/menu.json';
 import { ArrowLeft, Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -125,6 +126,8 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
                                                 <img
                                                     src={dish.image}
                                                     alt={dish.name}
+                                                    width="150"
+                                                    height="150"
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
                                                     decoding="async"
@@ -156,6 +159,8 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
+
+
 const Menu = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -166,8 +171,11 @@ const Menu = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
-    const [menuItems, setMenuItems] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [menuItems, setMenuItems] = useState(() => {
+        const cached = localStorage.getItem('abg_full_menu');
+        return cached ? JSON.parse(cached) : [];
+    });
+    const [loading, setLoading] = useState(!localStorage.getItem('abg_full_menu'));
 
     useEffect(() => {
         const fetchMenu = async () => {
@@ -177,6 +185,7 @@ const Menu = () => {
                 if (res.ok) {
                     const data = await res.json();
                     setMenuItems(data);
+                    localStorage.setItem('abg_full_menu', JSON.stringify(data));
                 }
             } catch (error) {
                 console.error("Error fetching menu:", error);
@@ -225,6 +234,24 @@ const Menu = () => {
 
     return (
         <div className="min-h-screen bg-transparent pt-32 pb-20 px-6 md:px-12">
+            <Helmet>
+                <title>Menu | Asia By Gram - Authentic Asian Delicacies</title>
+                <meta name="description" content="Explore our curated selection of authentic Asian noodles, broths, and specialties. Hand-crafted with the finest ingredients in Hyderabad." />
+                <meta property="og:title" content="Our Menu | Asia By Gram" />
+                <meta property="og:description" content="View our full menu of authentic Asian delicacies. From hand-pulled noodles to premium broths." />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Menu",
+                        "name": "Asia By Gram Menu",
+                        "mainEntityOfPage": "https://asiabygram.in/menu",
+                        "offers": {
+                            "@type": "Offer",
+                            "availability": "https://schema.org/InStock"
+                        }
+                    })}
+                </script>
+            </Helmet>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
@@ -350,6 +377,8 @@ const Menu = () => {
                                         <img
                                             src={dish.image || DEFAULT_IMAGE}
                                             alt={dish.name}
+                                            width="400"
+                                            height="300"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             loading="lazy"
                                             decoding="async"

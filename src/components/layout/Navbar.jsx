@@ -40,6 +40,15 @@ const Navbar = () => {
             >
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
+                    <Link to="/" className="flex-shrink-0">
+                        <img
+                            src="/logo.png"
+                            alt="Asia By Gram"
+                            width="64"
+                            height="34"
+                            className="h-10 w-auto object-contain"
+                        />
+                    </Link>
 
 
                     {/* Desktop Nav - Left Aligned */}
@@ -71,7 +80,11 @@ const Navbar = () => {
                     {/* Mobile Toggle */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden text-white p-2"
+                        className={clsx(
+                            "md:hidden p-2 transition-colors",
+                            isScrolled || isMobileMenuOpen ? "text-black" : "text-white"
+                        )}
+                        aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
                     >
                         {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
                     </button>

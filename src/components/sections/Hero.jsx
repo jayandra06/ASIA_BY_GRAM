@@ -55,16 +55,15 @@ const Hero = () => {
                     className="space-y-4 max-w-4xl"
                 >
                     {/* Top Tagline */}
-                    <motion.div
-                        variants={{ hidden: { opacity: 0, scaleX: 0 }, visible: { opacity: 1, scaleX: 1 } }}
+                    <div
                         className="flex items-center justify-center gap-4"
                     >
                         <div className="w-12 h-[1px] bg-black/60"></div>
-                        <h2 className="text-black/80 font-serif tracking-[0.3em] uppercase text-xs font-semibold">
+                        <span className="text-black/80 font-serif tracking-[0.3em] uppercase text-xs font-semibold">
                             Est. 2026
-                        </h2>
+                        </span>
                         <div className="w-12 h-[1px] bg-black/60"></div>
-                    </motion.div>
+                    </div>
 
                     {/* Main Heading - The "Wow" Factor with 3D Reveal */}
                     <div className="relative perspective-1000 mt-2 md:mt-4">
@@ -72,14 +71,21 @@ const Hero = () => {
                             variants={titleVariants}
                             className="flex justify-center pb-2"
                         >
-                            <img src="/logo.png" alt="Asia By Gram" className="w-[180px] md:w-[240px] lg:w-[280px] h-auto object-contain mx-auto drop-shadow-2xl" />
+                            <img
+                                src="/logo.png"
+                                alt="Asia By Gram"
+                                width="320"
+                                height="320"
+                                fetchpriority="high"
+                                className="w-[180px] md:w-[240px] lg:w-[320px] h-auto object-contain mx-auto drop-shadow-2xl"
+                            />
                         </motion.h1>
                     </div>
 
                     {/* Subheading / Description */}
                     <motion.p
                         variants={{ hidden: { opacity: 0, y: 30, filter: "blur(10px)" }, visible: { opacity: 1, y: 0, filter: "blur(0)" } }}
-                        className="text-black font-bold text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-8"
+                        className="text-black font-bold text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-[17px]"
                     >
                         "A culinary journey through the soul of Asia, crafted with passion and served with elegance in the heart of Hyderabad."
                     </motion.p>

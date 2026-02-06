@@ -30,7 +30,11 @@ const GallerySection = () => {
                         >
                             <img
                                 src={src}
-                                alt="Gallery"
+                                alt={`Asia By Gram gallery image showing authentic Asian dining experience ${idx + 1}`}
+                                width="400"
+                                height="600"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

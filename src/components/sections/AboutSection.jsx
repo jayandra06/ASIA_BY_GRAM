@@ -19,7 +19,9 @@ const AboutSection = () => {
                         >
                             <img
                                 src="https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80&w=800"
-                                alt="Chef Cooking"
+                                alt="Chef Cooking authentic Asian cuisine"
+                                width="800"
+                                height="400"
                                 className="rounded-2xl shadow-2xl object-cover h-[400px] w-full border border-white/20"
                             />
                         </motion.div>
@@ -32,7 +34,9 @@ const AboutSection = () => {
                         >
                             <img
                                 src="https://images.unsplash.com/photo-1595295333158-4742f28fbd85?auto=format&fit=crop&q=80&w=800"
-                                alt="Noodles Bowl"
+                                alt="Signature Ramen Noodles Bowl"
+                                width="800"
+                                height="400"
                                 className="rounded-2xl shadow-2xl object-cover h-[400px] w-full border border-white/20"
                             />
                         </motion.div>

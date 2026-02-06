@@ -6,8 +6,12 @@ const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf
 
 const MenuSection = () => {
     const navigate = useNavigate();
-    const [dishes, setDishes] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [dishes, setDishes] = useState(() => {
+        // Hydrate from cache immediately for instant render
+        const cached = localStorage.getItem('abg_featured_menu');
+        return cached ? JSON.parse(cached) : [];
+    });
+    const [loading, setLoading] = useState(!localStorage.getItem('abg_featured_menu'));
 
     useEffect(() => {
         const fetchFeatured = async () => {
@@ -16,8 +20,10 @@ const MenuSection = () => {
                 const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
                 if (res.ok) {
                     const data = await res.json();
-                    // Show only 6 featured items
-                    setDishes(data.slice(0, 6));
+                    const featured = data.slice(0, 6);
+                    setDishes(featured);
+                    // Update cache for next visit
+                    localStorage.setItem('abg_featured_menu', JSON.stringify(featured));
                 }
             } catch (error) {
                 console.error("Error fetching featured menu:", error);
@@ -85,6 +91,8 @@ const MenuSection = () => {
                                 <img
                                     src={dish.image || DEFAULT_IMAGE}
                                     alt={dish.name}
+                                    width="400"
+                                    height="300"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     loading="lazy"
                                     decoding="async"

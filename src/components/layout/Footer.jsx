@@ -11,16 +11,16 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 <div className="space-y-6">
                     <div className="mb-6">
-                        <img src="/logo.png" alt="Asia By Gram" className="h-16 w-auto object-contain" />
+                        <img src="/logo.png" alt="Asia By Gram" width="120" height="64" className="h-16 w-auto object-contain" />
                     </div>
                     <p className="text-black leading-relaxed">
                         The best noodle restaurant in Hyderabad. Premium ingredients, authentic broths, and an immersive dining atmosphere.
                     </p>
                     <div className="flex gap-4">
-                        <a href="#" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
+                        <a href="https://instagram.com/asiabygram" target="_blank" rel="noopener noreferrer" aria-label="Follow Asia By Gram on Instagram" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
                             <Instagram size={18} />
                         </a>
-                        <a href="#" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
+                        <a href="mailto:asiabygram@gmail.com" aria-label="Send us an email" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
                             <Mail size={18} />
                         </a>
                     </div>

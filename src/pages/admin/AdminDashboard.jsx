@@ -270,7 +270,13 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                 onRefresh();
             } else {
                 const err = await res.json();
-                alert(`Error: ${err.error || 'Failed to save updates'}`);
+                if (err.message === 'Invalid Token' || err.message === 'Access Denied') {
+                    alert("Your session has expired. Please login again.");
+                    localStorage.removeItem('token');
+                    window.location.href = '/admin/login';
+                } else {
+                    alert(`Error: ${err.error || err.message || 'Failed to save updates'}`);
+                }
             }
         } catch (error) {
             console.error("Bulk save error:", error);
@@ -589,7 +595,16 @@ const MenuManagement = () => {
             if (res.ok) {
                 fetchItems();
                 setIsModalOpen(false);
-            } else { alert("Failed to save item"); }
+            } else {
+                const err = await res.json();
+                if (err.message === 'Invalid Token' || err.message === 'Access Denied') {
+                    alert("Your session has expired. Please login again.");
+                    localStorage.removeItem('token');
+                    window.location.href = '/admin/login';
+                } else {
+                    alert(`Error: ${err.error || err.message || 'Failed to save item'}`);
+                }
+            }
         } catch (error) { console.error("Error saving item:", error); }
     };
 
@@ -640,6 +655,15 @@ const MenuManagement = () => {
                 setBulkFormData({ category: '', subcategory: '', price: '' });
                 setSelectedItems(new Set());
                 alert("Bulk update successful!");
+            } else {
+                const err = await res.json();
+                if (err.message === 'Invalid Token' || err.message === 'Access Denied') {
+                    alert("Your session has expired. Please login again.");
+                    localStorage.removeItem('token');
+                    window.location.href = '/admin/login';
+                } else {
+                    alert(`Error: ${err.error || err.message || 'Failed to save updates'}`);
+                }
             }
         } catch (error) { console.error(error); }
     };

@@ -17,10 +17,10 @@ const Footer = () => {
                         The best noodle restaurant in Hyderabad. Premium ingredients, authentic broths, and an immersive dining atmosphere.
                     </p>
                     <div className="flex gap-4">
-                        <a href="#" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
+                        <a href="https://instagram.com/asiabygram" target="_blank" rel="noopener noreferrer" aria-label="Follow Asia By Gram on Instagram" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
                             <Instagram size={18} />
                         </a>
-                        <a href="#" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
+                        <a href="mailto:asiabygram@gmail.com" aria-label="Send us an email" className="w-10 h-10 rounded-full border border-black flex items-center justify-center text-black hover:bg-black hover:text-white transition-all">
                             <Mail size={18} />
                         </a>
                     </div>

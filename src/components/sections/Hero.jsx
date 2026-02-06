@@ -55,16 +55,15 @@ const Hero = () => {
                     className="space-y-4 max-w-4xl"
                 >
                     {/* Top Tagline */}
-                    <motion.div
-                        variants={{ hidden: { opacity: 0, scaleX: 0 }, visible: { opacity: 1, scaleX: 1 } }}
+                    <div
                         className="flex items-center justify-center gap-4"
                     >
                         <div className="w-12 h-[1px] bg-black/60"></div>
-                        <h2 className="text-black/80 font-serif tracking-[0.3em] uppercase text-xs font-semibold">
+                        <span className="text-black/80 font-serif tracking-[0.3em] uppercase text-xs font-semibold">
                             Est. 2026
-                        </h2>
+                        </span>
                         <div className="w-12 h-[1px] bg-black/60"></div>
-                    </motion.div>
+                    </div>
 
                     {/* Main Heading - The "Wow" Factor with 3D Reveal */}
                     <div className="relative perspective-1000 mt-2 md:mt-4">

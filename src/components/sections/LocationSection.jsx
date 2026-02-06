@@ -33,8 +33,8 @@ const LocationSection = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-asian font-bold text-black mb-1">Opening Hours</h4>
-                                    <p className="text-zinc-700 drop-shadow-sm">Mon - Thu: 12:00 PM - 10:30 PM</p>
-                                    <p className="text-zinc-700 drop-shadow-sm">Fri - Sun: 12:00 PM - 11:30 PM</p>
+                                    <p className="text-zinc-700 drop-shadow-sm">Mon - Thu: 12:00 PM - 11:30 PM</p>
+                                    <p className="text-zinc-700 drop-shadow-sm">Fri - Sun: 12:00 PM - 12:30 PM</p>
                                 </div>
                             </div>
 
@@ -44,8 +44,8 @@ const LocationSection = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-asian font-bold text-black mb-1">Contact</h4>
-                                    <p className="text-zinc-700 drop-shadow-sm font-bold">+91 83090 57182</p>
-                                    <p className="text-zinc-700 drop-shadow-sm font-medium">reservations@asiabygram.com</p>
+                                    <p className="text-zinc-700 drop-shadow-sm font-bold">+91 8019682031, 8309057182</p>
+                                    <p className="text-zinc-700 drop-shadow-sm font-medium">asiabygram@gmail.com</p>
                                 </div>
                             </div>
                         </div>

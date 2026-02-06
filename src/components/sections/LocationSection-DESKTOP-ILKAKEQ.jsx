@@ -60,8 +60,10 @@ const LocationSection = () => {
 
                     {/* Map Side */}
                     <div className="relative min-h-[400px] lg:min-h-full bg-zinc-800">
+
+                       
                         <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3805.282504810057!2d78.2863!3d17.498!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93a890a59969%3A0xe54e601831498064!2sBeeramguda%20Main%20Rd%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1706341234567!5m2!1sen!2sin"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3804.9934085917234!2d78.29923937516773!3d17.507828083400003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb931a0b2257b3%3A0x526fb42264df1ddd!2sAsia%20By%20Gram!5e0!3m2!1sen!2sin!4v1770364917701!5m2!1sen!2sin"
                             width="100%"
                             height="100%"
                             style={{ border: 0, filter: 'grayscale(100%) invert(90%) contrast(80%)' }}

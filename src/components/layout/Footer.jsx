@@ -49,7 +49,7 @@ const Footer = () => {
                         </li>
                         <li className="flex items-center gap-3">
                             <Mail className="shrink-0 text-black" size={20} />
-                            <span>hello@asiabygram.com</span>
+                            <span>asiabygram@gmail.com</span>
                         </li>
                     </ul>
                 </div>
@@ -59,11 +59,11 @@ const Footer = () => {
                     <ul className="space-y-2 text-black">
                         <li className="flex justify-between border-b border-black/10 pb-2">
                             <span>Mon - Thu</span>
-                            <span>12:00 PM - 10:30 PM</span>
+                            <span>12:00 PM - 11:30 PM</span>
                         </li>
                         <li className="flex justify-between border-b border-black/10 pb-2">
                             <span>Fri - Sun</span>
-                            <span>12:00 PM - 11:30 PM</span>
+                            <span>12:00 PM - 12:30 PM</span>
                         </li>
                     </ul>
                 </div>
@@ -72,7 +72,7 @@ const Footer = () => {
             <div className="border-t border-black/10 pt-8 flex flex-col md:flex-row justify-between items-center text-black text-sm relative">
                 {/* Left: Admin Login */}
                 <div className="w-full md:w-auto flex justify-center md:justify-start">
-                    <a href="/admin/login" className="bg-primary px-3 py-1 rounded text-black font-bold text-xs uppercase hover:bg-primary/80 transition-colors">Admin Login</a>
+                    {/* <a href="/admin/login" className="bg-primary px-3 py-1 rounded text-black font-bold text-xs uppercase hover:bg-primary/80 transition-colors">Admin Login</a> */}
                 </div>
 
                 {/* Center: Copyright */}

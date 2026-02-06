@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
@@ -55,6 +56,7 @@ function App() {
               </Layout>
             } />
           </Routes>
+          <Analytics />
         </ModalProvider>
       </AuthProvider>
     </Router>

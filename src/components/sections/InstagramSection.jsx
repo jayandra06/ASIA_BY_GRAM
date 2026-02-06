@@ -43,6 +43,8 @@ const InstagramSection = () => {
                             {item.type === 'video' ? (
                                 <video
                                     src={item.src}
+                                    width="400"
+                                    height="400"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     muted
                                     loop
@@ -52,7 +54,11 @@ const InstagramSection = () => {
                             ) : (
                                 <img
                                     src={item.src}
-                                    alt="Social Feed"
+                                    alt={`Asia By Gram Instagram post showing ${item.src.includes('d') ? 'delicious Asian food' : 'restaurant vibes'}`}
+                                    width="400"
+                                    height="400"
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
                             )}

@@ -11,7 +11,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 <div className="space-y-6">
                     <div className="mb-6">
-                        <img src="/logo.png" alt="Asia By Gram" className="h-16 w-auto object-contain" />
+                        <img src="/logo.png" alt="Asia By Gram" width="120" height="64" className="h-16 w-auto object-contain" />
                     </div>
                     <p className="text-black leading-relaxed">
                         The best noodle restaurant in Hyderabad. Premium ingredients, authentic broths, and an immersive dining atmosphere.

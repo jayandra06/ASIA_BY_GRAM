@@ -71,7 +71,14 @@ const Hero = () => {
                             variants={titleVariants}
                             className="flex justify-center pb-2"
                         >
-                            <img src="/logo.png" alt="Asia By Gram" className="w-[180px] md:w-[240px] lg:w-[280px] h-auto object-contain mx-auto drop-shadow-2xl" />
+                            <img
+                                src="/logo.png"
+                                alt="Asia By Gram"
+                                width="320"
+                                height="320"
+                                fetchpriority="high"
+                                className="w-[180px] md:w-[240px] lg:w-[320px] h-auto object-contain mx-auto drop-shadow-2xl"
+                            />
                         </motion.h1>
                     </div>
 

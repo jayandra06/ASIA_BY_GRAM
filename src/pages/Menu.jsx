@@ -125,6 +125,8 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
                                                 <img
                                                     src={dish.image}
                                                     alt={dish.name}
+                                                    width="150"
+                                                    height="150"
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
                                                     decoding="async"
@@ -370,6 +372,8 @@ const Menu = () => {
                                         <img
                                             src={dish.image || DEFAULT_IMAGE}
                                             alt={dish.name}
+                                            width="400"
+                                            height="300"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             loading="lazy"
                                             decoding="async"

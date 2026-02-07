@@ -61,19 +61,6 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
- vercel/set-up-vercel-web-analytics-in-35kcpc
-            {/* Public Routes wrapped in Main Layout */}
-            <Route path="/*" element={
-              <Layout>
-                <AnimatedRoutes />
-              </Layout>
-            } />
-          </Routes>
-          <Analytics />
-        </ModalProvider>
-      </AuthProvider>
-    </Router>
-
               {/* Public Routes wrapped in Main Layout */}
               <Route path="/*" element={
                 <Layout>
@@ -81,11 +68,11 @@ function App() {
                 </Layout>
               } />
             </Routes>
+            <Analytics />
           </ModalProvider>
         </AuthProvider>
       </Router>
     </HelmetProvider>
- main
   );
 }
 

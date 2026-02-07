@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -43,6 +44,14 @@ const AnimatedRoutes = () => {
 
 
 function App() {
+  // Wake up backend on mount to handle Render cold start
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    fetch(apiUrl).catch(() => {
+      // Ignore errors, we just want to wake it up
+    });
+  }, []);
+
   return (
     <HelmetProvider>
       <Router>

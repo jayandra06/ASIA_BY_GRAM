@@ -54,6 +54,20 @@ const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
+// Keep-alive logic for Render
+const backendUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+    setInterval(() => {
+        import('https').then(https => {
+            https.get(backendUrl, (res) => {
+                console.log(`Self-ping sent to ${backendUrl}: ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.error('Self-ping error:', err.message);
+            });
+        });
+    }, 10 * 60 * 1000); // Ping every 10 minutes
+}
+
 process.on('SIGTERM', () => {
     server.close(() => {
         console.log('Process terminated');

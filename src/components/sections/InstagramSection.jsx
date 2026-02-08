@@ -1,3 +1,5 @@
+'use client';
+
 import { Instagram, Play, ArrowRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';

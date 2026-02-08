@@ -1,0 +1,23 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/dashboard/page": "/admin/dashboard",
+  "/admin/login/page": "/admin/login",
+  "/api/auth/login/route": "/api/auth/login",
+  "/api/auth/register/route": "/api/auth/register",
+  "/api/categories/[id]/route": "/api/categories/[id]",
+  "/api/categories/route": "/api/categories",
+  "/api/menu/[id]/route": "/api/menu/[id]",
+  "/api/menu/batch/route": "/api/menu/batch",
+  "/api/menu/bulk/route": "/api/menu/bulk",
+  "/api/menu/route": "/api/menu",
+  "/api/menu/template/route": "/api/menu/template",
+  "/api/menu/upload/route": "/api/menu/upload",
+  "/api/reservations/route": "/api/reservations",
+  "/api/reservations/status/[id]/route": "/api/reservations/status/[id]",
+  "/api/tables/[number]/route": "/api/tables/[number]",
+  "/api/tables/generate/route": "/api/tables/generate",
+  "/api/tables/route": "/api/tables",
+  "/menu/page": "/menu",
+  "/page": "/"
+}

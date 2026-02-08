@@ -1,3 +1,4 @@
+'use client'
 import { MapPin, Clock, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useModal } from '../../context/ModalContext';

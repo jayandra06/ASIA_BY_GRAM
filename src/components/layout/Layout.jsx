@@ -1,15 +1,17 @@
+'use client'
 
 import { useEffect } from 'react';
 import Lenis from 'lenis'
 import Navbar from './Navbar';
 import Footer from './Footer';
 import SideNav from './SideNav';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import GlobalBackground from '../ui/GlobalBackground';
-
 import SparticlesEffect from '../ui/SparticlesEffect';
 
 const Layout = ({ children }) => {
+    const pathname = usePathname();
+    const isAdminRoute = pathname?.startsWith('/admin');
 
     useEffect(() => {
         const lenis = new Lenis({
@@ -39,12 +41,12 @@ const Layout = ({ children }) => {
         <div className="bg-transparent min-h-screen text-black relative selection:bg-primary selection:text-white">
             <GlobalBackground />
             <SparticlesEffect />
-            <Navbar />
-            <SideNav />
+            {!isAdminRoute && <Navbar />}
+            {!isAdminRoute && <SideNav />}
             <main className="relative z-10">
                 {children}
             </main>
-            <Footer />
+            {!isAdminRoute && <Footer />}
         </div>
     );
 };

@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --font-inter: 'Inter', sans-serif;
+    --font-oswald: 'Oswald', sans-serif;
+    --font-outfit: 'Outfit', sans-serif;
+    --font-shojumaru: 'Shojumaru', cursive;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-background text-secondary antialiased font-sans box-border;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-zinc-100;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-zinc-400 rounded-full hover:bg-zinc-600 transition-colors;
+    }
+}
+
+@layer utilities {
+    .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .text-shadow-lg {
+        text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .perspective-1000 {
+        perspective: 1000px;
+    }
+
+    .preserve-3d {
+        transform-style: preserve-3d;
+    }
+}

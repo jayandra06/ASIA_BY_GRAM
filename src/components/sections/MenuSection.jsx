@@ -1,28 +1,30 @@
-import { motion } from 'framer-motion';
+'use client';
+
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
 const MenuSection = () => {
-    const navigate = useNavigate();
-    const [dishes, setDishes] = useState(() => {
-        // Hydrate from cache immediately for instant render
-        const cached = localStorage.getItem('abg_featured_menu');
-        return cached ? JSON.parse(cached) : [];
-    });
-    const [loading, setLoading] = useState(!localStorage.getItem('abg_featured_menu'));
+    const router = useRouter();
+    const [dishes, setDishes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchFeatured = async () => {
-            setLoading(true);
+            const cached = localStorage.getItem('abg_featured_menu');
+            if (cached) {
+                setDishes(JSON.parse(cached));
+                setLoading(false);
+            }
+
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/menu`);
+                const res = await fetch('/api/menu?category=Starters');
                 if (res.ok) {
                     const data = await res.json();
                     const featured = data.slice(0, 6);
                     setDishes(featured);
-                    // Update cache for next visit
                     localStorage.setItem('abg_featured_menu', JSON.stringify(featured));
                 }
             } catch (error) {
@@ -141,7 +143,7 @@ const MenuSection = () => {
 
                 <div className="mt-16 text-center">
                     <button
-                        onClick={() => navigate('/menu')}
+                        onClick={() => router.push('/menu')}
                         className="px-12 py-4 bg-black text-white hover:bg-zinc-800 transition-all rounded-sm font-medium tracking-widest uppercase text-sm shadow-lg active:scale-95"
                     >
                         View Full Menu

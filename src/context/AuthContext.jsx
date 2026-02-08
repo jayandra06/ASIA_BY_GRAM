@@ -1,5 +1,7 @@
+'use client';
+
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
@@ -8,7 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+    const router = useRouter();
 
     useEffect(() => {
         // Check if user is logged in
@@ -23,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         // Call backend API
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+            const response = await fetch(`/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
@@ -32,7 +34,7 @@ export const AuthProvider = ({ children }) => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 setUser(data.user);
-                navigate('/admin/dashboard');
+                router.push('/admin/dashboard');
                 return { success: true };
             } else {
                 return { success: false, message: data.message };
@@ -44,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (username, email, password) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+            const response = await fetch(`/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password }),
@@ -59,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
-        navigate('/admin/login');
+        router.push('/admin/login');
     };
 
     return (

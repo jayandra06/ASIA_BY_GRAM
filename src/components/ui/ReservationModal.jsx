@@ -1,6 +1,8 @@
+'use client';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Calendar, Clock, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ReservationModal = ({ isOpen, onClose }) => {
     const [step, setStep] = useState(1);
@@ -22,7 +24,7 @@ const ReservationModal = ({ isOpen, onClose }) => {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reservations`, {
+            const response = await fetch(`/api/reservations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

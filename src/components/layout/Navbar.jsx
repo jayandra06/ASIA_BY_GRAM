@@ -1,8 +1,10 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Instagram, MapPin } from 'lucide-react';
 import clsx from 'clsx';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { useModal } from '../../context/ModalContext';
 
 const Navbar = () => {
@@ -40,7 +42,7 @@ const Navbar = () => {
             >
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
-                    <Link to="/" className="flex-shrink-0">
+                    <Link href="/" className="flex-shrink-0">
                         <img
                             src="/logo.png"
                             alt="Asia By Gram"

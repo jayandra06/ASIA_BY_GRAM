@@ -1,13 +1,15 @@
+'use client';
+
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useModal } from '../../context/ModalContext';
 
 import QuatrefoilBackground from '../ui/QuatrefoilBackground';
 import SparticlesEffect from '../ui/SparticlesEffect';
 
 const Hero = () => {
-    const navigate = useNavigate();
+    const router = useRouter();
     const { openReservation } = useModal();
     const { scrollY } = useScroll();
     const y1 = useTransform(scrollY, [0, 500], [0, 200]);
@@ -76,7 +78,7 @@ const Hero = () => {
                                 alt="Asia By Gram"
                                 width="320"
                                 height="320"
-                                fetchpriority="high"
+                                fetchPriority="high"
                                 className="w-[180px] md:w-[240px] lg:w-[320px] h-auto object-contain mx-auto drop-shadow-2xl"
                             />
                         </motion.h1>
@@ -96,7 +98,7 @@ const Hero = () => {
                         className="flex w-[90%] md:w-[500px] h-14 shadow-2xl mx-auto rounded-sm overflow-hidden"
                     >
                         <div
-                            onClick={() => navigate('/menu')}
+                            onClick={() => router.push('/menu')}
                             className="flex-1 bg-black text-white hover:bg-zinc-900 transition-colors flex items-center justify-center gap-3 cursor-pointer group"
                         >
                             <span className="font-asian font-bold uppercase tracking-[0.2em] text-xs">Explore Menu</span>

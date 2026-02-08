@@ -1,0 +1,23 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/auth/register/route": "app/api/auth/register/route.js",
+  "/api/categories/[id]/route": "app/api/categories/[id]/route.js",
+  "/api/categories/route": "app/api/categories/route.js",
+  "/api/menu/[id]/route": "app/api/menu/[id]/route.js",
+  "/api/menu/batch/route": "app/api/menu/batch/route.js",
+  "/api/menu/bulk/route": "app/api/menu/bulk/route.js",
+  "/api/menu/route": "app/api/menu/route.js",
+  "/api/menu/template/route": "app/api/menu/template/route.js",
+  "/api/menu/upload/route": "app/api/menu/upload/route.js",
+  "/api/reservations/route": "app/api/reservations/route.js",
+  "/api/reservations/status/[id]/route": "app/api/reservations/status/[id]/route.js",
+  "/api/tables/[number]/route": "app/api/tables/[number]/route.js",
+  "/api/tables/generate/route": "app/api/tables/generate/route.js",
+  "/api/tables/route": "app/api/tables/route.js",
+  "/menu/page": "app/menu/page.js",
+  "/page": "app/page.js"
+}

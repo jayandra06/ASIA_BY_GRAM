@@ -5,7 +5,7 @@ import Menu from '../../../../models/Menu';
 export async function PUT(request, { params }) {
     try {
         await dbConnect();
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
 
         // Try to update by custom id first
@@ -38,7 +38,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         await dbConnect();
-        const { id } = params;
+        const { id } = await params;
 
         // Try to delete by custom id first
         let deleted = await Menu.findOneAndDelete({ id });

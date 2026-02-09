@@ -61,3 +61,35 @@ export async function GET(request) {
         });
     }
 }
+
+export async function POST(request) {
+    try {
+        await dbConnect();
+        const body = await request.json();
+
+        // Validation - ensure required fields are present
+        if (!body.name || !body.price || !body.category) {
+            return new Response(JSON.stringify({ error: 'Missing required fields: name, price, or category' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        const newItem = await Menu.create(body);
+
+        // Invalidate cache
+        menuCache = null;
+        cacheTimestamp = 0;
+
+        return new Response(JSON.stringify(newItem), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (error) {
+        console.error('Error in POST /api/menu:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+}

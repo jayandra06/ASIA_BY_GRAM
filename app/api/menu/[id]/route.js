@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/db';
 import Menu from '../../../../models/Menu';
 
@@ -7,10 +8,11 @@ export async function PUT(request, { params }) {
         const { id } = params;
         const body = await request.json();
 
-        // Try to update by custom id first, then by mongo _id
+        // Try to update by custom id first
         let updatedItem = await Menu.findOneAndUpdate({ id }, body, { new: true });
 
-        if (!updatedItem) {
+        // If not found, try by mongo _id
+        if (!updatedItem && mongoose.Types.ObjectId.isValid(id)) {
             updatedItem = await Menu.findByIdAndUpdate(id, body, { new: true });
         }
 
@@ -42,7 +44,7 @@ export async function DELETE(request, { params }) {
         let deleted = await Menu.findOneAndDelete({ id });
 
         // If not found, try by mongo _id
-        if (!deleted) {
+        if (!deleted && mongoose.Types.ObjectId.isValid(id)) {
             deleted = await Menu.findByIdAndDelete(id);
         }
 

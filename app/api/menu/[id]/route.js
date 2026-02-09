@@ -49,8 +49,9 @@ export async function DELETE(request, { params }) {
         }
 
         if (!deleted) {
-            return new Response(JSON.stringify({ error: 'Item not found' }), {
-                status: 404,
+            // Idempotent success: if it's already gone, consider it a success
+            return new Response(JSON.stringify({ message: 'Item deleted (or not found)' }), {
+                status: 200,
                 headers: { 'Content-Type': 'application/json' },
             });
         }

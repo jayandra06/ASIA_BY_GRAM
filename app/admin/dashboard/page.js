@@ -163,7 +163,8 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
 
     const handleChange = (id, field, value) => {
         setLocalItems(prev => prev.map(item => {
-            if (item.id === id) {
+            const uniqueId = item.id || item._id;
+            if (uniqueId === id) {
                 const updated = { ...item, [field]: value };
                 if (field === 'category') {
                     const newCat = categories.find(c => c.name === value);
@@ -222,11 +223,11 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
         try {
             const updates = localItems
                 .filter(item => {
-                    const original = items.find(o => o.id === item.id);
+                    const original = items.find(o => (o.id || o._id) === (item.id || item._id));
                     return JSON.stringify(item) !== JSON.stringify(original);
                 })
                 .map(item => ({
-                    id: item.id,
+                    id: item.id || item._id,
                     updates: {
                         name: item.name,
                         price: item.price,
@@ -289,7 +290,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                 <div className="flex gap-3">
                     <span className="text-sm text-zinc-500 self-center">
                         {localItems.filter(item => {
-                            const original = items.find(o => o.id === item.id);
+                            const original = items.find(o => (o.id || o._id) === (item.id || item._id));
                             return JSON.stringify(item) !== JSON.stringify(original);
                         }).length} changes pending
                     </span>
@@ -320,11 +321,12 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                         <tbody className="divide-y divide-zinc-100">
                             {filteredItems.map(item => {
                                 const categoryData = categories.find(c => c.name === item.category);
+                                const uniqueId = item.id || item._id;
                                 return (
-                                    <tr key={item.id} className="hover:bg-zinc-50/50 transition-colors">
+                                    <tr key={uniqueId} className="hover:bg-zinc-50/50 transition-colors">
                                         <td className="px-4 py-3 text-center">
                                             <button
-                                                onClick={() => setImageEditModal({ open: true, itemId: item.id, currentUrl: item.image })}
+                                                onClick={() => setImageEditModal({ open: true, itemId: uniqueId, currentUrl: item.image })}
                                                 className="w-12 h-12 rounded-lg overflow-hidden border-2 border-zinc-100 relative group active:scale-95 transition-all shadow-sm"
                                             >
                                                 <img src={item.image || '/logo.png'} className="w-full h-full object-cover" />
@@ -337,12 +339,12 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                             <input
                                                 type="text"
                                                 value={item.name}
-                                                onChange={e => handleChange(item.id, 'name', e.target.value)}
+                                                onChange={e => handleChange(uniqueId, 'name', e.target.value)}
                                                 className="w-full bg-transparent border-b border-transparent hover:border-zinc-200 focus:border-primary outline-none font-bold text-zinc-900 transition-all text-sm"
                                             />
                                             <textarea
                                                 value={item.description}
-                                                onChange={e => handleChange(item.id, 'description', e.target.value)}
+                                                onChange={e => handleChange(uniqueId, 'description', e.target.value)}
                                                 placeholder="Description..."
                                                 className="w-full bg-zinc-50/50 border border-transparent hover:border-zinc-200 focus:border-primary focus:bg-white outline-none text-[11px] text-zinc-500 resize-none h-6 focus:h-24 transition-all rounded px-2 py-1 leading-normal"
                                             />
@@ -350,7 +352,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                         <td className="px-4 py-3">
                                             <select
                                                 value={item.category}
-                                                onChange={e => handleChange(item.id, 'category', e.target.value)}
+                                                onChange={e => handleChange(uniqueId, 'category', e.target.value)}
                                                 className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30"
                                             >
                                                 {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
@@ -359,7 +361,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                         <td className="px-4 py-3">
                                             <select
                                                 value={item.subcategory || ''}
-                                                onChange={e => handleChange(item.id, 'subcategory', e.target.value)}
+                                                onChange={e => handleChange(uniqueId, 'subcategory', e.target.value)}
                                                 className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30"
                                             >
                                                 <option value="">None</option>
@@ -370,7 +372,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                             <input
                                                 type="text"
                                                 value={item.price}
-                                                onChange={e => handleChange(item.id, 'price', e.target.value)}
+                                                onChange={e => handleChange(uniqueId, 'price', e.target.value)}
                                                 className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30 font-bold text-primary"
                                             />
                                         </td>
@@ -379,7 +381,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                                 {['Veg', 'Non-Veg', 'Vegan'].map(type => (
                                                     <button
                                                         key={type}
-                                                        onClick={() => handleChange(item.id, 'dietary', type)}
+                                                        onClick={() => handleChange(uniqueId, 'dietary', type)}
                                                         className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : 'bg-green-600 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
                                                     >
                                                         {type === 'Non-Veg' ? 'NV' : type === 'Vegan' ? 'VN' : 'V'}
@@ -561,7 +563,7 @@ const MenuManagement = () => {
         e.preventDefault();
         try {
             const method = editingItem ? 'PUT' : 'POST';
-            const url = editingItem ? `/api/menu/${editingItem.id}` : `/api/menu`;
+            const url = editingItem ? `/api/menu/${editingItem.id || editingItem._id}` : `/api/menu`;
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
@@ -579,7 +581,11 @@ const MenuManagement = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this item?')) return;
         try {
-            const res = await fetch(`/api/menu/${id}`, {
+            // Support both custom id and mongo _id
+            const item = items.find(i => i.id === id || i._id === id);
+            const deleteId = item.id || item._id;
+
+            const res = await fetch(`/api/menu/${deleteId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
@@ -672,29 +678,32 @@ const MenuManagement = () => {
                         ))}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => (
-                            <motion.div layout key={item.id} onClick={() => handleSelect(item.id)} className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(item.id) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}>
-                                <div className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedItems.has(item.id) ? 'bg-primary border-primary' : 'bg-white/80 border-gray-300'}`}>{selectedItems.has(item.id) && <Check size={14} className="text-black" />}</div>
-                                <div className="h-48 overflow-hidden relative">
-                                    <img src={item.image || '/logo.png'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                    <div className="absolute top-2 right-2 flex gap-2 translate-y-[-100%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => handleOpenModal(item)} className="p-2 bg-white/90 backdrop-blur-md rounded-full text-zinc-900 hover:bg-primary hover:text-black transition-colors shadow-sm"><Edit2 size={14} /></button>
-                                        <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-50/90 backdrop-blur-md rounded-full text-red-500 hover:bg-red-500 hover:text-white transition-colors shadow-sm"><Trash2 size={14} /></button>
+                        {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => {
+                            const uniqueId = item.id || item._id;
+                            return (
+                                <motion.div layout key={uniqueId} onClick={() => handleSelect(uniqueId)} className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(uniqueId) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}>
+                                    <div className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedItems.has(uniqueId) ? 'bg-primary border-primary' : 'bg-white/80 border-gray-300'}`}>{selectedItems.has(uniqueId) && <Check size={14} className="text-black" />}</div>
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={item.image || '/logo.png'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        <div className="absolute top-2 right-2 flex gap-2 translate-y-[-100%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => handleOpenModal(item)} className="p-2 bg-white/90 backdrop-blur-md rounded-full text-zinc-900 hover:bg-primary hover:text-black transition-colors shadow-sm"><Edit2 size={14} /></button>
+                                            <button onClick={() => handleDelete(uniqueId)} className="p-2 bg-red-50/90 backdrop-blur-md rounded-full text-red-500 hover:bg-red-500 hover:text-white transition-colors shadow-sm"><Trash2 size={14} /></button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="p-4 space-y-1">
-                                    <div className="flex justify-between items-start gap-2">
-                                        <h3 className="font-bold text-lg text-zinc-900 leading-tight">{item.name}</h3>
-                                        <span className="bg-primary/20 text-black text-xs font-bold px-2 py-1 rounded whitespace-nowrap">{item.price}</span>
+                                    <div className="p-4 space-y-1">
+                                        <div className="flex justify-between items-start gap-2">
+                                            <h3 className="font-bold text-lg text-zinc-900 leading-tight">{item.name}</h3>
+                                            <span className="bg-primary/20 text-black text-xs font-bold px-2 py-1 rounded whitespace-nowrap">{item.price}</span>
+                                        </div>
+                                        <div className="flex gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
+                                            <span>{item.category}</span>
+                                            {item.subcategory && <span>• {item.subcategory}</span>}
+                                        </div>
+                                        <p className="text-zinc-500 text-sm line-clamp-2">{item.description}</p>
                                     </div>
-                                    <div className="flex gap-2 text-[10px] uppercase font-bold tracking-wider text-zinc-400">
-                                        <span>{item.category}</span>
-                                        {item.subcategory && <span>• {item.subcategory}</span>}
-                                    </div>
-                                    <p className="text-zinc-500 text-sm line-clamp-2">{item.description}</p>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </>
             )}

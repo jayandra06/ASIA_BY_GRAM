@@ -15,7 +15,11 @@ export async function POST(request) {
 
         const results = await Promise.all(updates.map(async (update) => {
             const { id, updates: itemUpdates } = update;
-            return Menu.findOneAndUpdate({ id }, itemUpdates, { new: true });
+            let updated = await Menu.findOneAndUpdate({ id }, itemUpdates, { new: true });
+            if (!updated) {
+                updated = await Menu.findByIdAndUpdate(id, itemUpdates, { new: true });
+            }
+            return updated;
         }));
 
         return new Response(JSON.stringify(results), {

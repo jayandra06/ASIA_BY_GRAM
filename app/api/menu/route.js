@@ -75,6 +75,11 @@ export async function POST(request) {
             });
         }
 
+        // Generate ID if missing
+        if (!body.id) {
+            body.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
         const newItem = await Menu.create(body);
 
         // Invalidate cache

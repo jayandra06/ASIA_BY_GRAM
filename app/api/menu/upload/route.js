@@ -39,6 +39,23 @@ export async function POST(request) {
                 categoryMap.get(item.category).add(item.subcategory);
             }
 
+            // Normalize dietary field
+            let dietary = item.dietary || item.Dietary || item.Dietry || item.dietry; // Handle variations
+            if (dietary) {
+                const lowerDietary = dietary.toString().toLowerCase().trim();
+                if (lowerDietary === 'veg' || lowerDietary === 'vegetarian') {
+                    item.dietary = 'Veg';
+                } else if (lowerDietary === 'non-veg' || lowerDietary === 'non veg' || lowerDietary === 'nonveg') {
+                    item.dietary = 'Non-Veg';
+                } else if (lowerDietary === 'vegan') {
+                    item.dietary = 'Vegan';
+                } else {
+                    item.dietary = 'Veg'; // Default to Veg if unknown
+                }
+            } else {
+                item.dietary = 'Veg'; // Default if missing
+            }
+
             // Normalize boolean fields if they come from the export
             const updates = { ...item };
             if (updates.available) {

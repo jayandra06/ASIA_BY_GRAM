@@ -4,12 +4,21 @@
 import mongoose from 'mongoose';
 import dns from 'dns';
 
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+
 // Set DNS servers for SRV resolution
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-const MONGODB_URI = 'mongodb://asiabygram:Asia2025@cluster0-shard-00-00.qr3nvbx.mongodb.net:27017,cluster0-shard-00-01.qr3nvbx.mongodb.net:27017,cluster0-shard-00-02.qr3nvbx.mongodb.net:27017/asia-by-gram?ssl=true&authSource=admin&replicaSet=atlas-fvfxf3-shard-0&retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function createIndexes() {
+    if (!MONGODB_URI) {
+        console.error('Error: MONGODB_URI is not defined in the environment.');
+        process.exit(1);
+    }
     try {
         await mongoose.connect(MONGODB_URI, {
             bufferCommands: false,

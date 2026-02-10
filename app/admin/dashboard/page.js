@@ -101,7 +101,7 @@ const CategoryManagement = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categories.map(cat => (
-                    <div key={cat._id} className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={cat._id || cat.name} className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="font-bold text-lg text-zinc-900">{cat.name}</h3>
                             <div className="flex gap-2">
@@ -111,7 +111,7 @@ const CategoryManagement = () => {
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {cat.subcategories && cat.subcategories.map((sub, idx) => (
-                                <span key={idx} className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full">{sub}</span>
+                                <span key={`${cat._id || cat.name}-sub-${idx}`} className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full">{sub}</span>
                             ))}
                             {(!cat.subcategories || cat.subcategories.length === 0) && <span className="text-xs text-zinc-400 italic">No subcategories</span>}
                         </div>
@@ -321,7 +321,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                             {filteredItems.map(item => {
                                 const categoryData = categories.find(c => c.name === item.category);
                                 return (
-                                    <tr key={item.id} className="hover:bg-zinc-50/50 transition-colors">
+                                    <tr key={item._id || item.id} className="hover:bg-zinc-50/50 transition-colors">
                                         <td className="px-4 py-3 text-center">
                                             <button
                                                 onClick={() => setImageEditModal({ open: true, itemId: item.id, currentUrl: item.image })}
@@ -363,7 +363,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                                 className="w-full bg-zinc-50 border border-zinc-200 rounded px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/30"
                                             >
                                                 <option value="">None</option>
-                                                {categoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                                {categoryData?.subcategories?.map((s, idx) => <option key={`${item._id || item.id}-sub-${idx}`} value={s}>{s}</option>)}
                                             </select>
                                         </td>
                                         <td className="px-4 py-3">
@@ -378,7 +378,7 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                             <div className="flex bg-zinc-50 border border-zinc-200 rounded p-0.5 overflow-hidden">
                                                 {['Veg', 'Non-Veg', 'Vegan'].map(type => (
                                                     <button
-                                                        key={type}
+                                                        key={`${item._id || item.id}-dietary-${type}`}
                                                         onClick={() => handleChange(item.id, 'dietary', type)}
                                                         className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : 'bg-green-600 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
                                                     >
@@ -668,12 +668,12 @@ const MenuManagement = () => {
                     <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
                         <button onClick={() => setActiveTab('all')} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === 'all' ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>All Items</button>
                         {categories.map(cat => (
-                            <button key={cat._id} onClick={() => setActiveTab(cat.name)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === cat.name ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>{cat.name}</button>
+                            <button key={cat._id || cat.name} onClick={() => setActiveTab(cat.name)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === cat.name ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>{cat.name}</button>
                         ))}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => (
-                            <motion.div layout key={item.id} onClick={() => handleSelect(item.id)} className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(item.id) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}>
+                            <motion.div layout key={item._id || item.id} onClick={() => handleSelect(item.id)} className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(item.id) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}>
                                 <div className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedItems.has(item.id) ? 'bg-primary border-primary' : 'bg-white/80 border-gray-300'}`}>{selectedItems.has(item.id) && <Check size={14} className="text-black" />}</div>
                                 <div className="h-48 overflow-hidden relative">
                                     <img src={item.image || '/logo.png'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -713,14 +713,14 @@ const MenuManagement = () => {
                                         <label className="text-xs text-zinc-500 uppercase font-bold">Category</label>
                                         <select required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value, subcategory: '' })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2">
                                             <option value="">Select Category</option>
-                                            {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                            {categories.map(c => <option key={c._id || c.name} value={c.name}>{c.name}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-zinc-500 uppercase font-bold">Sub Category</label>
                                         <select value={formData.subcategory} onChange={e => setFormData({ ...formData, subcategory: e.target.value })} className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2">
                                             <option value="">None</option>
-                                            {activeCategoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                            {activeCategoryData?.subcategories?.map((s, idx) => <option key={`active-sub-${idx}`} value={s}>{s}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -779,7 +779,7 @@ const MenuManagement = () => {
                                     <label className="text-xs text-zinc-500 uppercase font-bold">New Subcategory</label>
                                     <select value={bulkFormData.subcategory} onChange={e => setBulkFormData({ ...bulkFormData, subcategory: e.target.value })} className="w-full border rounded-lg px-3 py-2">
                                         <option value="">No Change</option>
-                                        {bulkCategoryData?.subcategories?.map(s => <option key={s} value={s}>{s}</option>)}
+                                        {bulkCategoryData?.subcategories?.map((s, idx) => <option key={`bulk-sub-${idx}`} value={s}>{s}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1">

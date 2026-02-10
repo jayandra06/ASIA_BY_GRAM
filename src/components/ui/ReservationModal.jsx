@@ -47,7 +47,7 @@ const ReservationModal = ({ isOpen, onClose }) => {
                     setIsSuccess(false);
                     setStep(1);
                     setFormData({
-                        name1: '',
+                        name: '',
                         email: '',
                         phone: '',
                         people: '2',

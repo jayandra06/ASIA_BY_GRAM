@@ -44,12 +44,12 @@ const Footer = () => {
                             <span>25-35/11/A/1 RC Puram, Main Road,<br />opposite ICICI BANK, Beeramguda, Colony,<br />Ramachandrapuram, Hyderabad, 502032</span>
                         </li>
                         <li className="flex items-center gap-3">
-                            <Phone className="shrink-0 text-black" size={20} />
-                            <span>+91 8019682031, +91 8309057182</span>
+                            {/* <Phone className="shrink-0 text-black" size={20} />
+                            <span>+91 8019682031, +91 8309057182</span> */}
                         </li>
                         <li className="flex items-center gap-3">
-                            <Mail className="shrink-0 text-black" size={20} />
-                            <span>asiabygram@gmail.com</span>
+                            {/*  <Mail className="shrink-0 text-black" size={20} />
+                            <span>asiabygram@gmail.com</span> */}
                         </li>
                     </ul>
                 </div>

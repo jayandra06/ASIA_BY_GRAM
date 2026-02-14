@@ -13,10 +13,15 @@ const MenuSection = () => {
 
     useEffect(() => {
         const fetchFeatured = async () => {
-            const cached = localStorage.getItem('abg_featured_menu');
-            if (cached) {
-                setDishes(JSON.parse(cached));
-                setLoading(false);
+            try {
+                const cached = localStorage.getItem('abg_featured_menu');
+                if (cached) {
+                    setDishes(JSON.parse(cached));
+                    setLoading(false);
+                }
+            } catch (e) {
+                console.error("Error parsing cached menu:", e);
+                localStorage.removeItem('abg_featured_menu');
             }
 
             try {

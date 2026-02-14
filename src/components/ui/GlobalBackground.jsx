@@ -44,9 +44,29 @@ const ParticleField = () => {
 };
 
 const GlobalBackground = () => {
+    const [hasWebGL, setHasWebGL] = useState(true);
+
+    useEffect(() => {
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) setHasWebGL(false);
+        } catch (e) {
+            setHasWebGL(false);
+        }
+    }, []);
+
+    if (!hasWebGL) return <div className="fixed inset-0 bg-white -z-10" />;
+
     return (
         <div className="fixed inset-0 w-full h-full -z-10 bg-white pointer-events-none">
-            <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
+            <Canvas
+                camera={{ position: [0, 0, 10], fov: 60 }}
+                gl={{ antialias: true }}
+                onError={(e) => {
+                    console.error("Three.js Canvas Error:", e);
+                }}
+            >
                 {/* Darker stars for visibility on white */}
                 <Stars
                     radius={100}

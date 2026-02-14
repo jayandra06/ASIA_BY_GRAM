@@ -8,6 +8,7 @@ import SideNav from './SideNav';
 import { usePathname } from 'next/navigation';
 import GlobalBackground from '../ui/GlobalBackground';
 import SparticlesEffect from '../ui/SparticlesEffect';
+import ErrorBoundary from '../ui/ErrorBoundary';
 
 const Layout = ({ children }) => {
     const pathname = usePathname();
@@ -39,12 +40,18 @@ const Layout = ({ children }) => {
 
     return (
         <div className="bg-transparent min-h-screen text-black relative selection:bg-primary selection:text-white">
-            <GlobalBackground />
-            <SparticlesEffect />
+            <ErrorBoundary>
+                <GlobalBackground />
+            </ErrorBoundary>
+            <ErrorBoundary>
+                <SparticlesEffect />
+            </ErrorBoundary>
             {!isAdminRoute && <Navbar />}
             {!isAdminRoute && <SideNav />}
             <main className="relative z-10">
-                {children}
+                <ErrorBoundary>
+                    {children}
+                </ErrorBoundary>
             </main>
             {!isAdminRoute && <Footer />}
         </div>

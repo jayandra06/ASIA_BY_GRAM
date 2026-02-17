@@ -13,6 +13,14 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+if (typeof window !== "undefined") {
+    console.log("Firebase Configuration Check:", {
+        hasProjectId: !!firebaseConfig.projectId,
+        projectIdValue: firebaseConfig.projectId,
+        hasAppId: !!firebaseConfig.appId
+    });
+}
+
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 let analytics;

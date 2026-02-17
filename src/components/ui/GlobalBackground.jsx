@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Stars, Sparkles } from '@react-three/drei';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 const ParticleField = () => {
     const groupRef = useRef();

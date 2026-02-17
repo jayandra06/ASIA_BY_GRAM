@@ -378,13 +378,13 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex bg-zinc-50 border border-zinc-200 rounded p-0.5 overflow-hidden">
-                                                {['Veg', 'Non-Veg', 'Vegan'].map(type => (
+                                                {['Veg', 'Non-Veg', 'Both', 'Vegan'].map(type => (
                                                     <button
                                                         key={type}
                                                         onClick={() => handleChange(uniqueId, 'dietary', type)}
-                                                        className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : 'bg-green-600 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
+                                                        className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : type === 'Veg' ? 'bg-green-600 text-white' : type === 'Both' ? 'bg-gradient-to-r from-green-600 to-red-500 text-white' : 'bg-emerald-500 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
                                                     >
-                                                        {type === 'Non-Veg' ? 'NV' : type === 'Vegan' ? 'VN' : 'V'}
+                                                        {type === 'Non-Veg' ? 'NV' : type === 'Vegan' ? 'VN' : type === 'Both' ? 'B' : 'V'}
                                                     </button>
                                                 ))}
                                             </div>
@@ -618,6 +618,7 @@ const MenuManagement = () => {
         if (bulkFormData.category) updates.category = bulkFormData.category;
         if (bulkFormData.subcategory) updates.subcategory = bulkFormData.subcategory;
         if (bulkFormData.price) updates.price = bulkFormData.price;
+        if (bulkFormData.dietary) updates.dietary = bulkFormData.dietary;
 
         try {
             const res = await fetch(`/api/menu/bulk`, {
@@ -747,6 +748,7 @@ const MenuManagement = () => {
                                         <select value={formData.dietary} onChange={e => setFormData({ ...formData, dietary: e.target.value })} className="w-full border rounded-lg px-3 py-2">
                                             <option value="Veg">Veg</option>
                                             <option value="Non-Veg">Non-Veg</option>
+                                            <option value="Both">Both (Veg & Non-Veg)</option>
                                             <option value="Vegan">Vegan</option>
                                         </select>
                                     </div>
@@ -794,6 +796,16 @@ const MenuManagement = () => {
                                 <div className="space-y-1">
                                     <label className="text-xs text-zinc-500 uppercase font-bold">New Price</label>
                                     <input type="text" value={bulkFormData.price} onChange={e => setBulkFormData({ ...bulkFormData, price: e.target.value })} placeholder="No Change" className="w-full border rounded-lg px-3 py-2 text-zinc-900" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">New Dietary</label>
+                                    <select value={bulkFormData.dietary} onChange={e => setBulkFormData({ ...bulkFormData, dietary: e.target.value })} className="w-full border rounded-lg px-3 py-2">
+                                        <option value="">No Change</option>
+                                        <option value="Veg">Veg</option>
+                                        <option value="Non-Veg">Non-Veg</option>
+                                        <option value="Both">Both</option>
+                                        <option value="Vegan">Vegan</option>
+                                    </select>
                                 </div>
                                 <button type="submit" className="w-full py-3 bg-primary text-black rounded-lg font-bold">Update All Selected</button>
                             </form>

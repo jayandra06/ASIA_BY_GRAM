@@ -3,21 +3,26 @@ import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDUpEqHZ7obogQP6C60vDTt_Qj89ovEAvQ",
-    authDomain: "leo-ludo-4d550.firebaseapp.com",
-    databaseURL: "https://leo-ludo-4d550-default-rtdb.firebaseio.com",
-    projectId: "leo-ludo-4d550",
-    storageBucket: "leo-ludo-4d550.firebasestorage.app",
-    messagingSenderId: "410861554958",
-    appId: "1:410861554958:web:246612b9a0a2ddf2601b5f",
-    measurementId: "G-LTRED8QH7S"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 let analytics;
+
 if (typeof window !== "undefined") {
-    analytics = getAnalytics(app);
+    try {
+        analytics = getAnalytics(app);
+    } catch (error) {
+        console.error("Firebase Analytics failed to initialize:", error);
+    }
 }
 
 export { storage, analytics };

@@ -377,16 +377,30 @@ const BulkMenuEditor = ({ items, categories, onRefresh }) => {
                                             />
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex bg-zinc-50 border border-zinc-200 rounded p-0.5 overflow-hidden">
-                                                {['Veg', 'Non-Veg', 'Both', 'Vegan'].map(type => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => handleChange(uniqueId, 'dietary', type)}
-                                                        className={`flex-1 text-[9px] py-1 px-1 font-bold rounded transition-all ${item.dietary === type ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : type === 'Veg' ? 'bg-green-600 text-white' : type === 'Both' ? 'bg-gradient-to-r from-green-600 to-red-500 text-white' : 'bg-emerald-500 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
-                                                    >
-                                                        {type === 'Non-Veg' ? 'NV' : type === 'Vegan' ? 'VN' : type === 'Both' ? 'B' : 'V'}
-                                                    </button>
-                                                ))}
+                                            <div className="flex bg-zinc-50 border border-zinc-200 rounded p-0.5 overflow-hidden gap-0.5">
+                                                {['Veg', 'Non-Veg'].map(type => {
+                                                    const dietaryArr = Array.isArray(item.dietary) ? item.dietary : (item.dietary ? [item.dietary] : []);
+                                                    const isActive = dietaryArr.includes(type);
+                                                    return (
+                                                        <button
+                                                            key={type}
+                                                            onClick={() => {
+                                                                const next = isActive ? dietaryArr.filter(d => d !== type) : [...dietaryArr, type];
+                                                                handleChange(uniqueId, 'dietary', next);
+                                                            }}
+                                                            className={`flex-1 text-[9px] py-1 px-2 font-bold rounded transition-all ${isActive ? (type === 'Non-Veg' ? 'bg-red-500 text-white' : 'bg-green-600 text-white') : 'text-zinc-400 hover:bg-zinc-100'}`}
+                                                        >
+                                                            {type === 'Non-Veg' ? 'NV' : 'V'}
+                                                        </button>
+                                                    );
+                                                })}
+                                                <button
+                                                    onClick={() => handleChange(uniqueId, 'dietary', [])}
+                                                    className={`text-[9px] py-1 px-2 font-bold rounded transition-all ${!(Array.isArray(item.dietary) ? item.dietary : (item.dietary ? [item.dietary] : [])).length ? 'bg-zinc-400 text-white' : 'text-zinc-400 hover:bg-zinc-100'}`}
+                                                    title="None (e.g. beverages)"
+                                                >
+                                                    —
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -451,7 +465,7 @@ const MenuManagement = () => {
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState(new Set());
-    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: 'Veg' });
+    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: [] });
     const [bulkFormData, setBulkFormData] = useState({ category: '', subcategory: '', price: '' });
     const [uploading, setUploading] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -525,7 +539,7 @@ const MenuManagement = () => {
             setFormData(item);
         } else {
             setEditingItem(null);
-            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: 'Veg' });
+            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: [] });
         }
         setIsModalOpen(true);
     };
@@ -618,7 +632,7 @@ const MenuManagement = () => {
         if (bulkFormData.category) updates.category = bulkFormData.category;
         if (bulkFormData.subcategory) updates.subcategory = bulkFormData.subcategory;
         if (bulkFormData.price) updates.price = bulkFormData.price;
-        if (bulkFormData.dietary) updates.dietary = bulkFormData.dietary;
+        if (bulkFormData.dietary !== undefined) updates.dietary = bulkFormData.dietary; // [] = none (beverages)
 
         try {
             const res = await fetch(`/api/menu/bulk`, {
@@ -745,12 +759,34 @@ const MenuManagement = () => {
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-zinc-500 uppercase font-bold">Dietary</label>
-                                        <select value={formData.dietary} onChange={e => setFormData({ ...formData, dietary: e.target.value })} className="w-full border rounded-lg px-3 py-2">
-                                            <option value="Veg">Veg</option>
-                                            <option value="Non-Veg">Non-Veg</option>
-                                            <option value="Both">Both (Veg & Non-Veg)</option>
-                                            <option value="Vegan">Vegan</option>
-                                        </select>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {['Veg', 'Non-Veg'].map(type => {
+                                                const dietaryArr = Array.isArray(formData.dietary) ? formData.dietary : (formData.dietary ? [formData.dietary] : []);
+                                                const isActive = dietaryArr.includes(type);
+                                                return (
+                                                    <button
+                                                        key={type}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = isActive ? dietaryArr.filter(d => d !== type) : [...dietaryArr, type];
+                                                            setFormData({ ...formData, dietary: next });
+                                                        }}
+                                                        className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${isActive ? (type === 'Non-Veg' ? 'bg-red-500 text-white border-red-500' : 'bg-green-600 text-white border-green-600') : 'bg-white text-zinc-400 border-zinc-200 hover:border-zinc-300'}`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, dietary: [] })}
+                                                className={`py-2 px-4 rounded-lg text-sm font-bold border transition-all ${!(Array.isArray(formData.dietary) ? formData.dietary : (formData.dietary ? [formData.dietary] : [])).length ? 'bg-zinc-400 text-white border-zinc-400' : 'bg-white text-zinc-400 border-zinc-200 hover:border-zinc-300'}`}
+                                                title="None (e.g. beverages)"
+                                            >
+                                                None
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 mt-1">Leave as None for beverages</p>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
@@ -799,13 +835,34 @@ const MenuManagement = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-zinc-500 uppercase font-bold">New Dietary</label>
-                                    <select value={bulkFormData.dietary} onChange={e => setBulkFormData({ ...bulkFormData, dietary: e.target.value })} className="w-full border rounded-lg px-3 py-2">
-                                        <option value="">No Change</option>
-                                        <option value="Veg">Veg</option>
-                                        <option value="Non-Veg">Non-Veg</option>
-                                        <option value="Both">Both</option>
-                                        <option value="Vegan">Vegan</option>
-                                    </select>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {['Veg', 'Non-Veg'].map(type => {
+                                            const dietaryArr = Array.isArray(bulkFormData.dietary) ? bulkFormData.dietary : (bulkFormData.dietary ? [bulkFormData.dietary] : []);
+                                            const isActive = dietaryArr.includes(type);
+                                            return (
+                                                <button
+                                                    key={type}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const next = isActive ? dietaryArr.filter(d => d !== type) : [...dietaryArr, type];
+                                                        setBulkFormData({ ...bulkFormData, dietary: next });
+                                                    }}
+                                                    className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${isActive ? (type === 'Non-Veg' ? 'bg-red-500 text-white border-red-500' : 'bg-green-600 text-white border-green-600') : 'bg-white text-zinc-400 border-zinc-200 hover:border-zinc-300'}`}
+                                                >
+                                                    {type}
+                                                </button>
+                                            );
+                                        })}
+                                        <button
+                                            type="button"
+                                            onClick={() => setBulkFormData({ ...bulkFormData, dietary: [] })}
+                                            className={`py-2 px-4 rounded-lg text-sm font-bold border transition-all ${Array.isArray(bulkFormData.dietary) && bulkFormData.dietary.length === 0 ? 'bg-zinc-400 text-white border-zinc-400' : 'bg-white text-zinc-400 border-zinc-200 hover:border-zinc-300'}`}
+                                            title="None (e.g. beverages)"
+                                        >
+                                            None
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400 mt-1">Leave unselected for no change. None = no dietary (beverages).</p>
                                 </div>
                                 <button type="submit" className="w-full py-3 bg-primary text-black rounded-lg font-bold">Update All Selected</button>
                             </form>

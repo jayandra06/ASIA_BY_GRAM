@@ -39,21 +39,23 @@ export async function POST(request) {
                 categoryMap.get(item.category).add(item.subcategory);
             }
 
-            // Normalize dietary field
+            // Normalize dietary field to array format (empty = no dietary, e.g. beverages)
             let dietary = item.dietary || item.Dietary || item.Dietry || item.dietry; // Handle variations
-            if (dietary) {
+            if (dietary !== undefined && dietary !== null && dietary !== '') {
                 const lowerDietary = dietary.toString().toLowerCase().trim();
-                if (lowerDietary === 'veg' || lowerDietary === 'vegetarian') {
-                    item.dietary = 'Veg';
+                if (lowerDietary === 'n/a' || lowerDietary === 'na' || lowerDietary === 'beverage' || lowerDietary === 'beverages' || lowerDietary === '-') {
+                    item.dietary = [];
+                } else if (lowerDietary === 'both' || lowerDietary === 'veg, non-veg' || lowerDietary === 'veg,non-veg') {
+                    item.dietary = ['Veg', 'Non-Veg'];
                 } else if (lowerDietary === 'non-veg' || lowerDietary === 'non veg' || lowerDietary === 'nonveg') {
-                    item.dietary = 'Non-Veg';
-                } else if (lowerDietary === 'vegan') {
-                    item.dietary = 'Vegan';
+                    item.dietary = ['Non-Veg'];
+                } else if (lowerDietary === 'veg' || lowerDietary === 'vegetarian' || lowerDietary === 'vegan') {
+                    item.dietary = ['Veg'];
                 } else {
-                    item.dietary = 'Veg'; // Default to Veg if unknown
+                    item.dietary = ['Veg']; // Default if unknown
                 }
             } else {
-                item.dietary = 'Veg'; // Default if missing
+                item.dietary = []; // Empty for beverages / not specified
             }
 
             // Normalize boolean fields if they come from the export

@@ -18,9 +18,10 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
     const filteredDishes = menuItems.filter(dish => {
         if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) return false;
         if (selectedDietary === 'All') return true;
-        if (selectedDietary === 'Veg' && (dish.dietary === 'Veg' || dish.dietary === 'Vegan' || dish.dietary === 'Both')) return true;
-        if (selectedDietary === 'Non-Veg' && (dish.dietary === 'Non-Veg' || dish.dietary === 'Both')) return true;
-        return false;
+        const dietaryArr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+        if (dietaryArr.length === 0) return true; // none (e.g. beverages) – show in Veg and Non-Veg filters
+        if (dietaryArr.length === 2) return true; // both – show in Veg and Non-Veg filters
+        return dietaryArr.includes(selectedDietary);
     });
 
     return (
@@ -166,14 +167,12 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
                                                 <div className="flex justify-between items-start gap-2">
                                                     <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
                                                     <div className="flex gap-1 mt-1.5 flex-shrink-0">
-                                                        {dish.dietary === 'Both' ? (
-                                                            <>
-                                                                <div className="w-2 h-2 rounded-full bg-green-500" />
-                                                                <div className="w-2 h-2 rounded-full bg-red-500" />
-                                                            </>
-                                                        ) : (
-                                                            <div className={`w-2 h-2 rounded-full ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'}`} />
-                                                        )}
+                                                        {(() => {
+                                                            const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                                            if (!arr.length) return null;
+                                                            if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
+                                                            return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
+                                                        })()}
                                                     </div>
                                                 </div>
                                                 <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
@@ -250,9 +249,8 @@ function MenuContent() {
 
     const filteredDishes = menuItems.filter(dish => {
         const matchesCategory = selectedCategory === 'All' || dish.category === selectedCategory;
-        const matchesDietary = selectedDietary === 'All' ||
-            (selectedDietary === 'Veg' && (dish.dietary === 'Veg' || dish.dietary === 'Vegan' || dish.dietary === 'Both')) ||
-            (selectedDietary === 'Non-Veg' && (dish.dietary === 'Non-Veg' || dish.dietary === 'Both'));
+        const dietaryArr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+        const matchesDietary = selectedDietary === 'All' ? true : (dietaryArr.length === 0 || dietaryArr.length === 2 || dietaryArr.includes(selectedDietary));
         const matchesSearch = dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (dish.description && dish.description.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesCategory && matchesDietary && matchesSearch;
@@ -387,14 +385,12 @@ function MenuContent() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="absolute top-4 right-4 z-20">
-                                            {dish.dietary === 'Both' ? (
-                                                <div className="flex gap-1">
-                                                    <div className="w-3 h-3 rounded-full border-2 border-white shadow-sm bg-green-500" />
-                                                    <div className="w-3 h-3 rounded-full border-2 border-white shadow-sm bg-red-500" />
-                                                </div>
-                                            ) : (
-                                                <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'}`} />
-                                            )}
+                                            {(() => {
+                                                const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                                if (!arr.length) return null;
+                                                if (arr.length === 2) return (<div className="flex gap-1"><div className="w-3 h-3 rounded-full border-2 border-white shadow-sm bg-green-500" /><div className="w-3 h-3 rounded-full border-2 border-white shadow-sm bg-red-500" /></div>);
+                                                return <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
+                                            })()}
                                         </div>
                                     </div>
 

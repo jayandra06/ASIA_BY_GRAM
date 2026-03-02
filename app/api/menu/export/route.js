@@ -14,7 +14,7 @@ export async function GET() {
             category: item.category || '',
             subcategory: item.subcategory || '',
             price: item.price || '',
-            dietary: item.dietary || 'Veg',
+            dietary: Array.isArray(item.dietary) && item.dietary.length ? item.dietary.join(', ') : (item.dietary && !Array.isArray(item.dietary) ? item.dietary : ''),
             description: item.description || '',
             available: item.available !== false ? 'Yes' : 'No',
             featured: item.featured ? 'Yes' : 'No',

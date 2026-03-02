@@ -54,10 +54,21 @@ const MenuSection = () => {
                                 <div>
                                     <div className="flex justify-between items-start mb-6">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-3 h-3 rounded-full border ${dish.dietary === 'Non-Veg' ? 'border-red-500 bg-red-500/20' : 'border-green-500 bg-green-500/20'
-                                                } flex items-center justify-center`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${dish.dietary === 'Non-Veg' ? 'bg-red-500' : 'bg-green-500'
-                                                    }`} />
+                                            {(() => {
+                                            const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                            if (!arr.length) return null;
+                                            if (arr.length === 2) return (
+                                                <div className="flex gap-1">
+                                                    <div className="w-3 h-3 rounded-full border border-green-500 bg-green-500/20 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /></div>
+                                                    <div className="w-3 h-3 rounded-full border border-red-500 bg-red-500/20 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-red-500" /></div>
+                                                </div>
+                                            );
+                                            return (
+                                                <div className={`w-3 h-3 rounded-full border ${arr.includes('Non-Veg') ? 'border-red-500 bg-red-500/20' : 'border-green-500 bg-green-500/20'} flex items-center justify-center`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />
+                                                </div>
+                                            );
+                                        })()}
                                             </div>
                                             <span className="inline-block px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-primary border border-primary/20 rounded-full uppercase bg-yellow-50/50">
                                                 {dish.category || 'Specialty'}

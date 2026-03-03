@@ -16,6 +16,7 @@ const MobileMenu = ({ tableNumber, menuItems = [] }) => {
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuItems.filter(dish => {
+        if (dish.category === 'Uncategorised') return false; // hide uncategorised from public menu
         if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) return false;
         if (selectedDietary === 'All') return true;
         const dietaryArr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
@@ -248,6 +249,7 @@ function MenuContent() {
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuItems.filter(dish => {
+        if (dish.category === 'Uncategorised') return false; // hide uncategorised from public menu
         const matchesCategory = selectedCategory === 'All' || dish.category === selectedCategory;
         const dietaryArr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
         const matchesDietary = selectedDietary === 'All' ? true : (dietaryArr.length === 0 || dietaryArr.length === 2 || dietaryArr.includes(selectedDietary));

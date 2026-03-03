@@ -4,7 +4,7 @@ import Reservation from '../../../../../models/Reservation';
 export async function PATCH(request, { params }) {
     try {
         await dbConnect();
-        const { id } = params;
+        const { id } = await params;
         const { status } = await request.json();
         const reservation = await Reservation.findByIdAndUpdate(id, { status }, { new: true });
         return new Response(JSON.stringify(reservation), {

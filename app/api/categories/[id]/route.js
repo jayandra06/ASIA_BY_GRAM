@@ -5,7 +5,7 @@ import Menu from '../../../../models/Menu';
 export async function PUT(request, { params }) {
     try {
         await dbConnect();
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const updatedCategory = await Category.findByIdAndUpdate(id, body, { new: true });
         return new Response(JSON.stringify(updatedCategory), {
@@ -23,7 +23,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         await dbConnect();
-        const { id } = params;
+        const { id } = await params;
 
         // Find the category to get its name before deleting
         const category = await Category.findById(id);
@@ -52,3 +52,4 @@ export async function DELETE(request, { params }) {
         });
     }
 }
+

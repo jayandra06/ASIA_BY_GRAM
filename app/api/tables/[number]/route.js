@@ -4,7 +4,7 @@ import Table from '../../../../models/Table';
 export async function DELETE(request, { params }) {
     try {
         await dbConnect();
-        const { number } = params;
+        const { number } = await params;
         const result = await Table.findOneAndDelete({ number: parseInt(number) });
         if (result) {
             return new Response(JSON.stringify({ message: 'Table deleted' }), {

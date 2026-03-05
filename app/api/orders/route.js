@@ -41,7 +41,11 @@ export async function POST(request) {
             });
         }
 
+        // Generate a simple unique-ish order number on the server
+        const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+
         const order = await Order.create({
+            orderNumber,
             items: body.items.map(i => ({
                 menuItemId: i.menuItemId,
                 name: i.name,
@@ -62,7 +66,10 @@ export async function POST(request) {
         });
     } catch (error) {
         console.error('POST /api/orders:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({
+            error: error.message || String(error),
+            stack: error.stack || null
+        }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });

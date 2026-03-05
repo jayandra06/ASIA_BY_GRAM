@@ -8,7 +8,7 @@ const OrderItemSchema = new mongoose.Schema({
 }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({
-    orderNumber: { type: String, unique: true }, // human-readable e.g. ORD-1001
+    orderNumber: { type: String, unique: true }, // human-readable e.g. ORD-ABC123
     items: [OrderItemSchema],
     customerName: { type: String, required: true },
     customerPhone: { type: String, required: true },
@@ -18,14 +18,5 @@ const OrderSchema = new mongoose.Schema({
     specialRequests: { type: String },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
-
-// Generate order number before save
-OrderSchema.pre('save', async function (next) {
-    if (!this.orderNumber) {
-        const count = await this.constructor.countDocuments();
-        this.orderNumber = `ORD-${String(count + 1).padStart(4, '0')}`;
-    }
-    next();
-});
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

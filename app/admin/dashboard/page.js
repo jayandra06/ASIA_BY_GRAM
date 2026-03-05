@@ -959,14 +959,19 @@ const TableAllocation = () => {
 const OrdersManagement = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [search, setSearch] = useState('');
 
     const fetchOrders = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
             if (res.ok) setOrders(await res.json());
-        } catch (error) { console.error("Error fetching orders:", error); }
-        finally { setLoading(false); }
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => { fetchOrders(); }, []);
@@ -984,61 +989,164 @@ const OrdersManagement = () => {
 
     const statusOptions = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Served', 'Cancelled'];
 
+    const filtered = orders.filter(order => {
+        const matchStatus = statusFilter === 'All' ? true : order.status === statusFilter;
+        const term = search.trim().toLowerCase();
+        if (!term) return matchStatus;
+        const haystack = [
+            order.orderNumber,
+            order.customerName,
+            order.customerPhone,
+            order.tableNumber
+        ].filter(Boolean).join(' ').toLowerCase();
+        return matchStatus && haystack.includes(term);
+    });
+
+    const countByStatus = (status) => orders.filter(o => o.status === status).length;
+
     return (
         <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Orders</h2>
-                <button onClick={fetchOrders} className="text-sm text-primary hover:underline">Refresh</button>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Orders</h2>
+                    <p className="text-xs text-zinc-500 mt-1">Live overview of all table and takeaway orders.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder="Search order, name, phone, table..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="pl-9 pr-3 py-2 rounded-lg border border-zinc-200 text-sm bg-white min-w-[220px] focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                    </div>
+                    <button onClick={fetchOrders} className="text-sm text-primary hover:text-primary-dark underline">Refresh</button>
+                </div>
             </div>
+
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white border border-yellow-100 rounded-xl p-4 flex flex-col gap-1 shadow-sm">
+                    <span className="text-xs font-bold uppercase tracking-widest text-yellow-600">Pending</span>
+                    <span className="text-2xl font-extrabold text-zinc-900">{countByStatus('Pending')}</span>
+                    <span className="text-[11px] text-zinc-500">New orders waiting to be confirmed.</span>
+                </div>
+                <div className="bg-white border border-blue-100 rounded-xl p-4 flex flex-col gap-1 shadow-sm">
+                    <span className="text-xs font-bold uppercase tracking-widest text-blue-600">In Progress</span>
+                    <span className="text-2xl font-extrabold text-zinc-900">
+                        {countByStatus('Confirmed') + countByStatus('Preparing') + countByStatus('Ready')}
+                    </span>
+                    <span className="text-[11px] text-zinc-500">Confirmed, Preparing or Ready to serve.</span>
+                </div>
+                <div className="bg-white border border-green-100 rounded-xl p-4 flex flex-col gap-1 shadow-sm">
+                    <span className="text-xs font-bold uppercase tracking-widest text-green-600">Completed</span>
+                    <span className="text-2xl font-extrabold text-zinc-900">
+                        {countByStatus('Served')}
+                    </span>
+                    <span className="text-[11px] text-zinc-500">Orders marked as Served.</span>
+                </div>
+            </div>
+
+            {/* Status filter pills */}
+            <div className="flex flex-wrap gap-2">
+                {['All', ...statusOptions].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setStatusFilter(status)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                            statusFilter === status
+                                ? 'bg-zinc-900 text-white border-zinc-900'
+                                : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+                        }`}
+                    >
+                        {status}
+                    </button>
+                ))}
+            </div>
+
+            {/* Orders table */}
             {loading ? (
-                <div className="flex justify-center py-12"><div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
+                <div className="flex justify-center py-12">
+                    <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                </div>
             ) : (
                 <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
                             <tr>
-                                <th className="p-4">Order #</th>
-                                <th className="p-4">Customer</th>
-                                <th className="p-4">Type</th>
-                                <th className="p-4">Table</th>
-                                <th className="p-4">Items</th>
-                                <th className="p-4">Total (approx)</th>
-                                <th className="p-4">Date & time</th>
-                                <th className="p-4">Requests</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Actions</th>
+                                <th className="p-3">Order #</th>
+                                <th className="p-3">Customer</th>
+                                <th className="p-3">Type</th>
+                                <th className="p-3">Table</th>
+                                <th className="p-3">Items</th>
+                                <th className="p-3">Total (approx)</th>
+                                <th className="p-3">Date & time</th>
+                                <th className="p-3">Requests</th>
+                                <th className="p-3">Status</th>
+                                <th className="p-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
-                            {orders.length === 0 ? (
-                                <tr><td colSpan="10" className="p-8 text-center text-zinc-400">No orders yet.</td></tr>
-                            ) : orders.map(order => {
-                                const total = order.items.reduce((s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1), 0);
+                            {filtered.length === 0 ? (
+                                <tr>
+                                    <td colSpan="10" className="p-8 text-center text-zinc-400">
+                                        No orders match the current filters.
+                                    </td>
+                                </tr>
+                            ) : filtered.map(order => {
+                                const total = order.items.reduce(
+                                    (s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1),
+                                    0
+                                );
                                 return (
                                     <tr key={order._id} className="hover:bg-zinc-50 transition-colors">
-                                        <td className="p-4 font-bold text-zinc-900">{order.orderNumber || order._id}</td>
-                                        <td className="p-4">
+                                        <td className="p-3 font-bold text-zinc-900 whitespace-nowrap">{order.orderNumber || order._id}</td>
+                                        <td className="p-3">
                                             <div className="font-bold text-zinc-900">{order.customerName}</div>
                                             <div className="text-xs text-zinc-400">{order.customerPhone}</div>
                                         </td>
-                                        <td className="p-4">{order.orderType}</td>
-                                        <td className="p-4">{order.tableNumber || '-'}</td>
-                                        <td className="p-4 max-w-[200px]">
+                                        <td className="p-3 whitespace-nowrap">{order.orderType}</td>
+                                        <td className="p-3 whitespace-nowrap">{order.tableNumber || '-'}</td>
+                                        <td className="p-3 max-w-[220px]">
                                             <ul className="text-xs space-y-0.5">
                                                 {order.items.map((item, idx) => (
                                                     <li key={idx}>{item.name} × {item.quantity}</li>
                                                 ))}
                                             </ul>
                                         </td>
-                                        <td className="p-4 font-bold">₹{total.toFixed(0)}</td>
-                                        <td className="p-4 text-xs">{order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}</td>
-                                        <td className="p-4 text-xs max-w-[120px] truncate" title={order.specialRequests || ''}>{order.specialRequests || '-'}</td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${order.status === 'Served' ? 'bg-green-100 text-green-700' : order.status === 'Cancelled' ? 'bg-red-100 text-red-700' : order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>{order.status}</span>
+                                        <td className="p-3 font-bold whitespace-nowrap">₹{total.toFixed(0)}</td>
+                                        <td className="p-3 text-xs whitespace-nowrap">
+                                            {order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}
                                         </td>
-                                        <td className="p-4">
-                                            <select value={order.status} onChange={e => updateOrderStatus(order._id, e.target.value)} className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800">
-                                                {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                                        <td className="p-3 text-xs max-w-[160px] truncate" title={order.specialRequests || ''}>
+                                            {order.specialRequests || '-'}
+                                        </td>
+                                        <td className="p-3 whitespace-nowrap">
+                                            <span
+                                                className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                                                    order.status === 'Served'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : order.status === 'Cancelled'
+                                                        ? 'bg-red-100 text-red-700'
+                                                        : order.status === 'Pending'
+                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                        : 'bg-blue-100 text-blue-700'
+                                                }`}
+                                            >
+                                                {order.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-3 whitespace-nowrap">
+                                            <select
+                                                value={order.status}
+                                                onChange={e => updateOrderStatus(order._id, e.target.value)}
+                                                className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800"
+                                            >
+                                                {statusOptions.map(s => (
+                                                    <option key={s} value={s}>{s}</option>
+                                                ))}
                                             </select>
                                         </td>
                                     </tr>
@@ -1048,7 +1156,11 @@ const OrdersManagement = () => {
                     </table>
                 </div>
             )}
-            {orders.length > 0 && <p className="text-xs text-zinc-400">Special requests are in the order details. Use status dropdown to update.</p>}
+            {orders.length > 0 && (
+                <p className="text-xs text-zinc-400">
+                    Tip: Filter by status or search to quickly find an order. Update status from the dropdown.
+                </p>
+            )}
         </div>
     );
 };

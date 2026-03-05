@@ -9,10 +9,12 @@ import Image from 'next/image';
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
-const MobileMenu = ({ tableNumber, menuItems = [] }) => {
+const FALLBACK_CATEGORIES = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
+
+const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
-    const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
+    const categories = categoriesProp && categoriesProp.length > 0 ? categoriesProp : FALLBACK_CATEGORIES;
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuItems.filter(dish => {
@@ -203,6 +205,7 @@ function MenuContent() {
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [menuItems, setMenuItems] = useState([]);
+    const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -224,6 +227,21 @@ function MenuContent() {
     }, []);
 
     useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/categories');
+                if (res.ok) {
+                    const data = await res.json();
+                    setCategories(['All', ...(Array.isArray(data) ? data.map(c => c.name) : [])]);
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
         };
@@ -242,10 +260,9 @@ function MenuContent() {
     }
 
     if (tableNumber || isMobile) {
-        return <MobileMenu tableNumber={tableNumber} menuItems={menuItems} />;
+        return <MobileMenu tableNumber={tableNumber} menuItems={menuItems} categories={categories} />;
     }
 
-    const categories = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
 
     const filteredDishes = menuItems.filter(dish => {

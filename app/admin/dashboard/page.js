@@ -517,6 +517,11 @@ const MenuManagement = () => {
         fetchCategories();
     }, []);
 
+    // Refetch categories when switching to menu/bulk so new categories from Category Management appear in dropdowns
+    useEffect(() => {
+        if (subTab === 'items' || subTab === 'bulk') fetchCategories();
+    }, [subTab]);
+
     const fetchItems = async () => {
         try {
             const res = await fetch('/api/menu');

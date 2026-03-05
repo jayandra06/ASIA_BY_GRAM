@@ -465,7 +465,7 @@ const MenuManagement = () => {
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState(new Set());
-    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: [] });
+    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: [], options: [] });
     const [bulkFormData, setBulkFormData] = useState({ category: '', subcategory: '', price: '' });
     const [uploading, setUploading] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -541,10 +541,13 @@ const MenuManagement = () => {
         setUploadProgress(0);
         if (item) {
             setEditingItem(item);
-            setFormData(item);
+            setFormData({
+                ...item,
+                options: Array.isArray(item.options) ? item.options : []
+            });
         } else {
             setEditingItem(null);
-            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: [] });
+            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: [], options: [] });
         }
         setIsModalOpen(true);
     };
@@ -802,6 +805,151 @@ const MenuManagement = () => {
                                 <div className="space-y-1">
                                     <label className="text-xs text-zinc-500 uppercase font-bold">Description</label>
                                     <textarea rows="3" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-zinc-900" />
+                                </div>
+                                <div className="space-y-2 pt-2 border-t border-dashed border-zinc-200">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs text-zinc-500 uppercase font-bold">Add-ons & Variants (optional)</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const next = Array.isArray(formData.options) ? [...formData.options] : [];
+                                                next.push({
+                                                    id: `opt_${Date.now().toString(36)}`,
+                                                    name: '',
+                                                    type: 'single',
+                                                    required: false,
+                                                    choices: []
+                                                });
+                                                setFormData({ ...formData, options: next });
+                                            }}
+                                            className="text-[11px] text-primary hover:text-primary-dark flex items-center gap-1"
+                                        >
+                                            <Plus size={12} /> Add Group
+                                        </button>
+                                    </div>
+                                    {Array.isArray(formData.options) && formData.options.length > 0 && (
+                                        <div className="space-y-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3 max-h-60 overflow-y-auto">
+                                            {formData.options.map((opt, idx) => (
+                                                <div key={opt.id || idx} className="bg-white rounded-lg border border-zinc-200 p-3 space-y-2">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Group name (e.g. Milk, Size)"
+                                                            value={opt.name || ''}
+                                                            onChange={e => {
+                                                                const next = [...formData.options];
+                                                                next[idx] = { ...next[idx], name: e.target.value };
+                                                                // auto-generate id from name if empty
+                                                                if (!next[idx].id) {
+                                                                    next[idx].id = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                                                                }
+                                                                setFormData({ ...formData, options: next });
+                                                            }}
+                                                            className="flex-1 border border-zinc-200 rounded px-2 py-1 text-xs"
+                                                        />
+                                                        <select
+                                                            value={opt.type || 'single'}
+                                                            onChange={e => {
+                                                                const next = [...formData.options];
+                                                                next[idx] = { ...next[idx], type: e.target.value };
+                                                                setFormData({ ...formData, options: next });
+                                                            }}
+                                                            className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white"
+                                                        >
+                                                            <option value="single">Single choice</option>
+                                                            <option value="multi">Multiple choice</option>
+                                                        </select>
+                                                        <label className="flex items-center gap-1 text-[11px] text-zinc-500">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={!!opt.required}
+                                                                onChange={e => {
+                                                                    const next = [...formData.options];
+                                                                    next[idx] = { ...next[idx], required: e.target.checked };
+                                                                    setFormData({ ...formData, options: next });
+                                                                }}
+                                                            />
+                                                            Required
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const next = [...formData.options];
+                                                                next.splice(idx, 1);
+                                                                setFormData({ ...formData, options: next });
+                                                            }}
+                                                            className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="block text-[11px] text-zinc-500 mb-1">Choices (as tags)</label>
+                                                        <div className="flex flex-wrap gap-1 mb-1">
+                                                            {(opt.choices || []).length === 0 && (
+                                                                <span className="text-[10px] text-zinc-400">No choices yet.</span>
+                                                            )}
+                                                            {(opt.choices || []).map((choice, cIdx) => (
+                                                                <span
+                                                                    key={cIdx}
+                                                                    className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-700 border border-zinc-200 rounded-full px-2 py-0.5 text-[11px]"
+                                                                >
+                                                                    {choice}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const next = [...formData.options];
+                                                                            const current = Array.isArray(next[idx].choices) ? next[idx].choices : [];
+                                                                            next[idx] = {
+                                                                                ...next[idx],
+                                                                                choices: current.filter(v => v !== choice)
+                                                                            };
+                                                                            setFormData({ ...formData, options: next });
+                                                                        }}
+                                                                        className="text-zinc-400 hover:text-red-500"
+                                                                    >
+                                                                        <X size={10} />
+                                                                    </button>
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Type and press Enter (e.g. Small)"
+                                                            className="w-full border border-zinc-200 rounded px-2 py-1 text-xs"
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter' || e.key === ',') {
+                                                                    e.preventDefault();
+                                                                    const raw = e.currentTarget.value.trim().replace(/,$/, '');
+                                                                    if (!raw) return;
+                                                                    const next = [...formData.options];
+                                                                    const current = Array.isArray(next[idx].choices) ? next[idx].choices : [];
+                                                                    if (!current.includes(raw)) {
+                                                                        next[idx] = {
+                                                                            ...next[idx],
+                                                                            choices: [...current, raw]
+                                                                        };
+                                                                        setFormData({ ...formData, options: next });
+                                                                    }
+                                                                    e.currentTarget.value = '';
+                                                                }
+                                                            }}
+                                                        />
+                                                        <p className="text-[10px] text-zinc-400">
+                                                            Example: add tags like <span className="font-semibold">Small</span>,{' '}
+                                                            <span className="font-semibold">Medium</span>,{' '}
+                                                            <span className="font-semibold">Large</span>.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {(!formData.options || formData.options.length === 0) && (
+                                        <p className="text-[10px] text-zinc-400">
+                                            Use this section for Boba, size options, spice level, extra toppings, etc.
+                                        </p>
+                                    )}
                                 </div>
                                 <button type="submit" disabled={uploading} className="w-full py-3 bg-primary text-black rounded-lg font-bold">{uploading ? 'Uploading...' : 'Save Item'}</button>
                             </form>

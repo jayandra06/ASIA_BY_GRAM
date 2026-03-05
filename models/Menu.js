@@ -10,7 +10,15 @@ const MenuSchema = new mongoose.Schema({
     dietary: { type: [String], enum: ['Veg', 'Non-Veg'], default: [] }, // empty = no dietary (e.g. beverages)
     image: String,
     available: { type: Boolean, default: true },
-    featured: { type: Boolean, default: false }
+    featured: { type: Boolean, default: false },
+    // Optional per-item configuration for add-ons / variants
+    options: [{
+        id: { type: String },                          // e.g. "milk", "size"
+        name: { type: String },                        // e.g. "Type of milk"
+        type: { type: String, enum: ['single', 'multi'], default: 'single' },
+        required: { type: Boolean, default: false },
+        choices: [{ type: String }]                    // e.g. ["Almond Milk", "Oat Milk"]
+    }]
 }, { timestamps: true });
 
 // Check if the model exists before creating a new one to prevent errors during hot reloading

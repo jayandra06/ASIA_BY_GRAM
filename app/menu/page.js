@@ -356,7 +356,9 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
 
                             <div className="grid gap-4 pb-24">
                                 {filteredDishes.map(dish => {
-                                    const optionConfig = ITEM_OPTIONS[dish.id];
+                                    const optionConfig = (Array.isArray(dish.options) && dish.options.length > 0)
+                                        ? dish.options
+                                        : ITEM_OPTIONS[dish.id];
                                     const hasOptions = !!optionConfig;
                                     return (
                                     <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
@@ -522,7 +524,10 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                         </button>
                                     </div>
                                     <div className="overflow-y-auto flex-1 p-4 space-y-4">
-                                        {ITEM_OPTIONS[optionModal.dish.id]?.map(group => (
+                                        {(Array.isArray(optionModal.dish.options) && optionModal.dish.options.length
+                                            ? optionModal.dish.options
+                                            : (ITEM_OPTIONS[optionModal.dish.id] || [])
+                                        ).map(group => (
                                             <div key={group.id} className="space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
@@ -594,7 +599,9 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                     <div className="p-4 border-t border-zinc-200">
                                         <button
                                             onClick={() => {
-                                                const config = ITEM_OPTIONS[optionModal.dish.id] || [];
+                                                const config = (Array.isArray(optionModal.dish.options) && optionModal.dish.options.length
+                                                    ? optionModal.dish.options
+                                                    : (ITEM_OPTIONS[optionModal.dish.id] || []));
                                                 // Build normalized options payload
                                                 const selectedOptions = config.map(group => {
                                                     const sel = optionModal.selections[group.id];

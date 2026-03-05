@@ -4,7 +4,12 @@ const OrderItemSchema = new mongoose.Schema({
     menuItemId: { type: String },
     name: { type: String, required: true },
     price: { type: String, required: true }, // e.g. "₹100"
-    quantity: { type: Number, required: true, min: 1 }
+    quantity: { type: Number, required: true, min: 1 },
+    // Selected options for this item, e.g. milk type, flavour, add-ons
+    options: [{
+        group: { type: String },          // e.g. "Milk", "Flavour"
+        values: [{ type: String }]        // e.g. ["Almond Milk"], ["Pearls", "Jelly"]
+    }]
 }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({

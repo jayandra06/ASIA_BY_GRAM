@@ -1110,9 +1110,21 @@ const OrdersManagement = () => {
                                         <td className="p-3 whitespace-nowrap">{order.orderType}</td>
                                         <td className="p-3 whitespace-nowrap">{order.tableNumber || '-'}</td>
                                         <td className="p-3 max-w-[220px]">
-                                            <ul className="text-xs space-y-0.5">
+                                            <ul className="text-xs space-y-1">
                                                 {order.items.map((item, idx) => (
-                                                    <li key={idx}>{item.name} × {item.quantity}</li>
+                                                    <li key={idx}>
+                                                        <div>{item.name} × {item.quantity}</div>
+                                                        {item.options && item.options.length > 0 && (
+                                                            <div className="text-[10px] text-zinc-400">
+                                                                {item.options.map((opt, oi) => (
+                                                                    <span key={oi}>
+                                                                        {opt.group}: {opt.values.join(', ')}
+                                                                        {oi !== item.options.length - 1 && ' • '}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </li>
                                                 ))}
                                             </ul>
                                         </td>

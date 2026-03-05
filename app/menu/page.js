@@ -11,6 +11,56 @@ const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf
 
 const FALLBACK_CATEGORIES = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
 
+// Per-item customization options (e.g. for Boba)
+const ITEM_OPTIONS = {
+    'item-boba': [
+        {
+            id: 'milk',
+            name: 'Type of milk',
+            type: 'single',
+            required: true,
+            choices: ['Regular Milk', 'Toned Milk', 'Almond Milk', 'Oat Milk']
+        },
+        {
+            id: 'flavour',
+            name: 'Flavour',
+            type: 'single',
+            required: true,
+            choices: ['Mango', 'Kiwi', 'Watermelon', 'Green Apple', 'Litchi', 'Passion Fruit', 'Coffee', 'Chocolate']
+        },
+        {
+            id: 'addons',
+            name: 'Add-ons',
+            type: 'multi',
+            required: false,
+            choices: ['Tapioca Pearls', 'Popping Boba', 'Fruit Jelly', 'Extra Ice']
+        }
+    ],
+    'item-boba-various-flavors': [
+        {
+            id: 'milk',
+            name: 'Type of milk',
+            type: 'single',
+            required: true,
+            choices: ['Regular Milk', 'Toned Milk', 'Almond Milk', 'Oat Milk']
+        },
+        {
+            id: 'flavour',
+            name: 'Flavour',
+            type: 'single',
+            required: true,
+            choices: ['Mango', 'Kiwi', 'Watermelon', 'Green Apple', 'Litchi', 'Passion Fruit', 'Coffee', 'Chocolate']
+        },
+        {
+            id: 'addons',
+            name: 'Add-ons',
+            type: 'multi',
+            required: false,
+            choices: ['Tapioca Pearls', 'Popping Boba', 'Fruit Jelly', 'Extra Ice']
+        }
+    ]
+};
+
 function parsePrice(priceStr) {
     if (typeof priceStr !== 'string') return 0;
     const num = priceStr.replace(/[^\d.]/g, '');
@@ -20,7 +70,7 @@ function parsePrice(priceStr) {
 const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
-    const [cart, setCart] = useState([]); // { menuItemId, name, price, quantity }
+    const [cart, setCart] = useState([]); // { menuItemId, name, price, quantity, options? }
     const [showCartDrawer, setShowCartDrawer] = useState(false);
     const [step, setStep] = useState('menu'); // 'menu' | 'checkout' | 'success'
     const [checkoutForm, setCheckoutForm] = useState({ customerName: '', customerPhone: '', orderType: 'Dine-in', specialRequests: '' });
@@ -33,14 +83,25 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
     const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
     const cartTotal = cart.reduce((sum, i) => sum + parsePrice(i.price) * i.quantity, 0);
 
-    const addToCart = (dish) => {
+    const [optionModal, setOptionModal] = useState({
+        open: false,
+        dish: null,
+        selections: {}
+    });
+
+    const addToCart = (dish, selectedOptions = []) => {
         const id = dish.id || dish._id;
+        const optionsKey = JSON.stringify(selectedOptions || []);
         setCart(prev => {
-            const existing = prev.find(i => i.menuItemId === id);
+            const existing = prev.find(i => i.menuItemId === id && JSON.stringify(i.options || []) === optionsKey);
             if (existing) {
-                return prev.map(i => i.menuItemId === id ? { ...i, quantity: i.quantity + 1 } : i);
+                return prev.map(i =>
+                    i.menuItemId === id && JSON.stringify(i.options || []) === optionsKey
+                        ? { ...i, quantity: i.quantity + 1 }
+                        : i
+                );
             }
-            return [...prev, { menuItemId: id, name: dish.name, price: dish.price, quantity: 1 }];
+            return [...prev, { menuItemId: id, name: dish.name, price: dish.price, quantity: 1, options: selectedOptions }];
         });
     };
     const updateQuantity = (menuItemId, delta) => {
@@ -63,7 +124,13 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    items: cart.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity })),
+                    items: cart.map(i => ({
+                        menuItemId: i.menuItemId,
+                        name: i.name,
+                        price: i.price,
+                        quantity: i.quantity,
+                        options: i.options || []
+                    })),
                     customerName: checkoutForm.customerName.trim(),
                     customerPhone: checkoutForm.customerPhone.trim(),
                     orderType: checkoutForm.orderType,
@@ -288,7 +355,10 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                             </div>
 
                             <div className="grid gap-4 pb-24">
-                                {filteredDishes.map(dish => (
+                                {filteredDishes.map(dish => {
+                                    const optionConfig = ITEM_OPTIONS[dish.id];
+                                    const hasOptions = !!optionConfig;
+                                    return (
                                     <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
                                         {dish.image && (
                                             <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
@@ -322,14 +392,32 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                             <div className="flex justify-between items-end mt-3">
                                                 <span className="font-bold text-primary-dark">{dish.price}</span>
                                                 {isTableOrder && (
-                                                    <button onClick={() => addToCart(dish)} className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-500 transition-colors">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!hasOptions) {
+                                                                addToCart(dish);
+                                                            } else {
+                                                                // open options modal
+                                                                const initialSelections = {};
+                                                                optionConfig.forEach(group => {
+                                                                    if (group.type === 'single') {
+                                                                        initialSelections[group.id] = group.choices[0] || '';
+                                                                    } else {
+                                                                        initialSelections[group.id] = [];
+                                                                    }
+                                                                });
+                                                                setOptionModal({ open: true, dish, selections: initialSelections });
+                                                            }
+                                                        }}
+                                                        className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-500 transition-colors"
+                                                    >
                                                         <Plus size={14} /> Add
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                )})}
                             </div>
                         </motion.div>
                     )}
@@ -398,6 +486,134 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                             <button onClick={openCheckout} className="w-full py-3 bg-primary text-black font-bold rounded-xl">Proceed to checkout</button>
                                         </div>
                                     )}
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Options modal */}
+                    <AnimatePresence>
+                        {optionModal.open && optionModal.dish && (
+                            <>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 0.5 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 bg-black z-40"
+                                    onClick={() => setOptionModal({ open: false, dish: null, selections: {} })}
+                                />
+                                <motion.div
+                                    initial={{ y: '100%' }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: '100%' }}
+                                    transition={{ type: 'tween' }}
+                                    className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] flex flex-col"
+                                >
+                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-zinc-900">{optionModal.dish.name}</h3>
+                                            <p className="text-xs text-zinc-500 mt-0.5">Customize your drink before adding to cart.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setOptionModal({ open: false, dish: null, selections: {} })}
+                                            className="p-2 text-zinc-500 hover:text-zinc-900"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="overflow-y-auto flex-1 p-4 space-y-4">
+                                        {ITEM_OPTIONS[optionModal.dish.id]?.map(group => (
+                                            <div key={group.id} className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                                                        {group.name}
+                                                    </span>
+                                                    {group.required && <span className="text-[10px] text-red-500 font-bold">Required</span>}
+                                                </div>
+                                                {group.type === 'single' ? (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {group.choices.map(choice => {
+                                                            const active = optionModal.selections[group.id] === choice;
+                                                            return (
+                                                                <button
+                                                                    key={choice}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setOptionModal(prev => ({
+                                                                            ...prev,
+                                                                            selections: { ...prev.selections, [group.id]: choice }
+                                                                        }))
+                                                                    }
+                                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                                                        active
+                                                                            ? 'bg-zinc-900 text-white border-zinc-900'
+                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                                                                    }`}
+                                                                >
+                                                                    {choice}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {group.choices.map(choice => {
+                                                            const values = optionModal.selections[group.id] || [];
+                                                            const active = values.includes(choice);
+                                                            return (
+                                                                <button
+                                                                    key={choice}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setOptionModal(prev => {
+                                                                            const current = prev.selections[group.id] || [];
+                                                                            const next = active
+                                                                                ? current.filter(v => v !== choice)
+                                                                                : [...current, choice];
+                                                                            return {
+                                                                                ...prev,
+                                                                                selections: { ...prev.selections, [group.id]: next }
+                                                                            };
+                                                                        })
+                                                                    }
+                                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                                                        active
+                                                                            ? 'bg-primary text-black border-primary'
+                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                                                                    }`}
+                                                                >
+                                                                    {choice}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-4 border-t border-zinc-200">
+                                        <button
+                                            onClick={() => {
+                                                const config = ITEM_OPTIONS[optionModal.dish.id] || [];
+                                                // Build normalized options payload
+                                                const selectedOptions = config.map(group => {
+                                                    const sel = optionModal.selections[group.id];
+                                                    const values = group.type === 'single'
+                                                        ? (sel ? [sel] : [])
+                                                        : Array.isArray(sel) ? sel : [];
+                                                    return {
+                                                        group: group.name,
+                                                        values
+                                                    };
+                                                }).filter(o => o.values.length > 0);
+                                                addToCart(optionModal.dish, selectedOptions);
+                                                setOptionModal({ open: false, dish: null, selections: {} });
+                                            }}
+                                            className="w-full py-3 bg-primary text-black font-bold rounded-xl"
+                                        >
+                                            Add to cart
+                                        </button>
+                                    </div>
                                 </motion.div>
                             </>
                         )}

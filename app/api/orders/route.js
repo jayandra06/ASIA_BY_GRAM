@@ -50,7 +50,8 @@ export async function POST(request) {
                 menuItemId: i.menuItemId,
                 name: i.name,
                 price: i.price,
-                quantity: i.quantity
+                quantity: i.quantity,
+                options: Array.isArray(i.options) ? i.options : []
             })),
             customerName: body.customerName.trim(),
             customerPhone: body.customerPhone.trim(),

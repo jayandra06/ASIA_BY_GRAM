@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save, ClipboardList } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../../src/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -956,6 +956,103 @@ const TableAllocation = () => {
     );
 };
 
+const OrdersManagement = () => {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+            if (res.ok) setOrders(await res.json());
+        } catch (error) { console.error("Error fetching orders:", error); }
+        finally { setLoading(false); }
+    };
+
+    useEffect(() => { fetchOrders(); }, []);
+
+    const updateOrderStatus = async (id, status) => {
+        try {
+            const res = await fetch(`/api/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
+        } catch (error) { console.error(error); }
+    };
+
+    const statusOptions = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Served', 'Cancelled'];
+
+    return (
+        <div className="p-6 space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Orders</h2>
+                <button onClick={fetchOrders} className="text-sm text-primary hover:underline">Refresh</button>
+            </div>
+            {loading ? (
+                <div className="flex justify-center py-12"><div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
+            ) : (
+                <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th className="p-4">Order #</th>
+                                <th className="p-4">Customer</th>
+                                <th className="p-4">Type</th>
+                                <th className="p-4">Table</th>
+                                <th className="p-4">Items</th>
+                                <th className="p-4">Total (approx)</th>
+                                <th className="p-4">Date & time</th>
+                                <th className="p-4">Requests</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
+                            {orders.length === 0 ? (
+                                <tr><td colSpan="10" className="p-8 text-center text-zinc-400">No orders yet.</td></tr>
+                            ) : orders.map(order => {
+                                const total = order.items.reduce((s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1), 0);
+                                return (
+                                    <tr key={order._id} className="hover:bg-zinc-50 transition-colors">
+                                        <td className="p-4 font-bold text-zinc-900">{order.orderNumber || order._id}</td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-zinc-900">{order.customerName}</div>
+                                            <div className="text-xs text-zinc-400">{order.customerPhone}</div>
+                                        </td>
+                                        <td className="p-4">{order.orderType}</td>
+                                        <td className="p-4">{order.tableNumber || '-'}</td>
+                                        <td className="p-4 max-w-[200px]">
+                                            <ul className="text-xs space-y-0.5">
+                                                {order.items.map((item, idx) => (
+                                                    <li key={idx}>{item.name} × {item.quantity}</li>
+                                                ))}
+                                            </ul>
+                                        </td>
+                                        <td className="p-4 font-bold">₹{total.toFixed(0)}</td>
+                                        <td className="p-4 text-xs">{order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}</td>
+                                        <td className="p-4 text-xs max-w-[120px] truncate" title={order.specialRequests || ''}>{order.specialRequests || '-'}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${order.status === 'Served' ? 'bg-green-100 text-green-700' : order.status === 'Cancelled' ? 'bg-red-100 text-red-700' : order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>{order.status}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <select value={order.status} onChange={e => updateOrderStatus(order._id, e.target.value)} className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800">
+                                                {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            {orders.length > 0 && <p className="text-xs text-zinc-400">Special requests are in the order details. Use status dropdown to update.</p>}
+        </div>
+    );
+};
+
 const QRCodeManagement = () => {
     const [tables, setTables] = useState([]);
     const [count, setCount] = useState('');
@@ -1075,6 +1172,7 @@ const AdminDashboardPage = () => {
                         <button onClick={() => setActiveView('welcome')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'welcome' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><LayoutDashboard size={20} /> Dashboard</button>
                         <button onClick={() => setActiveView('menu')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'menu' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><UtensilsCrossed size={20} /> Menu Management</button>
                         <button onClick={() => setActiveView('reservations')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'reservations' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><CalendarDays size={20} /> Table Allocation</button>
+                        <button onClick={() => setActiveView('orders')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'orders' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><ClipboardList size={20} /> Orders</button>
                         <button onClick={() => setActiveView('qr')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'qr' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><QrCode size={20} /> QR Management</button>
                     </nav>
                     <div className="p-4 border-t border-zinc-100 min-w-[256px]">
@@ -1092,6 +1190,7 @@ const AdminDashboardPage = () => {
                     )}
                     {activeView === 'menu' && <MenuManagement />}
                     {activeView === 'reservations' && <TableAllocation />}
+                    {activeView === 'orders' && <OrdersManagement />}
                     {activeView === 'qr' && <QRCodeManagement />}
                 </motion.div>
             </div>

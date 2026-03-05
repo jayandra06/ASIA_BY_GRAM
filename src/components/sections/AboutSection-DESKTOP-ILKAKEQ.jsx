@@ -96,17 +96,7 @@ const AboutSection = () => {
                             </p>
                         </motion.div>
 
-                        <motion.div
-                            variants={{
-                                hidden: { opacity: 0, scale: 0.8 },
-                                visible: { opacity: 1, scale: 1 }
-                            }}
-                            className="pt-8"
-                        >
-                            <span className="font-cursive text-6xl text-primary/80 rotate-[-5deg] block hover:text-primary transition-colors cursor-default drop-shadow-[0_0_15px_rgba(230,25,46,0.3)]">
-                                Asia By Gram Signature
-                            </span>
-                        </motion.div>
+                        {/* Signature line removed as per requirement */}
                     </motion.div>
                 </div>
             </div>

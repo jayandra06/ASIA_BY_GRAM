@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Search, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Search, ChevronRight, ChevronLeft, ChevronDown, ShoppingCart, Plus, Minus, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,11 +11,80 @@ const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf
 
 const FALLBACK_CATEGORIES = ['All', 'Starters', 'Fried Momos', 'Shawarma', 'Platters', 'Main Course', 'Desserts', 'Beverages'];
 
+function parsePrice(priceStr) {
+    if (typeof priceStr !== 'string') return 0;
+    const num = priceStr.replace(/[^\d.]/g, '');
+    return parseFloat(num) || 0;
+}
+
 const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
+    const [cart, setCart] = useState([]); // { menuItemId, name, price, quantity }
+    const [showCartDrawer, setShowCartDrawer] = useState(false);
+    const [step, setStep] = useState('menu'); // 'menu' | 'checkout' | 'success'
+    const [checkoutForm, setCheckoutForm] = useState({ customerName: '', customerPhone: '', orderType: 'Dine-in', specialRequests: '' });
+    const [orderSubmitting, setOrderSubmitting] = useState(false);
+    const [lastOrderNumber, setLastOrderNumber] = useState(null);
     const categories = categoriesProp && categoriesProp.length > 0 ? categoriesProp : FALLBACK_CATEGORIES;
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
+
+    const isTableOrder = Boolean(tableNumber);
+    const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
+    const cartTotal = cart.reduce((sum, i) => sum + parsePrice(i.price) * i.quantity, 0);
+
+    const addToCart = (dish) => {
+        const id = dish.id || dish._id;
+        setCart(prev => {
+            const existing = prev.find(i => i.menuItemId === id);
+            if (existing) {
+                return prev.map(i => i.menuItemId === id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+            return [...prev, { menuItemId: id, name: dish.name, price: dish.price, quantity: 1 }];
+        });
+    };
+    const updateQuantity = (menuItemId, delta) => {
+        setCart(prev => prev.map(i => i.menuItemId === menuItemId ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
+    };
+    const removeFromCart = (menuItemId) => setCart(prev => prev.filter(i => i.menuItemId !== menuItemId));
+
+    const openCheckout = () => {
+        setShowCartDrawer(false);
+        setStep('checkout');
+    };
+    const submitOrder = async () => {
+        if (!checkoutForm.customerName.trim() || !checkoutForm.customerPhone.trim()) {
+            alert('Please enter your name and phone number.');
+            return;
+        }
+        setOrderSubmitting(true);
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: cart.map(i => ({ menuItemId: i.menuItemId, name: i.name, price: i.price, quantity: i.quantity })),
+                    customerName: checkoutForm.customerName.trim(),
+                    customerPhone: checkoutForm.customerPhone.trim(),
+                    orderType: checkoutForm.orderType,
+                    tableNumber: checkoutForm.orderType === 'Dine-in' ? tableNumber : null,
+                    specialRequests: checkoutForm.specialRequests.trim() || null
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setLastOrderNumber(data.orderNumber);
+                setCart([]);
+                setStep('success');
+            } else {
+                alert(data.error || 'Failed to place order.');
+            }
+        } catch (e) {
+            alert('Something went wrong. Please try again.');
+        } finally {
+            setOrderSubmitting(false);
+        }
+    };
 
     const filteredDishes = menuItems.filter(dish => {
         if (dish.category === 'Uncategorised') return false; // hide uncategorised from public menu
@@ -26,6 +95,76 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
         if (dietaryArr.length === 2) return true; // both – show in Veg and Non-Veg filters
         return dietaryArr.includes(selectedDietary);
     });
+
+    // Checkout step
+    if (step === 'checkout') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-8">
+                <div className="bg-[#FDC55E] pt-8 pb-6 px-6 rounded-b-[2rem] shadow-sm">
+                    <button onClick={() => setStep('menu')} className="flex items-center gap-2 text-zinc-800 font-bold mb-2">
+                        <ChevronLeft size={20} /> Back
+                    </button>
+                    <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
+                    <p className="text-sm text-zinc-800/80 mt-1">Table {tableNumber}</p>
+                </div>
+                <div className="flex-1 p-6 space-y-6">
+                    <div className="bg-white rounded-xl border border-zinc-200 p-4">
+                        <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3">Order summary</h2>
+                        {cart.map(item => (
+                            <div key={item.menuItemId} className="flex justify-between py-2 border-b border-zinc-100 last:border-0">
+                                <span className="text-zinc-800">{item.name} × {item.quantity}</span>
+                                <span className="font-bold text-primary-dark">{item.price}</span>
+                            </div>
+                        ))}
+                        <div className="flex justify-between pt-3 mt-2 border-t border-zinc-200 font-bold text-zinc-900">
+                            <span>Total</span>
+                            <span>₹{cartTotal.toFixed(0)}</span>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Name *</label>
+                            <input type="text" value={checkoutForm.customerName} onChange={e => setCheckoutForm(f => ({ ...f, customerName: e.target.value }))} placeholder="Your name" className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Phone *</label>
+                            <input type="tel" value={checkoutForm.customerPhone} onChange={e => setCheckoutForm(f => ({ ...f, customerPhone: e.target.value }))} placeholder="10-digit mobile number" className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Order type</label>
+                            <div className="flex gap-2">
+                                {['Dine-in', 'Take away'].map(type => (
+                                    <button key={type} type="button" onClick={() => setCheckoutForm(f => ({ ...f, orderType: type }))} className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${checkoutForm.orderType === type ? 'bg-primary text-black border-primary' : 'bg-white text-zinc-500 border-zinc-200'}`}>{type}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Special requests (optional)</label>
+                            <textarea value={checkoutForm.specialRequests} onChange={e => setCheckoutForm(f => ({ ...f, specialRequests: e.target.value }))} placeholder="Any special instructions" rows={2} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+                        </div>
+                    </div>
+                    <button onClick={submitOrder} disabled={orderSubmitting} className="w-full py-4 bg-primary text-black font-bold rounded-xl disabled:opacity-60">
+                        {orderSubmitting ? 'Placing order...' : 'Place order'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === 'success') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col font-sans items-center justify-center p-6 text-center">
+                <div className="bg-white rounded-2xl border border-zinc-200 p-8 max-w-sm w-full shadow-lg">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">✓</div>
+                    <h1 className="text-2xl font-bold text-zinc-900 mb-2">Order placed!</h1>
+                    <p className="text-zinc-600 mb-1">Order number</p>
+                    <p className="text-xl font-bold text-primary mb-6">{lastOrderNumber}</p>
+                    <p className="text-sm text-zinc-500 mb-6">We will prepare your order shortly. You can show this number at the counter.</p>
+                    <button onClick={() => { setStep('menu'); setCheckoutForm({ customerName: '', customerPhone: '', orderType: 'Dine-in', specialRequests: '' }); }} className="w-full py-3 bg-primary text-black font-bold rounded-xl">Order again</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -148,7 +287,7 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 pb-20">
+                            <div className="grid gap-4 pb-24">
                                 {filteredDishes.map(dish => (
                                     <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
                                         {dish.image && (
@@ -182,6 +321,11 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                                             </div>
                                             <div className="flex justify-between items-end mt-3">
                                                 <span className="font-bold text-primary-dark">{dish.price}</span>
+                                                {isTableOrder && (
+                                                    <button onClick={() => addToCart(dish)} className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-500 transition-colors">
+                                                        <Plus size={14} /> Add
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -191,6 +335,75 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Cart bar (table order only) */}
+            {isTableOrder && (
+                <>
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 shadow-lg p-4 z-30 safe-area-pb">
+                        <div className="flex items-center justify-between gap-4">
+                            <button onClick={() => setShowCartDrawer(true)} className="flex items-center gap-2 flex-1">
+                                <div className="relative">
+                                    <ShoppingCart size={24} className="text-zinc-800" />
+                                    {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-primary text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>}
+                                </div>
+                                <span className="font-bold text-zinc-800">Cart {cartCount > 0 ? `(${cartCount} items)` : ''}</span>
+                            </button>
+                            {cartCount > 0 && (
+                                <>
+                                    <span className="font-bold text-primary">₹{cartTotal.toFixed(0)}</span>
+                                    <button onClick={openCheckout} className="bg-primary text-black px-4 py-2 rounded-xl font-bold text-sm">Checkout</button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Cart drawer */}
+                    <AnimatePresence>
+                        {showCartDrawer && (
+                            <>
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCartDrawer(false)} className="fixed inset-0 bg-black/50 z-40" />
+                                <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'tween' }} className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] flex flex-col">
+                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
+                                        <h3 className="font-bold text-lg text-zinc-900">Your order</h3>
+                                        <button onClick={() => setShowCartDrawer(false)} className="p-2 text-zinc-500 hover:text-zinc-900"><X size={20} /></button>
+                                    </div>
+                                    <div className="overflow-y-auto flex-1 p-4">
+                                        {cart.length === 0 ? (
+                                            <p className="text-zinc-500 text-center py-8">Cart is empty. Add items from the menu.</p>
+                                        ) : (
+                                            <ul className="space-y-3">
+                                                {cart.map(item => (
+                                                    <li key={item.menuItemId} className="flex items-center justify-between gap-2 bg-zinc-50 rounded-xl p-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-zinc-900 truncate">{item.name}</p>
+                                                            <p className="text-sm text-primary font-bold">{item.price}</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold"><Minus size={14} /></button>
+                                                            <span className="w-6 text-center font-bold text-zinc-900">{item.quantity}</span>
+                                                            <button onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold"><Plus size={14} /></button>
+                                                            <button onClick={() => removeFromCart(item.menuItemId)} className="p-1 text-red-500 hover:bg-red-50 rounded"><X size={18} /></button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                    {cart.length > 0 && (
+                                        <div className="p-4 border-t border-zinc-200">
+                                            <div className="flex justify-between font-bold text-zinc-900 mb-3">
+                                                <span>Total</span>
+                                                <span>₹{cartTotal.toFixed(0)}</span>
+                                            </div>
+                                            <button onClick={openCheckout} className="w-full py-3 bg-primary text-black font-bold rounded-xl">Proceed to checkout</button>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                </>
+            )}
         </div>
     );
 };

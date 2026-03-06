@@ -47,9 +47,6 @@ function buildDefaultCustInfo(order) {
         customer_favorite: '',
         customer_tag_ids: '',
         customer_remark: '',
-        gst_no: '',
-        latitude: '',
-        longitude: '',
     };
 }
 
@@ -112,7 +109,7 @@ function buildKotDataFromOrder(order) {
     const currentDate = formatYmd(new Date());
 
     return {
-        print_val: 1,
+        print_val: 0,
         save_bill_will_call: 0,
         mergekot: 0,
         merge_with_bill: 0,
@@ -171,7 +168,14 @@ async function sendKotToPetpooja(order) {
     try {
         const res = await fetch(petpoojaUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {
+                // Match Petpooja desktop request headers more closely
+                'Accept': 'text/html, */*; q=0.01',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept-Language': 'en-US',
+                'User-Agent': process.env.PETPOOJA_USER_AGENT
+                    || 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Petpooja/121.0.1 Chrome/110.0.5481.208 Electron/23.3.13 Safari/537.36',
+            },
             body: params.toString(),
             signal: controller.signal,
         });
@@ -181,7 +185,13 @@ async function sendKotToPetpooja(order) {
         if (!res.ok) {
             throw new Error(`Petpooja KOT error ${res.status}: ${text}`);
         }
-        return { ok: true, raw: text };
+        // Petpooja often returns HTTP 200 even on application-level errors
+        let parsed = null;
+        try { parsed = JSON.parse(text); } catch { parsed = null; }
+        if (parsed && (parsed.error === 1 || parsed.error === '1' || parsed.allow_access === 0 || parsed.allow_access === '0')) {
+            return { ok: false, raw: text, parsed };
+        }
+        return { ok: true, raw: text, parsed };
     } catch (err) {
         clearTimeout(timeoutId);
         if (err.name === 'AbortError') {

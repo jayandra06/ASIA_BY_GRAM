@@ -145,7 +145,7 @@ function buildKotDataFromOrder(order) {
 
 // Call Petpooja KOT endpoint (save_kot.php) for a given order
 async function sendKotToPetpooja(order) {
-    const petpoojaUrl = process.env.PETPOOJA_KOT_URL; // e.g. http://asiabygram-serv:3000/petpooja_server/save_kot.php
+    const petpoojaUrl = process.env.PETPOOJA_KOT_URL;
     if (!petpoojaUrl) {
         return { ok: false, skipped: true, reason: 'PETPOOJA_KOT_URL not configured' };
     }
@@ -157,24 +157,38 @@ async function sendKotToPetpooja(order) {
     params.set('rest_id', process.env.PETPOOJA_REST_ID || '');
     params.set('user', process.env.PETPOOJA_USER || '');
     params.set('sync_code', process.env.PETPOOJA_SYNC_CODE || '');
-    params.set('r_c', process.env.PETPOOJA_RC || '');
+    // Huge r_c JSON can crash Petpooja server; use PETPOOJA_USE_MINIMAL_RC=1 to send {} and avoid crash
+    const useMinimalRc = process.env.PETPOOJA_USE_MINIMAL_RC === '1' || process.env.PETPOOJA_USE_MINIMAL_RC === 'true';
+    params.set('r_c', useMinimalRc ? '{}' : (process.env.PETPOOJA_RC || ''));
     params.set('dates', JSON.stringify(buildPetpoojaDates()));
     params.set('app_version', process.env.PETPOOJA_APP_VERSION || 'WEB-NEXTJS');
     params.set('server_version', process.env.PETPOOJA_SERVER_VERSION || 'WEB-NEXTJS');
 
-    const res = await fetch(petpoojaUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
-        // Petpooja runs on your LAN; this will only work where that host is reachable
-    });
+    const timeoutMs = Math.min(Number(process.env.PETPOOJA_REQUEST_TIMEOUT_MS) || 0, 60000) || 15000; // default 15s, max 60s
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    const text = await res.text();
-    if (!res.ok) {
-        throw new Error(`Petpooja KOT error ${res.status}: ${text}`);
+    try {
+        const res = await fetch(petpoojaUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const text = await res.text();
+        if (!res.ok) {
+            throw new Error(`Petpooja KOT error ${res.status}: ${text}`);
+        }
+        return { ok: true, raw: text };
+    } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+            throw new Error(`Petpooja KOT timeout after ${timeoutMs}ms`);
+        }
+        throw err;
     }
-
-    return { ok: true, raw: text };
 }
 
 export async function GET(request) {

@@ -1106,9 +1106,27 @@ const TableAllocation = () => {
 
 const OrdersManagement = () => {
     const [orders, setOrders] = useState([]);
+    const [tables, setTables] = useState([]);
+    const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('All');
+    const [typeFilter, setTypeFilter] = useState('All'); // All | Dine-in | Take away
     const [search, setSearch] = useState('');
+    const [viewMode, setViewMode] = useState('table'); // table | list
+    const [selectedTable, setSelectedTable] = useState(null);
+    const [newOrderForm, setNewOrderForm] = useState({
+        customerName: '',
+        customerPhone: '',
+        items: [] // { menuItemId?, name, price, quantity }
+    });
+    const [creatingOrder, setCreatingOrder] = useState(false);
+    const [menuFilterCategory, setMenuFilterCategory] = useState('All');
+    const [menuSearch, setMenuSearch] = useState('');
+    const [optionModal, setOptionModal] = useState({
+        open: false,
+        menuItem: null,
+        selections: {}
+    });
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -1122,7 +1140,36 @@ const OrdersManagement = () => {
         }
     };
 
-    useEffect(() => { fetchOrders(); }, []);
+    const fetchTables = async () => {
+        try {
+            const res = await fetch('/api/tables', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+            if (res.ok) {
+                const data = await res.json();
+                const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.number || 0) - (b.number || 0)) : [];
+                setTables(sorted);
+            }
+        } catch (error) {
+            console.error("Error fetching tables:", error);
+        }
+    };
+
+    const fetchMenuItems = async () => {
+        try {
+            const res = await fetch('/api/menu', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+            if (res.ok) {
+                const data = await res.json();
+                setMenuItems(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error("Error fetching menu items:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrders();
+        fetchTables();
+        fetchMenuItems();
+    }, []);
 
     const updateOrderStatus = async (id, status) => {
         try {
@@ -1137,7 +1184,9 @@ const OrdersManagement = () => {
 
     const statusOptions = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Served', 'Cancelled'];
 
-    const filtered = orders.filter(order => {
+    const ordersByType = orders.filter(o => typeFilter === 'All' ? true : o.orderType === typeFilter);
+
+    const filtered = ordersByType.filter(order => {
         const matchStatus = statusFilter === 'All' ? true : order.status === statusFilter;
         const term = search.trim().toLowerCase();
         if (!term) return matchStatus;
@@ -1150,16 +1199,93 @@ const OrdersManagement = () => {
         return matchStatus && haystack.includes(term);
     });
 
-    const countByStatus = (status) => orders.filter(o => o.status === status).length;
+    const countByStatus = (status) => ordersByType.filter(o => o.status === status).length;
+
+    const openTableDetail = (table) => {
+        setSelectedTable(table);
+        setNewOrderForm({
+            customerName: `Table ${table.number}`,
+            customerPhone: '',
+            items: []
+        });
+    };
+
+    const createManualOrder = async () => {
+        if (!selectedTable) return;
+        const items = newOrderForm.items
+            .filter(i => i.name.trim() && i.price.trim() && i.quantity > 0)
+            .map(i => ({
+                menuItemId: i.menuItemId || null,
+                name: i.name.trim(),
+                price: i.price.trim(),
+                quantity: i.quantity,
+                options: Array.isArray(i.options) ? i.options : []
+            }));
+        if (items.length === 0) {
+            alert('Add at least one item.');
+            return;
+        }
+        setCreatingOrder(true);
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({
+                    items,
+                    customerName: newOrderForm.customerName ? newOrderForm.customerName.trim() : undefined,
+                    customerPhone: newOrderForm.customerPhone ? newOrderForm.customerPhone.trim() : undefined,
+                    orderType: 'Dine-in',
+                    tableNumber: String(selectedTable.number),
+                    specialRequests: null,
+                    source: 'admin'
+                })
+            });
+            if (res.ok) {
+                await fetchOrders();
+                setNewOrderForm({
+                    customerName: `Table ${selectedTable.number}`,
+                    customerPhone: '',
+                    items: []
+                });
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to create order.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error creating order.');
+        } finally {
+            setCreatingOrder(false);
+        }
+    };
+
+    const dineInOrdersByTable = (tableNumber) =>
+        orders.filter(o => o.orderType === 'Dine-in' && String(o.tableNumber) === String(tableNumber));
 
     return (
         <div className="p-6 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Orders</h2>
-                    <p className="text-xs text-zinc-500 mt-1">Live overview of all table and takeaway orders.</p>
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Orders Dashboard</h2>
+                    <p className="text-xs text-zinc-500 mt-1">Monitor all tables and takeaway orders in one place.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex bg-zinc-100 rounded-full p-1 text-xs font-bold">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('table')}
+                            className={`px-3 py-1.5 rounded-full ${viewMode === 'table' ? 'bg-white shadow text-zinc-900' : 'text-zinc-500'}`}
+                        >
+                            Table view
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`px-3 py-1.5 rounded-full ${viewMode === 'list' ? 'bg-white shadow text-zinc-900' : 'text-zinc-500'}`}
+                        >
+                            List view
+                        </button>
+                    </div>
                     <div className="relative">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                         <input
@@ -1172,6 +1298,23 @@ const OrdersManagement = () => {
                     </div>
                     <button onClick={fetchOrders} className="text-sm text-primary hover:text-primary-dark underline">Refresh</button>
                 </div>
+            </div>
+
+            {/* Type filter tabs */}
+            <div className="flex flex-wrap gap-2">
+                {['All', 'Dine-in', 'Take away'].map(type => (
+                    <button
+                        key={type}
+                        onClick={() => setTypeFilter(type)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                            typeFilter === type
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+                        }`}
+                    >
+                        {type}
+                    </button>
+                ))}
             </div>
 
             {/* Summary cards */}
@@ -1214,111 +1357,670 @@ const OrdersManagement = () => {
                 ))}
             </div>
 
-            {/* Orders table */}
-            {loading ? (
-                <div className="flex justify-center py-12">
-                    <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                </div>
-            ) : (
-                <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
-                            <tr>
-                                <th className="p-3">Order #</th>
-                                <th className="p-3">Customer</th>
-                                <th className="p-3">Type</th>
-                                <th className="p-3">Table</th>
-                                <th className="p-3">Items</th>
-                                <th className="p-3">Total (approx)</th>
-                                <th className="p-3">Date & time</th>
-                                <th className="p-3">Requests</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
-                            {filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan="10" className="p-8 text-center text-zinc-400">
-                                        No orders match the current filters.
-                                    </td>
-                                </tr>
-                            ) : filtered.map(order => {
-                                const total = order.items.reduce(
-                                    (s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1),
-                                    0
-                                );
+            {/* Table view */}
+            {viewMode === 'table' ? (
+                <>
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-zinc-500">
+                            Showing {tables.length} tables from QR management. Tap a table to view and add orders.
+                        </p>
+                        {typeFilter !== 'All' && typeFilter !== 'Dine-in' && (
+                            <p className="text-[11px] text-red-500">
+                                Table view is for Dine-in orders. Switch type filter to Dine-in or All.
+                            </p>
+                        )}
+                    </div>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {tables.map(table => {
+                                const tOrders = dineInOrdersByTable(table.number);
+                                const openOrders = tOrders.filter(o => !['Served', 'Cancelled'].includes(o.status));
+                                const hasOpen = openOrders.length > 0;
                                 return (
-                                    <tr key={order._id} className="hover:bg-zinc-50 transition-colors">
-                                        <td className="p-3 font-bold text-zinc-900 whitespace-nowrap">{order.orderNumber || order._id}</td>
-                                        <td className="p-3">
-                                            <div className="font-bold text-zinc-900">{order.customerName}</div>
-                                            <div className="text-xs text-zinc-400">{order.customerPhone}</div>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">{order.orderType}</td>
-                                        <td className="p-3 whitespace-nowrap">{order.tableNumber || '-'}</td>
-                                        <td className="p-3 max-w-[220px]">
-                                            <ul className="text-xs space-y-1">
-                                                {order.items.map((item, idx) => (
-                                                    <li key={idx}>
-                                                        <div>{item.name} × {item.quantity}</div>
-                                                        {item.options && item.options.length > 0 && (
-                                                            <div className="text-[10px] text-zinc-400">
-                                                                {item.options.map((opt, oi) => (
-                                                                    <span key={oi}>
-                                                                        {opt.group}: {opt.values.join(', ')}
-                                                                        {oi !== item.options.length - 1 && ' • '}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </td>
-                                        <td className="p-3 font-bold whitespace-nowrap">₹{total.toFixed(0)}</td>
-                                        <td className="p-3 text-xs whitespace-nowrap">
-                                            {order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}
-                                        </td>
-                                        <td className="p-3 text-xs max-w-[160px] truncate" title={order.specialRequests || ''}>
-                                            {order.specialRequests || '-'}
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">
-                                            <span
-                                                className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                                                    order.status === 'Served'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : order.status === 'Cancelled'
-                                                        ? 'bg-red-100 text-red-700'
-                                                        : order.status === 'Pending'
-                                                        ? 'bg-yellow-100 text-yellow-700'
-                                                        : 'bg-blue-100 text-blue-700'
-                                                }`}
-                                            >
-                                                {order.status}
+                                    <button
+                                        key={table._id || table.number}
+                                        type="button"
+                                        onClick={() => openTableDetail(table)}
+                                        className={`bg-white border rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all ${
+                                            hasOpen ? 'border-primary' : 'border-zinc-200'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Table</span>
+                                            <span className="text-[11px] text-zinc-400">
+                                                #{table.number}
                                             </span>
-                                        </td>
-                                        <td className="p-3 whitespace-nowrap">
-                                            <select
-                                                value={order.status}
-                                                onChange={e => updateOrderStatus(order._id, e.target.value)}
-                                                className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800"
-                                            >
-                                                {statusOptions.map(s => (
-                                                    <option key={s} value={s}>{s}</option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                        <div className="text-xl font-extrabold text-zinc-900 mb-1">
+                                            T{table.number}
+                                        </div>
+                                        <div className="text-[11px] text-zinc-500">
+                                            {hasOpen ? (
+                                                <>
+                                                    {openOrders.length} active order{openOrders.length > 1 ? 's' : ''}.
+                                                </>
+                                            ) : (
+                                                'No active orders.'
+                                            )}
+                                        </div>
+                                    </button>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </div>
+                    )}
+
+                    {/* Table detail drawer */}
+                    <AnimatePresence>
+                        {selectedTable && (
+                            <>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 0.5 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 bg-black z-40"
+                                    onClick={() => setSelectedTable(null)}
+                                />
+                                <motion.div
+                                    initial={{ x: '100%' }}
+                                    animate={{ x: 0 }}
+                                    exit={{ x: '100%' }}
+                                    transition={{ type: 'tween' }}
+                                    className="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl flex flex-col"
+                                >
+                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-zinc-900">Table {selectedTable.number}</h3>
+                                            <p className="text-[11px] text-zinc-500">
+                                                Dine-in orders for this table. You can also add a manual order.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setSelectedTable(null)}
+                                            className="p-2 text-zinc-500 hover:text-zinc-900 rounded"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                        <div>
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Existing orders</h4>
+                                            {dineInOrdersByTable(selectedTable.number).length === 0 ? (
+                                                <p className="text-xs text-zinc-400">No orders yet for this table.</p>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {dineInOrdersByTable(selectedTable.number).map(order => {
+                                                        const total = order.items.reduce(
+                                                            (s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1),
+                                                            0
+                                                        );
+                                                        return (
+                                                            <div key={order._id} className="border border-zinc-200 rounded-lg p-3 text-xs space-y-1">
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="font-bold text-zinc-900">{order.orderNumber}</span>
+                                                                    <span className="text-[10px] text-zinc-400">
+                                                                        {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : ''}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-[11px] text-zinc-500">
+                                                                    {order.customerName} • {order.customerPhone}
+                                                                </div>
+                                                                <ul className="mt-1 space-y-0.5">
+                                                                    {order.items.map((item, idx) => (
+                                                                        <li key={idx}>
+                                                                            {item.name} × {item.quantity}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                                <div className="flex justify-between items-center mt-1">
+                                                                    <span className="text-[11px] text-zinc-500">Status:</span>
+                                                                    <select
+                                                                        value={order.status}
+                                                                        onChange={e => updateOrderStatus(order._id, e.target.value)}
+                                                                        className="text-[11px] border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800"
+                                                                    >
+                                                                        {statusOptions.map(s => (
+                                                                            <option key={s} value={s}>{s}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                                <div className="text-[11px] font-bold text-primary mt-1">
+                                                                    Total: ₹{total.toFixed(0)}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="border-t border-dashed border-zinc-200 pt-3">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Add manual order</h4>
+                                            <div className="space-y-2 mb-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Customer name"
+                                                    value={newOrderForm.customerName}
+                                                    onChange={e => setNewOrderForm(f => ({ ...f, customerName: e.target.value }))}
+                                                    className="w-full border border-zinc-200 rounded px-2 py-1 text-xs"
+                                                />
+                                                <input
+                                                    type="tel"
+                                                    placeholder="Phone number"
+                                                    value={newOrderForm.customerPhone}
+                                                    onChange={e => setNewOrderForm(f => ({ ...f, customerPhone: e.target.value }))}
+                                                    className="w-full border border-zinc-200 rounded px-2 py-1 text-xs"
+                                                />
+                                            </div>
+                                            {/* POS-style item picker */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 text-[11px]">
+                                                {/* Left: menu browser */}
+                                                <div className="space-y-2 border border-zinc-200 rounded-lg p-2 bg-zinc-50">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="font-bold text-zinc-600 uppercase tracking-widest text-[10px]">Menu</span>
+                                                        <select
+                                                            value={menuFilterCategory}
+                                                            onChange={e => setMenuFilterCategory(e.target.value)}
+                                                            className="border border-zinc-200 rounded px-2 py-1 bg-white text-[11px]"
+                                                        >
+                                                            <option value="All">All categories</option>
+                                                            {Array.from(new Set(menuItems.map(mi => mi.category).filter(Boolean)))
+                                                                .sort()
+                                                                .map(cat => (
+                                                                    <option key={cat} value={cat}>{cat}</option>
+                                                                ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="relative">
+                                                        <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search items..."
+                                                            value={menuSearch}
+                                                            onChange={e => setMenuSearch(e.target.value)}
+                                                            className="pl-6 pr-2 py-1 rounded border border-zinc-200 text-[11px] w-full bg-white"
+                                                        />
+                                                    </div>
+                                                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                                                        {menuItems
+                                                            .filter(mi => (menuFilterCategory === 'All' || mi.category === menuFilterCategory))
+                                                            .filter(mi =>
+                                                                mi.name.toLowerCase().includes(menuSearch.toLowerCase())
+                                                            )
+                                                            .map(mi => (
+                                                                <button
+                                                                    key={mi.id || mi._id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const id = mi.id || mi._id;
+                                                                        const hasOptions = Array.isArray(mi.options) && mi.options.length > 0;
+                                                                        if (!hasOptions) {
+                                                                            setNewOrderForm(f => {
+                                                                                const existingIndex = f.items.findIndex(
+                                                                                    it => it.menuItemId === id && !it.options
+                                                                                );
+                                                                                if (existingIndex !== -1) {
+                                                                                    const next = [...f.items];
+                                                                                    next[existingIndex] = {
+                                                                                        ...next[existingIndex],
+                                                                                        quantity: next[existingIndex].quantity + 1
+                                                                                    };
+                                                                                    return { ...f, items: next };
+                                                                                }
+                                                                                return {
+                                                                                    ...f,
+                                                                                    items: [
+                                                                                        ...f.items,
+                                                                                        {
+                                                                                            menuItemId: id,
+                                                                                            name: mi.name,
+                                                                                            price: mi.price,
+                                                                                            quantity: 1
+                                                                                        }
+                                                                                    ]
+                                                                                };
+                                                                            });
+                                                                        } else {
+                                                                            const initialSelections = {};
+                                                                            mi.options.forEach(group => {
+                                                                                if (group.type === 'single') {
+                                                                                    initialSelections[group.id] = group.choices?.[0] || '';
+                                                                                } else {
+                                                                                    initialSelections[group.id] = [];
+                                                                                }
+                                                                            });
+                                                                            setOptionModal({
+                                                                                open: true,
+                                                                                menuItem: mi,
+                                                                                selections: initialSelections
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full flex items-center justify-between gap-2 px-2 py-1 rounded border border-transparent hover:border-primary/40 hover:bg-white text-left"
+                                                                >
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="truncate font-semibold text-zinc-800">
+                                                                            {mi.name}
+                                                                        </div>
+                                                                        <div className="text-[10px] text-zinc-400 truncate">
+                                                                            {mi.category}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right text-[11px] font-bold text-primary whitespace-nowrap">
+                                                                        {mi.price}
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Right: current order items */}
+                                                <div className="space-y-2 border border-zinc-200 rounded-lg p-2 bg-white">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-bold text-zinc-600 uppercase tracking-widest text-[10px]">
+                                                            Order items
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setNewOrderForm(f => ({
+                                                                    ...f,
+                                                                    items: [
+                                                                        ...f.items,
+                                                                        { menuItemId: '', name: '', price: '', quantity: 1 }
+                                                                    ]
+                                                                }))
+                                                            }
+                                                            className="text-[10px] text-primary hover:text-primary-dark flex items-center gap-1"
+                                                        >
+                                                            <Plus size={10} /> Custom item
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
+                                                        {newOrderForm.items.length === 0 && (
+                                                            <p className="text-[10px] text-zinc-400">
+                                                                Select items from the menu on the left, or add a custom item.
+                                                            </p>
+                                                        )}
+                                                        {newOrderForm.items.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Item name"
+                                                                        value={item.name}
+                                                                        onChange={e => {
+                                                                            const next = [...newOrderForm.items];
+                                                                            next[idx] = { ...next[idx], name: e.target.value };
+                                                                            setNewOrderForm(f => ({ ...f, items: next }));
+                                                                        }}
+                                                                        className="w-full border border-zinc-200 rounded px-2 py-1 text-[11px]"
+                                                                    />
+                                                                    {item.options && item.options.length > 0 && (
+                                                                        <div className="mt-1 text-[10px] text-zinc-400">
+                                                                            {item.options.map((opt, oi) => (
+                                                                                <span key={oi}>
+                                                                                    {opt.group}: {opt.values.join(', ')}
+                                                                                    {oi !== item.options.length - 1 && ' • '}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Price"
+                                                                    value={item.price}
+                                                                    onChange={e => {
+                                                                        const next = [...newOrderForm.items];
+                                                                        next[idx] = { ...next[idx], price: e.target.value };
+                                                                        setNewOrderForm(f => ({ ...f, items: next }));
+                                                                    }}
+                                                                    className="w-16 border border-zinc-200 rounded px-2 py-1 text-[11px]"
+                                                                />
+                                                                <div className="flex items-center gap-1">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const next = [...newOrderForm.items];
+                                                                            next[idx] = {
+                                                                                ...next[idx],
+                                                                                quantity: Math.max(1, (next[idx].quantity || 1) - 1)
+                                                                            };
+                                                                            setNewOrderForm(f => ({ ...f, items: next }));
+                                                                        }}
+                                                                        className="w-6 h-6 border border-zinc-200 rounded flex items-center justify-center text-[11px]"
+                                                                    >
+                                                                        -
+                                                                    </button>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={item.quantity}
+                                                                        onChange={e => {
+                                                                            const next = [...newOrderForm.items];
+                                                                            next[idx] = {
+                                                                                ...next[idx],
+                                                                                quantity: Math.max(1, parseInt(e.target.value || '1', 10))
+                                                                            };
+                                                                            setNewOrderForm(f => ({ ...f, items: next }));
+                                                                        }}
+                                                                        className="w-10 border border-zinc-200 rounded px-1 py-1 text-[11px] text-center"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const next = [...newOrderForm.items];
+                                                                            next.splice(idx, 1);
+                                                                            setNewOrderForm(f => ({ ...f, items: next }));
+                                                                        }}
+                                                                        className="w-6 h-6 text-red-500 hover:bg-red-50 rounded flex items-center justify-center"
+                                                                    >
+                                                                        <Trash2 size={10} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 border-t border-zinc-200">
+                                        <button
+                                            onClick={createManualOrder}
+                                            disabled={creatingOrder}
+                                            className="w-full py-2.5 bg-primary text-black font-bold rounded-lg text-sm disabled:opacity-60"
+                                        >
+                                            {creatingOrder ? 'Creating order...' : 'Create order for this table'}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Options modal for POS (add-ons / variants) */}
+                    <AnimatePresence>
+                        {optionModal.open && optionModal.menuItem && (
+                            <>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 0.5 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 bg-black z-[60]"
+                                    onClick={() => setOptionModal({ open: false, menuItem: null, selections: {} })}
+                                />
+                                <motion.div
+                                    initial={{ y: '100%' }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: '100%' }}
+                                    transition={{ type: 'tween' }}
+                                    className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-[70] max-h-[80vh] flex flex-col"
+                                >
+                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-zinc-900">{optionModal.menuItem.name}</h3>
+                                            <p className="text-[11px] text-zinc-500">
+                                                Select add-ons / variants before adding to the order.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setOptionModal({ open: false, menuItem: null, selections: {} })}
+                                            className="p-2 text-zinc-500 hover:text-zinc-900 rounded"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4 text-[11px]">
+                                        {optionModal.menuItem.options?.map(group => (
+                                            <div key={group.id} className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                                                        {group.name}
+                                                    </span>
+                                                    {group.required && (
+                                                        <span className="text-[10px] text-red-500 font-bold">Required</span>
+                                                    )}
+                                                </div>
+                                                {group.type === 'single' ? (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {group.choices?.map(choice => {
+                                                            const active = optionModal.selections[group.id] === choice;
+                                                            return (
+                                                                <button
+                                                                    key={choice}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setOptionModal(prev => ({
+                                                                            ...prev,
+                                                                            selections: { ...prev.selections, [group.id]: choice }
+                                                                        }))
+                                                                    }
+                                                                    className={`px-3 py-1.5 rounded-full border text-[11px] font-bold ${
+                                                                        active
+                                                                            ? 'bg-zinc-900 text-white border-zinc-900'
+                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                                                                    }`}
+                                                                >
+                                                                    {choice}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {group.choices?.map(choice => {
+                                                            const values = optionModal.selections[group.id] || [];
+                                                            const active = values.includes(choice);
+                                                            return (
+                                                                <button
+                                                                    key={choice}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setOptionModal(prev => {
+                                                                            const current = prev.selections[group.id] || [];
+                                                                            const nextVals = active
+                                                                                ? current.filter(v => v !== choice)
+                                                                                : [...current, choice];
+                                                                            return {
+                                                                                ...prev,
+                                                                                selections: { ...prev.selections, [group.id]: nextVals }
+                                                                            };
+                                                                        })
+                                                                    }
+                                                                    className={`px-3 py-1.5 rounded-full border text-[11px] font-bold ${
+                                                                        active
+                                                                            ? 'bg-primary text-black border-primary'
+                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                                                                    }`}
+                                                                >
+                                                                    {choice}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-4 border-t border-zinc-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const mi = optionModal.menuItem;
+                                                const config = mi.options || [];
+                                                const selectedOptions = config
+                                                    .map(group => {
+                                                        const sel = optionModal.selections[group.id];
+                                                        const values =
+                                                            group.type === 'single'
+                                                                ? sel
+                                                                    ? [sel]
+                                                                    : []
+                                                                : Array.isArray(sel)
+                                                                ? sel
+                                                                : [];
+                                                        return {
+                                                            group: group.name,
+                                                            values
+                                                        };
+                                                    })
+                                                    .filter(o => o.values.length > 0);
+
+                                                const id = mi.id || mi._id;
+                                                const optionsKey = JSON.stringify(selectedOptions);
+                                                setNewOrderForm(f => {
+                                                    const existingIndex = f.items.findIndex(
+                                                        it =>
+                                                            it.menuItemId === id &&
+                                                            JSON.stringify(it.options || []) === optionsKey
+                                                    );
+                                                    if (existingIndex !== -1) {
+                                                        const next = [...f.items];
+                                                        next[existingIndex] = {
+                                                            ...next[existingIndex],
+                                                            quantity: next[existingIndex].quantity + 1
+                                                        };
+                                                        return { ...f, items: next };
+                                                    }
+                                                    return {
+                                                        ...f,
+                                                        items: [
+                                                            ...f.items,
+                                                            {
+                                                                menuItemId: id,
+                                                                name: mi.name,
+                                                                price: mi.price,
+                                                                quantity: 1,
+                                                                options: selectedOptions
+                                                            }
+                                                        ]
+                                                    };
+                                                });
+                                                setOptionModal({ open: false, menuItem: null, selections: {} });
+                                            }}
+                                            className="w-full py-2.5 bg-primary text-black font-bold rounded-lg text-sm"
+                                        >
+                                            Add item to order
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                </>
+            ) : (
+                <>
+                    {/* List view */}
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th className="p-3">Order #</th>
+                                        <th className="p-3">Customer</th>
+                                        <th className="p-3">Type</th>
+                                        <th className="p-3">Table</th>
+                                        <th className="p-3">Items</th>
+                                        <th className="p-3">Total (approx)</th>
+                                        <th className="p-3">Date & time</th>
+                                        <th className="p-3">Requests</th>
+                                        <th className="p-3">Status</th>
+                                        <th className="p-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
+                                    {filtered.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="10" className="p-8 text-center text-zinc-400">
+                                                No orders match the current filters.
+                                            </td>
+                                        </tr>
+                                    ) : filtered.map(order => {
+                                        const total = order.items.reduce(
+                                            (s, i) => s + (parseFloat(String(i.price).replace(/[^\d.]/g, '')) || 0) * (i.quantity || 1),
+                                            0
+                                        );
+                                        return (
+                                            <tr key={order._id} className="hover:bg-zinc-50 transition-colors">
+                                                <td className="p-3 font-bold text-zinc-900 whitespace-nowrap">{order.orderNumber || order._id}</td>
+                                                <td className="p-3">
+                                                    <div className="font-bold text-zinc-900">{order.customerName}</div>
+                                                    <div className="text-xs text-zinc-400">{order.customerPhone}</div>
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap">{order.orderType}</td>
+                                                <td className="p-3 whitespace-nowrap">{order.tableNumber || '-'}</td>
+                                                <td className="p-3 max-w-[220px]">
+                                                    <ul className="text-xs space-y-1">
+                                                        {order.items.map((item, idx) => (
+                                                            <li key={idx}>
+                                                                <div>{item.name} × {item.quantity}</div>
+                                                                {item.options && item.options.length > 0 && (
+                                                                    <div className="text-[10px] text-zinc-400">
+                                                                        {item.options.map((opt, oi) => (
+                                                                            <span key={oi}>
+                                                                                {opt.group}: {opt.values.join(', ')}
+                                                                                {oi !== item.options.length - 1 && ' • '}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </td>
+                                                <td className="p-3 font-bold whitespace-nowrap">₹{total.toFixed(0)}</td>
+                                                <td className="p-3 text-xs whitespace-nowrap">
+                                                    {order.createdAt ? new Date(order.createdAt).toLocaleString() : '-'}
+                                                </td>
+                                                <td className="p-3 text-xs max-w-[160px] truncate" title={order.specialRequests || ''}>
+                                                    {order.specialRequests || '-'}
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap">
+                                                    <span
+                                                        className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                                                            order.status === 'Served'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : order.status === 'Cancelled'
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : order.status === 'Pending'
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-blue-100 text-blue-700'
+                                                        }`}
+                                                    >
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 whitespace-nowrap">
+                                                    <select
+                                                        value={order.status}
+                                                        onChange={e => updateOrderStatus(order._id, e.target.value)}
+                                                        className="text-xs border border-zinc-200 rounded px-2 py-1 bg-white text-zinc-800"
+                                                    >
+                                                        {statusOptions.map(s => (
+                                                            <option key={s} value={s}>{s}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
             )}
             {orders.length > 0 && (
                 <p className="text-xs text-zinc-400">
-                    Tip: Filter by status or search to quickly find an order. Update status from the dropdown.
+                    Tip: Switch between table view and list view, and use the Dine-in / Take away tabs to focus on specific order types.
                 </p>
             )}
         </div>
@@ -1335,7 +2037,11 @@ const QRCodeManagement = () => {
     const fetchTables = async () => {
         try {
             const res = await fetch('/api/tables');
-            if (res.ok) setTables(await res.json());
+            if (res.ok) {
+                const data = await res.json();
+                const sorted = Array.isArray(data) ? [...data].sort((a, b) => (a.number || 0) - (b.number || 0)) : [];
+                setTables(sorted);
+            }
         } catch (error) { console.error(error); }
     };
 

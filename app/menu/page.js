@@ -114,8 +114,9 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
         setStep('checkout');
     };
     const submitOrder = async () => {
+        // For QR/table orders on the website, name and phone are mandatory
         if (!checkoutForm.customerName.trim() || !checkoutForm.customerPhone.trim()) {
-            alert('Please enter your name and phone number.');
+            alert('Please enter your name and phone number to place the order.');
             return;
         }
         setOrderSubmitting(true);
@@ -135,7 +136,8 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                     customerPhone: checkoutForm.customerPhone.trim(),
                     orderType: checkoutForm.orderType,
                     tableNumber: checkoutForm.orderType === 'Dine-in' ? tableNumber : null,
-                    specialRequests: checkoutForm.specialRequests.trim() || null
+                    specialRequests: checkoutForm.specialRequests.trim() || null,
+                    source: 'web'
                 })
             });
             const data = await res.json();
@@ -191,11 +193,23 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                     <div className="space-y-4">
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Name *</label>
-                            <input type="text" value={checkoutForm.customerName} onChange={e => setCheckoutForm(f => ({ ...f, customerName: e.target.value }))} placeholder="Your name" className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary" />
+                            <input
+                                type="text"
+                                value={checkoutForm.customerName}
+                                onChange={e => setCheckoutForm(f => ({ ...f, customerName: e.target.value }))}
+                                placeholder="Your name"
+                                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Phone *</label>
-                            <input type="tel" value={checkoutForm.customerPhone} onChange={e => setCheckoutForm(f => ({ ...f, customerPhone: e.target.value }))} placeholder="10-digit mobile number" className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary" />
+                            <input
+                                type="tel"
+                                value={checkoutForm.customerPhone}
+                                onChange={e => setCheckoutForm(f => ({ ...f, customerPhone: e.target.value }))}
+                                placeholder="10-digit mobile number"
+                                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Order type</label>

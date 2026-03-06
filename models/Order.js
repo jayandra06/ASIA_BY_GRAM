@@ -15,8 +15,9 @@ const OrderItemSchema = new mongoose.Schema({
 const OrderSchema = new mongoose.Schema({
     orderNumber: { type: String, unique: true }, // human-readable e.g. ORD-ABC123
     items: [OrderItemSchema],
-    customerName: { type: String, required: true },
-    customerPhone: { type: String, required: true },
+    // Name and phone are optional (especially for Dine-in QR/orders)
+    customerName: { type: String },
+    customerPhone: { type: String },
     orderType: { type: String, enum: ['Dine-in', 'Take away'], required: true },
     tableNumber: { type: String }, // for Dine-in
     status: { type: String, enum: ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Served', 'Cancelled'], default: 'Pending' },

@@ -70,90 +70,8 @@ function parsePrice(priceStr) {
 const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
-    const [cart, setCart] = useState([]); // { menuItemId, name, price, quantity, options? }
-    const [showCartDrawer, setShowCartDrawer] = useState(false);
-    const [step, setStep] = useState('menu'); // 'menu' | 'checkout' | 'success'
-    const [checkoutForm, setCheckoutForm] = useState({ customerName: '', customerPhone: '', orderType: 'Dine-in', specialRequests: '' });
-    const [orderSubmitting, setOrderSubmitting] = useState(false);
-    const [lastOrderNumber, setLastOrderNumber] = useState(null);
     const categories = categoriesProp && categoriesProp.length > 0 ? categoriesProp : FALLBACK_CATEGORIES;
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
-
-    const isTableOrder = Boolean(tableNumber);
-    const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
-    const cartTotal = cart.reduce((sum, i) => sum + parsePrice(i.price) * i.quantity, 0);
-
-    const [optionModal, setOptionModal] = useState({
-        open: false,
-        dish: null,
-        selections: {}
-    });
-
-    const addToCart = (dish, selectedOptions = []) => {
-        const id = dish.id || dish._id;
-        const optionsKey = JSON.stringify(selectedOptions || []);
-        setCart(prev => {
-            const existing = prev.find(i => i.menuItemId === id && JSON.stringify(i.options || []) === optionsKey);
-            if (existing) {
-                return prev.map(i =>
-                    i.menuItemId === id && JSON.stringify(i.options || []) === optionsKey
-                        ? { ...i, quantity: i.quantity + 1 }
-                        : i
-                );
-            }
-            return [...prev, { menuItemId: id, name: dish.name, price: dish.price, quantity: 1, options: selectedOptions }];
-        });
-    };
-    const updateQuantity = (menuItemId, delta) => {
-        setCart(prev => prev.map(i => i.menuItemId === menuItemId ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
-    };
-    const removeFromCart = (menuItemId) => setCart(prev => prev.filter(i => i.menuItemId !== menuItemId));
-
-    const openCheckout = () => {
-        setShowCartDrawer(false);
-        setStep('checkout');
-    };
-    const submitOrder = async () => {
-        // For QR/table orders on the website, name and phone are mandatory
-        if (!checkoutForm.customerName.trim() || !checkoutForm.customerPhone.trim()) {
-            alert('Please enter your name and phone number to place the order.');
-            return;
-        }
-        setOrderSubmitting(true);
-        try {
-            const res = await fetch('/api/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    items: cart.map(i => ({
-                        menuItemId: i.menuItemId,
-                        name: i.name,
-                        price: i.price,
-                        quantity: i.quantity,
-                        options: i.options || []
-                    })),
-                    customerName: checkoutForm.customerName.trim(),
-                    customerPhone: checkoutForm.customerPhone.trim(),
-                    orderType: checkoutForm.orderType,
-                    tableNumber: checkoutForm.orderType === 'Dine-in' ? tableNumber : null,
-                    specialRequests: checkoutForm.specialRequests.trim() || null,
-                    source: 'web'
-                })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setLastOrderNumber(data.orderNumber);
-                setCart([]);
-                setStep('success');
-            } else {
-                alert(data.error || 'Failed to place order.');
-            }
-        } catch (e) {
-            alert('Something went wrong. Please try again.');
-        } finally {
-            setOrderSubmitting(false);
-        }
-    };
 
     const filteredDishes = menuItems.filter(dish => {
         if (dish.category === 'Uncategorised') return false; // hide uncategorised from public menu
@@ -164,88 +82,6 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
         if (dietaryArr.length === 2) return true; // both – show in Veg and Non-Veg filters
         return dietaryArr.includes(selectedDietary);
     });
-
-    // Checkout step
-    if (step === 'checkout') {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-8">
-                <div className="bg-[#FDC55E] pt-8 pb-6 px-6 rounded-b-[2rem] shadow-sm">
-                    <button onClick={() => setStep('menu')} className="flex items-center gap-2 text-zinc-800 font-bold mb-2">
-                        <ChevronLeft size={20} /> Back
-                    </button>
-                    <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
-                    <p className="text-sm text-zinc-800/80 mt-1">Table {tableNumber}</p>
-                </div>
-                <div className="flex-1 p-6 space-y-6">
-                    <div className="bg-white rounded-xl border border-zinc-200 p-4">
-                        <h2 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3">Order summary</h2>
-                        {cart.map(item => (
-                            <div key={item.menuItemId} className="flex justify-between py-2 border-b border-zinc-100 last:border-0">
-                                <span className="text-zinc-800">{item.name} × {item.quantity}</span>
-                                <span className="font-bold text-primary-dark">{item.price}</span>
-                            </div>
-                        ))}
-                        <div className="flex justify-between pt-3 mt-2 border-t border-zinc-200 font-bold text-zinc-900">
-                            <span>Total</span>
-                            <span>₹{cartTotal.toFixed(0)}</span>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Name *</label>
-                            <input
-                                type="text"
-                                value={checkoutForm.customerName}
-                                onChange={e => setCheckoutForm(f => ({ ...f, customerName: e.target.value }))}
-                                placeholder="Your name"
-                                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Phone *</label>
-                            <input
-                                type="tel"
-                                value={checkoutForm.customerPhone}
-                                onChange={e => setCheckoutForm(f => ({ ...f, customerPhone: e.target.value }))}
-                                placeholder="10-digit mobile number"
-                                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Order type</label>
-                            <div className="flex gap-2">
-                                {['Dine-in', 'Take away'].map(type => (
-                                    <button key={type} type="button" onClick={() => setCheckoutForm(f => ({ ...f, orderType: type }))} className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${checkoutForm.orderType === type ? 'bg-primary text-black border-primary' : 'bg-white text-zinc-500 border-zinc-200'}`}>{type}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Special requests (optional)</label>
-                            <textarea value={checkoutForm.specialRequests} onChange={e => setCheckoutForm(f => ({ ...f, specialRequests: e.target.value }))} placeholder="Any special instructions" rows={2} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
-                        </div>
-                    </div>
-                    <button onClick={submitOrder} disabled={orderSubmitting} className="w-full py-4 bg-primary text-black font-bold rounded-xl disabled:opacity-60">
-                        {orderSubmitting ? 'Placing order...' : 'Place order'}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (step === 'success') {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col font-sans items-center justify-center p-6 text-center">
-                <div className="bg-white rounded-2xl border border-zinc-200 p-8 max-w-sm w-full shadow-lg">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">✓</div>
-                    <h1 className="text-2xl font-bold text-zinc-900 mb-2">Order placed!</h1>
-                    <p className="text-zinc-600 mb-1">Order number</p>
-                    <p className="text-xl font-bold text-primary mb-6">{lastOrderNumber}</p>
-                    <p className="text-sm text-zinc-500 mb-6">We will prepare your order shortly. You can show this number at the counter.</p>
-                    <button onClick={() => { setStep('menu'); setCheckoutForm({ customerName: '', customerPhone: '', orderType: 'Dine-in', specialRequests: '' }); }} className="w-full py-3 bg-primary text-black font-bold rounded-xl">Order again</button>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -370,277 +206,49 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
 
                             <div className="grid gap-4 pb-24">
                                 {filteredDishes.map(dish => {
-                                    const optionConfig = (Array.isArray(dish.options) && dish.options.length > 0)
-                                        ? dish.options
-                                        : ITEM_OPTIONS[dish.id];
-                                    const hasOptions = !!optionConfig;
                                     return (
-                                    <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
-                                        {dish.image && (
-                                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                                                <Image
-                                                    src={dish.image}
-                                                    alt={dish.name}
-                                                    fill
-                                                    sizes="96px"
-                                                    className="object-cover"
-                                                    loading="lazy"
-                                                    placeholder="blur"
-                                                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
-                                                    <div className="flex gap-1 mt-1.5 flex-shrink-0">
-                                                        {(() => {
-                                                            const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
-                                                            if (!arr.length) return null;
-                                                            if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
-                                                            return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
-                                                        })()}
-                                                    </div>
+                                        <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
+                                            {dish.image && (
+                                                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
+                                                    <Image
+                                                        src={dish.image}
+                                                        alt={dish.name}
+                                                        fill
+                                                        sizes="96px"
+                                                        className="object-cover"
+                                                        loading="lazy"
+                                                        placeholder="blur"
+                                                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+                                                    />
                                                 </div>
-                                                <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
-                                            </div>
-                                            <div className="flex justify-between items-end mt-3">
-                                                <span className="font-bold text-primary-dark">{dish.price}</span>
-                                                {isTableOrder && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (!hasOptions) {
-                                                                addToCart(dish);
-                                                            } else {
-                                                                // open options modal
-                                                                const initialSelections = {};
-                                                                optionConfig.forEach(group => {
-                                                                    if (group.type === 'single') {
-                                                                        initialSelections[group.id] = group.choices[0] || '';
-                                                                    } else {
-                                                                        initialSelections[group.id] = [];
-                                                                    }
-                                                                });
-                                                                setOptionModal({ open: true, dish, selections: initialSelections });
-                                                            }
-                                                        }}
-                                                        className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-500 transition-colors"
-                                                    >
-                                                        <Plus size={14} /> Add
-                                                    </button>
-                                                )}
+                                            )}
+                                            <div className="flex-1 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
+                                                        <div className="flex gap-1 mt-1.5 flex-shrink-0">
+                                                            {(() => {
+                                                                const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                                                if (!arr.length) return null;
+                                                                if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
+                                                                return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
+                                                </div>
+                                                <div className="flex justify-between items-end mt-3">
+                                                    <span className="font-bold text-primary-dark">{dish.price}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )})}
+                                    )
+                                })}
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
-
-            {/* Cart bar (table order only) */}
-            {isTableOrder && (
-                <>
-                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 shadow-lg p-4 z-30 safe-area-pb">
-                        <div className="flex items-center justify-between gap-4">
-                            <button onClick={() => setShowCartDrawer(true)} className="flex items-center gap-2 flex-1">
-                                <div className="relative">
-                                    <ShoppingCart size={24} className="text-zinc-800" />
-                                    {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-primary text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>}
-                                </div>
-                                <span className="font-bold text-zinc-800">Cart {cartCount > 0 ? `(${cartCount} items)` : ''}</span>
-                            </button>
-                            {cartCount > 0 && (
-                                <>
-                                    <span className="font-bold text-primary">₹{cartTotal.toFixed(0)}</span>
-                                    <button onClick={openCheckout} className="bg-primary text-black px-4 py-2 rounded-xl font-bold text-sm">Checkout</button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Cart drawer */}
-                    <AnimatePresence>
-                        {showCartDrawer && (
-                            <>
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCartDrawer(false)} className="fixed inset-0 bg-black/50 z-40" />
-                                <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'tween' }} className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] flex flex-col">
-                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
-                                        <h3 className="font-bold text-lg text-zinc-900">Your order</h3>
-                                        <button onClick={() => setShowCartDrawer(false)} className="p-2 text-zinc-500 hover:text-zinc-900"><X size={20} /></button>
-                                    </div>
-                                    <div className="overflow-y-auto flex-1 p-4">
-                                        {cart.length === 0 ? (
-                                            <p className="text-zinc-500 text-center py-8">Cart is empty. Add items from the menu.</p>
-                                        ) : (
-                                            <ul className="space-y-3">
-                                                {cart.map(item => (
-                                                    <li key={item.menuItemId} className="flex items-center justify-between gap-2 bg-zinc-50 rounded-xl p-3">
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="font-bold text-zinc-900 truncate">{item.name}</p>
-                                                            <p className="text-sm text-primary font-bold">{item.price}</p>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <button onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold"><Minus size={14} /></button>
-                                                            <span className="w-6 text-center font-bold text-zinc-900">{item.quantity}</span>
-                                                            <button onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold"><Plus size={14} /></button>
-                                                            <button onClick={() => removeFromCart(item.menuItemId)} className="p-1 text-red-500 hover:bg-red-50 rounded"><X size={18} /></button>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                    {cart.length > 0 && (
-                                        <div className="p-4 border-t border-zinc-200">
-                                            <div className="flex justify-between font-bold text-zinc-900 mb-3">
-                                                <span>Total</span>
-                                                <span>₹{cartTotal.toFixed(0)}</span>
-                                            </div>
-                                            <button onClick={openCheckout} className="w-full py-3 bg-primary text-black font-bold rounded-xl">Proceed to checkout</button>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Options modal */}
-                    <AnimatePresence>
-                        {optionModal.open && optionModal.dish && (
-                            <>
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 0.5 }}
-                                    exit={{ opacity: 0 }}
-                                    className="fixed inset-0 bg-black z-40"
-                                    onClick={() => setOptionModal({ open: false, dish: null, selections: {} })}
-                                />
-                                <motion.div
-                                    initial={{ y: '100%' }}
-                                    animate={{ y: 0 }}
-                                    exit={{ y: '100%' }}
-                                    transition={{ type: 'tween' }}
-                                    className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 max-h-[80vh] flex flex-col"
-                                >
-                                    <div className="p-4 border-b border-zinc-200 flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-bold text-lg text-zinc-900">{optionModal.dish.name}</h3>
-                                            <p className="text-xs text-zinc-500 mt-0.5">Customize your drink before adding to cart.</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setOptionModal({ open: false, dish: null, selections: {} })}
-                                            className="p-2 text-zinc-500 hover:text-zinc-900"
-                                        >
-                                            <X size={20} />
-                                        </button>
-                                    </div>
-                                    <div className="overflow-y-auto flex-1 p-4 space-y-4">
-                                        {(Array.isArray(optionModal.dish.options) && optionModal.dish.options.length
-                                            ? optionModal.dish.options
-                                            : (ITEM_OPTIONS[optionModal.dish.id] || [])
-                                        ).map(group => (
-                                            <div key={group.id} className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-                                                        {group.name}
-                                                    </span>
-                                                    {group.required && <span className="text-[10px] text-red-500 font-bold">Required</span>}
-                                                </div>
-                                                {group.type === 'single' ? (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {group.choices.map(choice => {
-                                                            const active = optionModal.selections[group.id] === choice;
-                                                            return (
-                                                                <button
-                                                                    key={choice}
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        setOptionModal(prev => ({
-                                                                            ...prev,
-                                                                            selections: { ...prev.selections, [group.id]: choice }
-                                                                        }))
-                                                                    }
-                                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                                                                        active
-                                                                            ? 'bg-zinc-900 text-white border-zinc-900'
-                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                                                                    }`}
-                                                                >
-                                                                    {choice}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {group.choices.map(choice => {
-                                                            const values = optionModal.selections[group.id] || [];
-                                                            const active = values.includes(choice);
-                                                            return (
-                                                                <button
-                                                                    key={choice}
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        setOptionModal(prev => {
-                                                                            const current = prev.selections[group.id] || [];
-                                                                            const next = active
-                                                                                ? current.filter(v => v !== choice)
-                                                                                : [...current, choice];
-                                                                            return {
-                                                                                ...prev,
-                                                                                selections: { ...prev.selections, [group.id]: next }
-                                                                            };
-                                                                        })
-                                                                    }
-                                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                                                                        active
-                                                                            ? 'bg-primary text-black border-primary'
-                                                                            : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                                                                    }`}
-                                                                >
-                                                                    {choice}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="p-4 border-t border-zinc-200">
-                                        <button
-                                            onClick={() => {
-                                                const config = (Array.isArray(optionModal.dish.options) && optionModal.dish.options.length
-                                                    ? optionModal.dish.options
-                                                    : (ITEM_OPTIONS[optionModal.dish.id] || []));
-                                                // Build normalized options payload
-                                                const selectedOptions = config.map(group => {
-                                                    const sel = optionModal.selections[group.id];
-                                                    const values = group.type === 'single'
-                                                        ? (sel ? [sel] : [])
-                                                        : Array.isArray(sel) ? sel : [];
-                                                    return {
-                                                        group: group.name,
-                                                        values
-                                                    };
-                                                }).filter(o => o.values.length > 0);
-                                                addToCart(optionModal.dish, selectedOptions);
-                                                setOptionModal({ open: false, dish: null, selections: {} });
-                                            }}
-                                            className="w-full py-3 bg-primary text-black font-bold rounded-xl"
-                                        >
-                                            Add to cart
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
-                </>
-            )}
         </div>
     );
 };

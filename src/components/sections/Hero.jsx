@@ -32,30 +32,34 @@ const Hero = () => {
     };
 
     return (
-        <section id="home" className="relative w-full overflow-x-hidden flex flex-col items-center justify-start bg-transparent perspective-1000 pt-[4.5rem] sm:pt-20 md:pt-[5.25rem] pb-6 md:pb-8">
+        <section
+            id="home"
+            className="relative w-full overflow-x-hidden bg-transparent perspective-1000 isolate"
+        >
             <QuatrefoilBackground />
             <SparticlesEffect className="absolute inset-0 pointer-events-none z-40" />
 
-            {/* Content Overlay - Centered and elegant */}
-            <motion.div
-                style={{ y: y1, opacity }}
-                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-2 md:pt-3 pb-2 md:pb-4"
-            >
+            {/* At least one full viewport so #menu (Signature Dishes) starts below the fold */}
+            <div className="relative z-10 flex min-h-[100dvh] min-h-screen w-full flex-col items-center justify-center pt-[4.5rem] sm:pt-20 md:pt-[5.25rem] pb-10 md:pb-16">
                 <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={{
-                        hidden: { opacity: 0 },
-                        visible: {
-                            opacity: 1,
-                            transition: {
-                                staggerChildren: 0.2,
-                                delayChildren: 0.1
-                            }
-                        }
-                    }}
-                    className="space-y-2 md:space-y-3 max-w-4xl"
+                    style={{ y: y1, opacity }}
+                    className="container mx-auto px-6 md:px-12 flex flex-col items-center text-center"
                 >
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            visible: {
+                                opacity: 1,
+                                transition: {
+                                    staggerChildren: 0.2,
+                                    delayChildren: 0.1
+                                }
+                            }
+                        }}
+                        className="space-y-2 md:space-y-3 max-w-4xl"
+                    >
                     {/* Top Tagline */}
                     <div
                         className="flex items-center justify-center gap-4"
@@ -111,8 +115,9 @@ const Hero = () => {
                             <span className="font-asian font-bold uppercase tracking-[0.2em] text-xs">Book a Table</span>
                         </div>
                     </motion.div>
+                    </motion.div>
                 </motion.div>
-            </motion.div>
+            </div>
         </section>
     );
 };

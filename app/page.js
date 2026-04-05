@@ -9,8 +9,8 @@ export default function Home() {
     return (
         <>
             <Hero />
-            <AboutSection />
             <MenuSection />
+            <AboutSection />
             <GallerySection />
             <InstagramSection />
             <LocationSection />

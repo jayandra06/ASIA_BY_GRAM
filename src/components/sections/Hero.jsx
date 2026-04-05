@@ -32,14 +32,14 @@ const Hero = () => {
     };
 
     return (
-        <section id="home" className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center bg-transparent perspective-1000">
+        <section id="home" className="relative w-full overflow-x-hidden flex flex-col items-center justify-start bg-transparent perspective-1000 pt-[4.5rem] sm:pt-20 md:pt-[5.25rem] pb-6 md:pb-8">
             <QuatrefoilBackground />
             <SparticlesEffect className="absolute inset-0 pointer-events-none z-40" />
 
             {/* Content Overlay - Centered and elegant */}
             <motion.div
                 style={{ y: y1, opacity }}
-                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-20 md:pt-28"
+                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-2 md:pt-3 pb-2 md:pb-4"
             >
                 <motion.div
                     initial="hidden"
@@ -54,7 +54,7 @@ const Hero = () => {
                             }
                         }
                     }}
-                    className="space-y-4 max-w-4xl"
+                    className="space-y-2 md:space-y-3 max-w-4xl"
                 >
                     {/* Top Tagline */}
                     <div
@@ -68,7 +68,7 @@ const Hero = () => {
                     </div>
 
                     {/* Main Heading - The "Wow" Factor with 3D Reveal */}
-                    <div className="relative perspective-1000 mt-2 md:mt-4">
+                    <div className="relative perspective-1000 mt-0 md:mt-1">
                         <motion.h1
                             variants={titleVariants}
                             className="flex justify-center pb-2"
@@ -79,7 +79,7 @@ const Hero = () => {
                                 width="320"
                                 height="320"
                                 fetchPriority="high"
-                                className="w-[180px] md:w-[240px] lg:w-[320px] h-auto object-contain mx-auto drop-shadow-2xl"
+                                className="w-[160px] sm:w-[200px] md:w-[220px] lg:w-[260px] h-auto object-contain mx-auto drop-shadow-2xl"
                             />
                         </motion.h1>
                     </div>
@@ -87,7 +87,7 @@ const Hero = () => {
                     {/* Subheading / Description */}
                     <motion.p
                         variants={{ hidden: { opacity: 0, y: 30, filter: "blur(10px)" }, visible: { opacity: 1, y: 0, filter: "blur(0)" } }}
-                        className="text-black font-bold text-sm md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed pt-2 pb-[17px]"
+                        className="text-black font-bold text-sm md:text-base font-serif italic max-w-2xl mx-auto leading-relaxed pt-1 pb-2 md:pb-3"
                     >
                         "A culinary journey through the soul of Asia, crafted with passion and served with elegance in the heart of Hyderabad."
                     </motion.p>

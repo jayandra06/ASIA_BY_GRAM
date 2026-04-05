@@ -30,14 +30,14 @@ const Hero = () => {
     };
 
     return (
-        <section id="home" className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center bg-transparent perspective-1000">
+        <section id="home" className="relative w-full min-h-screen min-h-[100dvh] overflow-x-hidden flex flex-col items-center justify-center bg-transparent perspective-1000 py-8 md:py-12">
             <QuatrefoilBackground />
             <SparticlesEffect className="absolute inset-0 pointer-events-none z-40" />
 
             {/* Content Overlay - Centered and elegant */}
             <motion.div
                 style={{ y: y1, opacity }}
-                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-20 md:pt-28"
+                className="relative z-10 container mx-auto px-6 md:px-12 flex flex-col items-center text-center pt-16 md:pt-20 lg:pt-24 pb-6 md:pb-10"
             >
                 <motion.div
                     initial="hidden"

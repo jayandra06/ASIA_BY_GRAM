@@ -42,9 +42,9 @@ const MenuSection = () => {
     }, []);
 
     return (
-        <section id="menu" className="py-24 bg-transparent relative">
+        <section id="menu" className="pt-6 md:pt-10 pb-20 md:pb-24 bg-transparent relative scroll-mt-24">
             <div className="container mx-auto px-6 md:px-12">
-                <div className="text-center mb-16 space-y-4">
+                <div className="text-center mb-8 md:mb-12 space-y-3 md:space-y-4">
                     <h2 className="text-primary font-bold tracking-widest uppercase text-3xl md:text-4xl text-center mx-auto">Signature Dishes</h2>
                     <h3 className="text-4xl md:text-5xl font-asian font-bold text-black tracking-widest text-center mx-auto">Culinary Masterpieces</h3>
                 </div>

@@ -694,6 +694,15 @@ const MenuManagement = () => {
 
     const activeCategoryData = categories.find(c => c.name === formData.category);
     const bulkCategoryData = categories.find(c => c.name === bulkFormData.category);
+    const filteredItems = items.filter(item => activeTab === 'all' || item.category === activeTab);
+
+    const handleSelectAllFiltered = () => {
+        setSelectedItems(new Set(filteredItems.map(item => item.id || item._id)));
+    };
+
+    const handleClearSelection = () => {
+        setSelectedItems(new Set());
+    };
 
     return (
         <div className="p-6 space-y-6 relative">
@@ -735,8 +744,29 @@ const MenuManagement = () => {
                             <button key={cat._id} onClick={() => setActiveTab(cat.name)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${activeTab === cat.name ? 'bg-zinc-900 text-white font-bold' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'}`}>{cat.name}</button>
                         ))}
                     </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
+                        <p className="text-xs text-zinc-500">
+                            Showing <span className="font-bold text-zinc-700">{filteredItems.length}</span> items • Selected <span className="font-bold text-zinc-700">{selectedItems.size}</span>
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleSelectAllFiltered}
+                                disabled={filteredItems.length === 0}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Select All (Filtered)
+                            </button>
+                            <button
+                                onClick={handleClearSelection}
+                                disabled={selectedItems.size === 0}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {items.filter(item => activeTab === 'all' || item.category === activeTab).map(item => {
+                        {filteredItems.map(item => {
                             const uniqueId = item.id || item._id;
                             return (
                                 <motion.div layout key={uniqueId} onClick={() => handleSelect(uniqueId)} className={`bg-white border rounded-xl overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer relative ${selectedItems.has(uniqueId) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-zinc-200 hover:border-primary/50'}`}>

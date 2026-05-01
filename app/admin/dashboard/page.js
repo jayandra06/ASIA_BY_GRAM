@@ -466,7 +466,16 @@ const MenuManagement = () => {
     const [editingItem, setEditingItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState(new Set());
     const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: [], options: [] });
-    const [bulkFormData, setBulkFormData] = useState({ category: '', subcategory: '', price: '' });
+    const [bulkFormData, setBulkFormData] = useState({
+        category: '',
+        subcategory: '',
+        priceMode: 'no_change', // no_change | set | increase_amount | decrease_amount | increase_percent | decrease_percent
+        priceValue: '',
+        dietary: undefined,
+        gstEnabledMode: 'no_change', // no_change | enable | disable
+        gstRate: '',
+        gstIncludedMode: 'no_change' // no_change | included | excluded
+    });
     const [uploading, setUploading] = useState(false);
     const [importing, setImporting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -639,14 +648,40 @@ const MenuManagement = () => {
         const updates = {};
         if (bulkFormData.category) updates.category = bulkFormData.category;
         if (bulkFormData.subcategory) updates.subcategory = bulkFormData.subcategory;
-        if (bulkFormData.price) updates.price = bulkFormData.price;
         if (bulkFormData.dietary !== undefined) updates.dietary = bulkFormData.dietary; // [] = none (beverages)
+
+        const priceOperation = {
+            mode: bulkFormData.priceMode,
+            value: bulkFormData.priceValue
+        };
+
+        const gstSettings = {
+            enabledMode: bulkFormData.gstEnabledMode,
+            rate: bulkFormData.gstRate,
+            includedMode: bulkFormData.gstIncludedMode
+        };
+
+        const hasPriceOp = priceOperation.mode && priceOperation.mode !== 'no_change' && String(priceOperation.value).trim() !== '';
+        const hasGstOp = gstSettings.enabledMode !== 'no_change'
+            || gstSettings.includedMode !== 'no_change'
+            || String(gstSettings.rate).trim() !== '';
+        const hasFieldUpdates = Object.keys(updates).length > 0;
+
+        if (!hasPriceOp && !hasGstOp && !hasFieldUpdates) {
+            alert('Please choose at least one bulk update option.');
+            return;
+        }
 
         try {
             const res = await fetch(`/api/menu/bulk`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: JSON.stringify({ ids: Array.from(selectedItems), updates })
+                body: JSON.stringify({
+                    ids: Array.from(selectedItems),
+                    updates,
+                    priceOperation: hasPriceOp ? priceOperation : null,
+                    gstSettings: hasGstOp ? gstSettings : null
+                })
             });
             if (res.ok) {
                 fetchItems();
@@ -983,8 +1018,69 @@ const MenuManagement = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs text-zinc-500 uppercase font-bold">New Price</label>
-                                    <input type="text" value={bulkFormData.price} onChange={e => setBulkFormData({ ...bulkFormData, price: e.target.value })} placeholder="No Change" className="w-full border rounded-lg px-3 py-2 text-zinc-900" />
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">Bulk Price Operation</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <select
+                                            value={bulkFormData.priceMode}
+                                            onChange={e => setBulkFormData({ ...bulkFormData, priceMode: e.target.value })}
+                                            className="w-full border rounded-lg px-3 py-2 text-zinc-900"
+                                        >
+                                            <option value="no_change">No Change</option>
+                                            <option value="set">Set fixed price</option>
+                                            <option value="increase_amount">Increase by amount (+₹)</option>
+                                            <option value="decrease_amount">Decrease by amount (-₹)</option>
+                                            <option value="increase_percent">Increase by percent (+%)</option>
+                                            <option value="decrease_percent">Decrease by percent (-%)</option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={bulkFormData.priceValue}
+                                            onChange={e => setBulkFormData({ ...bulkFormData, priceValue: e.target.value })}
+                                            placeholder={bulkFormData.priceMode?.includes('percent') ? 'e.g. 10' : 'e.g. 25'}
+                                            disabled={bulkFormData.priceMode === 'no_change'}
+                                            className="w-full border rounded-lg px-3 py-2 text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-400"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400 mt-1">
+                                        Use this for one-click rice hike updates across all selected items.
+                                    </p>
+                                </div>
+                                <div className="space-y-2 rounded-lg border border-zinc-200 p-3 bg-zinc-50">
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">GST Settings (Bulk)</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <select
+                                            value={bulkFormData.gstEnabledMode}
+                                            onChange={e => setBulkFormData({ ...bulkFormData, gstEnabledMode: e.target.value })}
+                                            className="w-full border rounded-lg px-3 py-2 text-zinc-900"
+                                        >
+                                            <option value="no_change">GST Enabled: No Change</option>
+                                            <option value="enable">Enable GST</option>
+                                            <option value="disable">Disable GST</option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={bulkFormData.gstRate}
+                                            onChange={e => setBulkFormData({ ...bulkFormData, gstRate: e.target.value })}
+                                            placeholder="GST % (optional)"
+                                            className="w-full border rounded-lg px-3 py-2 text-zinc-900"
+                                        />
+                                    </div>
+                                    <select
+                                        value={bulkFormData.gstIncludedMode}
+                                        onChange={e => setBulkFormData({ ...bulkFormData, gstIncludedMode: e.target.value })}
+                                        className="w-full border rounded-lg px-3 py-2 text-zinc-900"
+                                    >
+                                        <option value="no_change">GST in menu price: No Change</option>
+                                        <option value="included">GST Included in Menu Price</option>
+                                        <option value="excluded">GST Excluded from Menu Price</option>
+                                    </select>
+                                    <p className="text-[10px] text-zinc-400">
+                                        If GST is disabled/not set, GST will not be added to menu prices.
+                                    </p>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-zinc-500 uppercase font-bold">New Dietary</label>

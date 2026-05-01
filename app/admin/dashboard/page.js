@@ -700,6 +700,11 @@ const MenuManagement = () => {
         setSelectedItems(new Set(filteredItems.map(item => item.id || item._id)));
     };
 
+    const handleSelectTop20Filtered = () => {
+        const ids = filteredItems.slice(0, 20).map(item => item.id || item._id);
+        setSelectedItems(new Set(ids));
+    };
+
     const handleClearSelection = () => {
         setSelectedItems(new Set());
     };
@@ -749,6 +754,14 @@ const MenuManagement = () => {
                             Showing <span className="font-bold text-zinc-700">{filteredItems.length}</span> items • Selected <span className="font-bold text-zinc-700">{selectedItems.size}</span>
                         </p>
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleSelectTop20Filtered}
+                                disabled={filteredItems.length === 0}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Quick-select first 20 items in current filter"
+                            >
+                                Select Top 20
+                            </button>
                             <button
                                 onClick={handleSelectAllFiltered}
                                 disabled={filteredItems.length === 0}

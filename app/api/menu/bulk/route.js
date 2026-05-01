@@ -15,6 +15,14 @@ function formatPrice(priceNumber) {
     return `₹${hasDecimals ? rounded.toFixed(2) : Math.round(rounded)}`;
 }
 
+function computeDisplayPrice(basePrice, gstEnabled, gstRate, gstIncludedInPrice) {
+    if (!Number.isFinite(basePrice)) return NaN;
+    if (!gstEnabled || !Number.isFinite(gstRate) || gstRate <= 0 || !gstIncludedInPrice) {
+        return basePrice;
+    }
+    return basePrice * (1 + (gstRate / 100));
+}
+
 function applyPriceOperation(currentPrice, operation) {
     if (!operation || !operation.mode || operation.mode === 'no_change') return currentPrice;
     const value = Number(operation.value);
@@ -65,6 +73,7 @@ export async function PATCH(request) {
         let modifiedCount = 0;
         for (const item of menuItems) {
             let changed = false;
+            let priceChanged = false;
 
             // Direct field updates (category, subcategory, dietary, etc.)
             for (const [key, value] of Object.entries(updates)) {
@@ -72,14 +81,29 @@ export async function PATCH(request) {
                 changed = true;
             }
 
+            // Resolve base price from stored basePrice or current display price.
+            // If item was saved as GST-included and no basePrice existed, derive base first.
+            const currentDisplay = parsePriceNumber(item.price);
+            const currentRate = Number(item.gstRate);
+            let currentBase = Number.isFinite(item.basePrice)
+                ? item.basePrice
+                : (
+                    Number.isFinite(currentDisplay)
+                        ? (
+                            item.gstEnabled && item.gstIncludedInPrice && Number.isFinite(currentRate) && currentRate > 0
+                                ? (currentDisplay / (1 + currentRate / 100))
+                                : currentDisplay
+                        )
+                        : NaN
+                );
+
             // Bulk price operation
             if (priceOperation && priceOperation.mode && priceOperation.mode !== 'no_change') {
-                const currentBase = Number.isFinite(item.basePrice) ? item.basePrice : parsePriceNumber(item.price);
                 if (Number.isFinite(currentBase)) {
-                    const nextBase = applyPriceOperation(currentBase, priceOperation);
-                    item.basePrice = nextBase;
-                    item.price = formatPrice(nextBase);
+                    currentBase = applyPriceOperation(currentBase, priceOperation);
+                    item.basePrice = currentBase;
                     changed = true;
+                    priceChanged = true;
                 }
             }
 
@@ -88,9 +112,11 @@ export async function PATCH(request) {
                 if (gstSettings.enabledMode === 'enable') {
                     item.gstEnabled = true;
                     changed = true;
+                    priceChanged = true;
                 } else if (gstSettings.enabledMode === 'disable') {
                     item.gstEnabled = false;
                     changed = true;
+                    priceChanged = true;
                 }
 
                 if (gstSettings.rate !== undefined && gstSettings.rate !== null && gstSettings.rate !== '') {
@@ -98,16 +124,33 @@ export async function PATCH(request) {
                     if (Number.isFinite(parsedRate) && parsedRate >= 0) {
                         item.gstRate = parsedRate;
                         changed = true;
+                        priceChanged = true;
                     }
                 }
 
                 if (gstSettings.includedMode === 'included') {
                     item.gstIncludedInPrice = true;
                     changed = true;
+                    priceChanged = true;
                 } else if (gstSettings.includedMode === 'excluded') {
                     item.gstIncludedInPrice = false;
                     changed = true;
+                    priceChanged = true;
                 }
+            }
+
+            // Recalculate visible menu price whenever price/GST settings changed.
+            if (priceChanged && Number.isFinite(currentBase)) {
+                item.basePrice = currentBase;
+                const effectiveRate = Number(item.gstRate);
+                const effectiveDisplay = computeDisplayPrice(
+                    currentBase,
+                    !!item.gstEnabled,
+                    Number.isFinite(effectiveRate) ? effectiveRate : NaN,
+                    !!item.gstIncludedInPrice
+                );
+                item.price = formatPrice(Number.isFinite(effectiveDisplay) ? effectiveDisplay : currentBase);
+                changed = true;
             }
 
             if (changed) {

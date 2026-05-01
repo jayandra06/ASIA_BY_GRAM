@@ -2,11 +2,61 @@ import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/db';
 import Menu from '../../../../models/Menu';
 
+function parsePriceNumber(value) {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+    if (value === null || value === undefined) return NaN;
+    const cleaned = String(value).replace(/[^\d.-]/g, '');
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : NaN;
+}
+
+function formatPrice(priceNumber) {
+    const rounded = Number.isFinite(priceNumber) ? Math.max(0, Math.round(priceNumber * 100) / 100) : 0;
+    const hasDecimals = Math.abs(rounded - Math.round(rounded)) > 0.001;
+    return `₹${hasDecimals ? rounded.toFixed(2) : Math.round(rounded)}`;
+}
+
+function computeDisplayPrice(basePrice, gstEnabled, gstRate, gstIncludedInPrice) {
+    if (!Number.isFinite(basePrice)) return NaN;
+    if (!gstEnabled || !Number.isFinite(gstRate) || gstRate <= 0 || !gstIncludedInPrice) return basePrice;
+    return basePrice * (1 + gstRate / 100);
+}
+
 export async function PUT(request, { params }) {
     try {
         await dbConnect();
         const { id } = await params;
         const body = await request.json();
+
+        // Normalize pricing/GST fields on update so reopening edit shows persisted values
+        const incomingPrice = parsePriceNumber(body.price);
+        const incomingBase = parsePriceNumber(body.basePrice);
+        const gstEnabled = !!body.gstEnabled;
+        const gstRate = parsePriceNumber(body.gstRate);
+        const gstIncludedInPrice = !!body.gstIncludedInPrice;
+
+        const resolvedBase = Number.isFinite(incomingBase)
+            ? incomingBase
+            : (
+                Number.isFinite(incomingPrice)
+                    ? (
+                        gstEnabled && gstIncludedInPrice && Number.isFinite(gstRate) && gstRate > 0
+                            ? incomingPrice / (1 + gstRate / 100)
+                            : incomingPrice
+                    )
+                    : NaN
+            );
+
+        if (Number.isFinite(resolvedBase)) {
+            body.basePrice = resolvedBase;
+            const display = computeDisplayPrice(
+                resolvedBase,
+                gstEnabled,
+                Number.isFinite(gstRate) ? gstRate : NaN,
+                gstIncludedInPrice
+            );
+            body.price = formatPrice(Number.isFinite(display) ? display : resolvedBase);
+        }
 
         // Try to update by custom id first
         let updatedItem = await Menu.findOneAndUpdate({ id }, body, { new: true });

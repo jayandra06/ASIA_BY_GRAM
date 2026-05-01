@@ -465,7 +465,20 @@ const MenuManagement = () => {
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedItems, setSelectedItems] = useState(new Set());
-    const [formData, setFormData] = useState({ name: '', price: '', description: '', category: '', subcategory: '', image: '', dietary: [], options: [] });
+    const [formData, setFormData] = useState({
+        name: '',
+        price: '',
+        basePrice: '',
+        description: '',
+        category: '',
+        subcategory: '',
+        image: '',
+        dietary: [],
+        gstEnabled: false,
+        gstRate: '',
+        gstIncludedInPrice: false,
+        options: []
+    });
     const [bulkFormData, setBulkFormData] = useState({
         category: '',
         subcategory: '',
@@ -552,11 +565,28 @@ const MenuManagement = () => {
             setEditingItem(item);
             setFormData({
                 ...item,
+                basePrice: item.basePrice ?? '',
+                gstEnabled: !!item.gstEnabled,
+                gstRate: item.gstRate ?? '',
+                gstIncludedInPrice: !!item.gstIncludedInPrice,
                 options: Array.isArray(item.options) ? item.options : []
             });
         } else {
             setEditingItem(null);
-            setFormData({ name: '', price: '', description: '', category: categories[0]?.name || '', subcategory: '', image: '', dietary: [], options: [] });
+            setFormData({
+                name: '',
+                price: '',
+                basePrice: '',
+                description: '',
+                category: categories[0]?.name || '',
+                subcategory: '',
+                image: '',
+                dietary: [],
+                gstEnabled: false,
+                gstRate: '',
+                gstIncludedInPrice: false,
+                options: []
+            });
         }
         setIsModalOpen(true);
     };
@@ -874,6 +904,39 @@ const MenuManagement = () => {
                                         </div>
                                         <p className="text-[10px] text-zinc-400 mt-1">Leave as None for beverages</p>
                                     </div>
+                                </div>
+                                <div className="space-y-2 rounded-lg border border-zinc-200 p-3 bg-zinc-50">
+                                    <label className="text-xs text-zinc-500 uppercase font-bold">GST (Item)</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <label className="flex items-center gap-2 text-sm text-zinc-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.gstEnabled}
+                                                onChange={e => setFormData({ ...formData, gstEnabled: e.target.checked })}
+                                            />
+                                            GST Enabled
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={formData.gstRate ?? ''}
+                                            onChange={e => setFormData({ ...formData, gstRate: e.target.value })}
+                                            placeholder="GST %"
+                                            className="w-full border rounded-lg px-3 py-2 text-zinc-900"
+                                        />
+                                        <label className="flex items-center gap-2 text-sm text-zinc-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.gstIncludedInPrice}
+                                                onChange={e => setFormData({ ...formData, gstIncludedInPrice: e.target.checked })}
+                                            />
+                                            Included in price
+                                        </label>
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400">
+                                        These values are saved and prefilled on next edit.
+                                    </p>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-zinc-500 uppercase font-bold">Image</label>

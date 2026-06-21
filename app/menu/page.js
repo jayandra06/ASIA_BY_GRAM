@@ -70,12 +70,20 @@ function parsePrice(priceStr) {
 const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const categories = categoriesProp && categoriesProp.length > 0 ? categoriesProp : FALLBACK_CATEGORIES;
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
+    const isSearching = searchQuery.trim().length > 0;
 
     const filteredDishes = menuItems.filter(dish => {
         if (dish.category === 'Uncategorised') return false; // hide uncategorised from public menu
-        if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) return false;
+        if (isSearching) {
+            const matchesSearch = dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (dish.description && dish.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            if (!matchesSearch) return false;
+        } else if (selectedCategory && selectedCategory !== 'All' && dish.category !== selectedCategory) {
+            return false;
+        }
         if (selectedDietary === 'All') return true;
         const dietaryArr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
         if (dietaryArr.length === 0) return true; // none (e.g. beverages) – show in Veg and Non-Veg filters
@@ -99,8 +107,99 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
             </div>
 
             <div className="flex-1 p-6">
+                <div className="relative mb-6">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search dishes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white border border-zinc-200 rounded-xl pl-11 pr-10 py-3 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 p-1"
+                            aria-label="Clear search"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+
                 <AnimatePresence mode="wait">
-                    {!selectedCategory ? (
+                    {isSearching ? (
+                        <motion.div
+                            key="search-results"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="space-y-4"
+                        >
+                            <div className="flex gap-2 mb-2 justify-center">
+                                {dietaryOptions.map(option => (
+                                    <button
+                                        key={option}
+                                        onClick={() => setSelectedDietary(option)}
+                                        className={`flex-1 max-w-[100px] py-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${selectedDietary === option
+                                            ? 'bg-zinc-900 text-white border-zinc-900 shadow-md'
+                                            : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-300'
+                                            }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <h2 className="text-lg font-bold text-zinc-900 mb-4 px-1">
+                                {filteredDishes.length > 0
+                                    ? `${filteredDishes.length} result${filteredDishes.length === 1 ? '' : 's'} for "${searchQuery}"`
+                                    : `No results for "${searchQuery}"`}
+                            </h2>
+
+                            <div className="grid gap-4 pb-24">
+                                {filteredDishes.map(dish => (
+                                    <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
+                                        {dish.image && (
+                                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
+                                                <Image
+                                                    src={dish.image}
+                                                    alt={dish.name}
+                                                    fill
+                                                    sizes="96px"
+                                                    className="object-cover"
+                                                    loading="lazy"
+                                                    placeholder="blur"
+                                                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex justify-between items-start gap-2">
+                                                    <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
+                                                    <div className="flex gap-1 mt-1.5 flex-shrink-0">
+                                                        {(() => {
+                                                            const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                                            if (!arr.length) return null;
+                                                            if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
+                                                            return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">{dish.category}</p>
+                                                <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
+                                            </div>
+                                            <div className="flex justify-between items-end mt-3">
+                                                <span className="font-bold text-primary-dark">{dish.price}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    ) : !selectedCategory ? (
                         <motion.div
                             key="categories"
                             initial={{ opacity: 0, x: -20 }}

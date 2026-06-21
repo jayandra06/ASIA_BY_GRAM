@@ -67,10 +67,74 @@ function parsePrice(priceStr) {
     return parseFloat(num) || 0;
 }
 
+function DishImageLightbox({ dish, onClose }) {
+    useEffect(() => {
+        if (!dish) return;
+        const onKey = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', onKey);
+        };
+    }, [dish, onClose]);
+
+    return (
+        <AnimatePresence>
+            {dish && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+                >
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-white hover:text-primary transition-colors p-2 z-10"
+                        aria-label="Close image"
+                    >
+                        <X size={32} />
+                    </button>
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.92 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.92 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl"
+                    >
+                        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-black">
+                            <img
+                                src={dish.image || DEFAULT_IMAGE}
+                                alt={dish.name}
+                                className="w-full max-h-[70vh] object-contain"
+                            />
+                        </div>
+                        <div className="p-5 bg-white">
+                            <div className="flex justify-between items-start gap-4">
+                                <h3 className="text-xl font-bold text-zinc-900">{dish.name}</h3>
+                                <span className="text-lg font-bold text-primary shrink-0">{dish.price}</span>
+                            </div>
+                            {dish.description && (
+                                <p className="text-sm text-zinc-600 mt-2 leading-relaxed">{dish.description}</p>
+                            )}
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
 const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDish, setSelectedDish] = useState(null);
     const categories = categoriesProp && categoriesProp.length > 0 ? categoriesProp : FALLBACK_CATEGORIES;
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];
     const isSearching = searchQuery.trim().length > 0;
@@ -90,6 +154,60 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
         if (dietaryArr.length === 2) return true; // both – show in Veg and Non-Veg filters
         return dietaryArr.includes(selectedDietary);
     });
+
+    const openDishImage = (dish) => setSelectedDish(dish);
+
+    const renderMobileDishCard = (dish, showCategory = false) => (
+        <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
+            {dish.image && (
+                <button
+                    type="button"
+                    onClick={() => openDishImage(dish)}
+                    className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative cursor-zoom-in"
+                    aria-label={`View full image of ${dish.name}`}
+                >
+                    <Image
+                        src={dish.image}
+                        alt={dish.name}
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+                    />
+                </button>
+            )}
+            <div className="flex-1 flex flex-col justify-between">
+                <div>
+                    <div className="flex justify-between items-start gap-2">
+                        <button
+                            type="button"
+                            onClick={() => openDishImage(dish)}
+                            className="font-bold text-zinc-900 leading-snug text-left hover:text-primary transition-colors"
+                        >
+                            {dish.name}
+                        </button>
+                        <div className="flex gap-1 mt-1.5 flex-shrink-0">
+                            {(() => {
+                                const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
+                                if (!arr.length) return null;
+                                if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
+                                return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
+                            })()}
+                        </div>
+                    </div>
+                    {showCategory && (
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">{dish.category}</p>
+                    )}
+                    <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
+                </div>
+                <div className="flex justify-between items-end mt-3">
+                    <span className="font-bold text-primary-dark">{dish.price}</span>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -159,44 +277,7 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                             </h2>
 
                             <div className="grid gap-4 pb-24">
-                                {filteredDishes.map(dish => (
-                                    <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
-                                        {dish.image && (
-                                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                                                <Image
-                                                    src={dish.image}
-                                                    alt={dish.name}
-                                                    fill
-                                                    sizes="96px"
-                                                    className="object-cover"
-                                                    loading="lazy"
-                                                    placeholder="blur"
-                                                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex justify-between items-start gap-2">
-                                                    <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
-                                                    <div className="flex gap-1 mt-1.5 flex-shrink-0">
-                                                        {(() => {
-                                                            const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
-                                                            if (!arr.length) return null;
-                                                            if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
-                                                            return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                                <p className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">{dish.category}</p>
-                                                <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
-                                            </div>
-                                            <div className="flex justify-between items-end mt-3">
-                                                <span className="font-bold text-primary-dark">{dish.price}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                {filteredDishes.map(dish => renderMobileDishCard(dish, true))}
                             </div>
                         </motion.div>
                     ) : !selectedCategory ? (
@@ -304,50 +385,14 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
                             </div>
 
                             <div className="grid gap-4 pb-24">
-                                {filteredDishes.map(dish => {
-                                    return (
-                                        <div key={dish.id} className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex gap-4">
-                                            {dish.image && (
-                                                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                                                    <Image
-                                                        src={dish.image}
-                                                        alt={dish.name}
-                                                        fill
-                                                        sizes="96px"
-                                                        className="object-cover"
-                                                        loading="lazy"
-                                                        placeholder="blur"
-                                                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
-                                                    />
-                                                </div>
-                                            )}
-                                            <div className="flex-1 flex flex-col justify-between">
-                                                <div>
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <h3 className="font-bold text-zinc-900 leading-snug">{dish.name}</h3>
-                                                        <div className="flex gap-1 mt-1.5 flex-shrink-0">
-                                                            {(() => {
-                                                                const arr = Array.isArray(dish.dietary) ? dish.dietary : (dish.dietary ? [dish.dietary] : []);
-                                                                if (!arr.length) return null;
-                                                                if (arr.length === 2) return (<div className="flex gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /><div className="w-2 h-2 rounded-full bg-red-500" /></div>);
-                                                                return <div className={`w-2 h-2 rounded-full ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-xs text-zinc-500 line-clamp-2 mt-1">{dish.description}</p>
-                                                </div>
-                                                <div className="flex justify-between items-end mt-3">
-                                                    <span className="font-bold text-primary-dark">{dish.price}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
+                                {filteredDishes.map(dish => renderMobileDishCard(dish))}
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
+
+            <DishImageLightbox dish={selectedDish} onClose={() => setSelectedDish(null)} />
         </div>
     );
 };
@@ -361,6 +406,7 @@ function MenuContent() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDish, setSelectedDish] = useState(null);
     const [menuItems, setMenuItems] = useState([]);
     const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
     const [loading, setLoading] = useState(true);
@@ -431,6 +477,8 @@ function MenuContent() {
             (dish.description && dish.description.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesCategory && matchesDietary && matchesSearch;
     });
+
+    const openDishImage = (dish) => setSelectedDish(dish);
 
     return (
         <div className="min-h-screen bg-transparent pt-32 pb-20 px-6 md:px-12">
@@ -548,7 +596,12 @@ function MenuContent() {
                                     }}
                                     className="group relative rounded-2xl bg-white border border-primary/20 hover:border-gold-500 transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_rgba(255,193,7,0.2)] overflow-hidden flex flex-col"
                                 >
-                                    <div className="relative h-56 overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => openDishImage(dish)}
+                                        className="relative h-56 overflow-hidden w-full text-left cursor-zoom-in"
+                                        aria-label={`View full image of ${dish.name}`}
+                                    >
                                         <Image
                                             src={dish.image || DEFAULT_IMAGE}
                                             alt={dish.name}
@@ -568,7 +621,7 @@ function MenuContent() {
                                                 return <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm ${arr.includes('Non-Veg') ? 'bg-red-500' : 'bg-green-500'}`} />;
                                             })()}
                                         </div>
-                                    </div>
+                                    </button>
 
                                     <div className="p-6 flex flex-col flex-1 relative z-10">
                                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -579,9 +632,13 @@ function MenuContent() {
                                                     <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] bg-yellow-50/50 px-2 py-0.5 rounded-full border border-primary/20">
                                                         {dish.category || 'Specialty'}
                                                     </span>
-                                                    <h3 className="text-xl font-bold text-zinc-900 uppercase tracking-tight group-hover:text-[#FF8F00] transition-colors mt-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openDishImage(dish)}
+                                                        className="text-xl font-bold text-zinc-900 uppercase tracking-tight group-hover:text-[#FF8F00] transition-colors mt-1 text-left hover:underline"
+                                                    >
                                                         {dish.name}
-                                                    </h3>
+                                                    </button>
                                                 </div>
                                                 <p className="text-lg font-bold text-primary">{dish.price}</p>
                                             </div>
@@ -618,6 +675,8 @@ function MenuContent() {
                     </AnimatePresence>
                 </motion.div>
             </div>
+
+            <DishImageLightbox dish={selectedDish} onClose={() => setSelectedDish(null)} />
         </div>
     );
 }

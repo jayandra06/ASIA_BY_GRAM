@@ -12,7 +12,7 @@ const EMPTY_FORM = {
     mediaUrl: '',
     category: 'offer',
     adType: 'popup',
-    ctaText: 'Learn More',
+    ctaText: 'View Menu',
     ctaLink: '',
     autoCloseSeconds: 0,
     showCloseButton: true,
@@ -82,7 +82,7 @@ const AdsManagement = () => {
                 mediaUrl: ad.mediaUrl || '',
                 category: ad.category || 'offer',
                 adType: ad.adType || 'popup',
-                ctaText: ad.ctaText || 'Learn More',
+                ctaText: ad.ctaText || 'View Menu',
                 ctaLink: ad.ctaLink || '',
                 autoCloseSeconds: ad.autoCloseSeconds ?? 0,
                 showCloseButton: ad.showCloseButton !== false,
@@ -251,32 +251,32 @@ const AdsManagement = () => {
     const labelClass = 'block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5';
     const cardClass = 'bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4';
 
-    if (isLoading) return <div className="p-6 text-zinc-500">Loading ads...</div>;
+    if (isLoading) return <div className="p-6 text-zinc-500">Loading restaurant events...</div>;
 
     return (
         <div className="p-6 space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Ads Management</h2>
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Events &amp; Ads</h2>
                     <p className="text-sm text-zinc-500 mt-1">
-                        Manage offers, competitions &amp; promos for homepage and QR menu
+                        Promote specials, events &amp; offers on the homepage and table QR menu
                     </p>
                 </div>
                 <button
                     onClick={() => openModal()}
                     className="inline-flex items-center gap-2 bg-primary text-black font-bold px-4 py-2.5 rounded-lg text-sm hover:brightness-95 transition-all self-start md:self-auto"
                 >
-                    <Plus size={18} /> Create Ad
+                    <Plus size={18} /> Create Event Ad
                 </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Ads</p>
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Events</p>
                     <p className="text-3xl font-bold text-zinc-900 mt-1">{ads.length}</p>
                 </div>
                 <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Published</p>
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Live Now</p>
                     <p className="text-3xl font-bold text-green-600 mt-1">{publishedCount}</p>
                 </div>
                 <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
@@ -292,7 +292,7 @@ const AdsManagement = () => {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search ads..."
+                        placeholder="Search by event name or description..."
                         className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-3 py-2.5 text-sm outline-none focus:border-primary"
                     />
                 </div>
@@ -325,11 +325,11 @@ const AdsManagement = () => {
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
                         <tr>
-                            <th className="p-4">Ad</th>
-                            <th className="p-4">Type</th>
-                            <th className="p-4">Placement</th>
+                            <th className="p-4">Event</th>
+                            <th className="p-4">Ad Type</th>
+                            <th className="p-4">Shown On</th>
                             <th className="p-4">Priority</th>
-                            <th className="p-4">Schedule</th>
+                            <th className="p-4">Visible Period</th>
                             <th className="p-4">Status</th>
                             <th className="p-4">Actions</th>
                         </tr>
@@ -338,7 +338,7 @@ const AdsManagement = () => {
                         {filtered.length === 0 ? (
                             <tr>
                                 <td colSpan="7" className="p-8 text-center text-zinc-400">
-                                    No ads yet. Create one to show offers on homepage &amp; QR menu.
+                                    No events yet. Create a special, offer, or competition to show on the homepage &amp; QR menu.
                                 </td>
                             </tr>
                         ) : (
@@ -359,7 +359,7 @@ const AdsManagement = () => {
                                             )}
                                             <div>
                                                 <div className="font-bold text-zinc-900">
-                                                    {ad.title || ad.category || 'Untitled'}
+                                                    {ad.title || ad.category || 'Untitled Event'}
                                                 </div>
                                                 <div className="text-xs text-zinc-400 mt-0.5 max-w-[220px] truncate">
                                                     {ad.content}
@@ -437,7 +437,7 @@ const AdsManagement = () => {
                     <div className="relative w-full max-w-3xl bg-zinc-50 rounded-2xl shadow-2xl mb-10">
                         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white rounded-t-2xl">
                             <h3 className="text-lg font-bold text-zinc-900">
-                                {editingAd ? 'Edit Ad' : 'Create Ad'}
+                                {editingAd ? 'Edit Event Ad' : 'Create Event Ad'}
                             </h3>
                             <button
                                 type="button"
@@ -452,34 +452,34 @@ const AdsManagement = () => {
                             {/* Basic Information */}
                             <div className={cardClass}>
                                 <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Basic Information
+                                    Event Details
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={labelClass}>Title (internal)</label>
+                                        <label className={labelClass}>Event Name *</label>
                                         <input
                                             name="title"
                                             value={formData.title}
                                             onChange={handleChange}
-                                            placeholder="e.g. German A1 Offer"
+                                            placeholder="e.g. Weekend Ramen Special"
                                             className={inputClass}
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Category *</label>
+                                        <label className={labelClass}>Event Category *</label>
                                         <select
                                             name="category"
                                             value={formData.category}
                                             onChange={handleChange}
                                             className={inputClass}
                                         >
-                                            <option value="offer">Offer</option>
-                                            <option value="competition">Competition</option>
-                                            <option value="general">General</option>
+                                            <option value="offer">Food Offer / Special</option>
+                                            <option value="competition">Restaurant Event / Competition</option>
+                                            <option value="general">General Promo</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Ad Type *</label>
+                                        <label className={labelClass}>Advertisement Type *</label>
                                         <select
                                             name="adType"
                                             value={formData.adType}
@@ -490,42 +490,42 @@ const AdsManagement = () => {
                                             <option value="banner">Banner — Top sticky strip</option>
                                             <option value="toast">Toast — Bottom-right notice</option>
                                             <option value="badge">Badge — Small glowing dot</option>
-                                            <option value="flyer">Flyer — Image card</option>
+                                            <option value="flyer">Flyer — Poster card</option>
                                             <option value="floating">Floating Button</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Placement *</label>
+                                        <label className={labelClass}>Where to Show *</label>
                                         <select
                                             name="placement"
                                             value={formData.placement}
                                             onChange={handleChange}
                                             className={inputClass}
                                         >
-                                            <option value="both">Homepage + QR Menu</option>
+                                            <option value="both">Homepage + Table QR Menu</option>
                                             <option value="homepage">Homepage only</option>
-                                            <option value="menu">QR Menu only</option>
+                                            <option value="menu">Table QR Menu only</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Ad Content *</label>
+                                    <label className={labelClass}>Event Description *</label>
                                     <textarea
                                         name="content"
                                         value={formData.content}
                                         onChange={handleChange}
                                         rows={3}
                                         required
-                                        placeholder="🔥 New offer starting soon! Limited seats available."
+                                        placeholder="e.g. Try our new spicy ramen bowl this weekend — dine-in only. Limited bowls daily!"
                                         className={inputClass}
                                     />
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Image</label>
+                                    <label className={labelClass}>Event Poster</label>
                                     <div className="flex flex-col sm:flex-row gap-3 items-start">
                                         <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-sm font-medium cursor-pointer transition-colors">
                                             <Upload size={16} />
-                                            {uploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload Image'}
+                                            {uploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload Poster'}
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -538,14 +538,14 @@ const AdsManagement = () => {
                                             name="mediaUrl"
                                             value={formData.mediaUrl}
                                             onChange={handleChange}
-                                            placeholder="Or paste image URL"
+                                            placeholder="Or paste poster image URL"
                                             className={`${inputClass} flex-1`}
                                         />
                                     </div>
                                     {formData.mediaUrl && (
                                         <img
                                             src={formData.mediaUrl}
-                                            alt="Preview"
+                                            alt="Event poster preview"
                                             className="mt-3 h-28 rounded-lg object-cover border border-zinc-200"
                                         />
                                     )}
@@ -555,25 +555,26 @@ const AdsManagement = () => {
                             {/* CTA */}
                             <div className={cardClass}>
                                 <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Call-to-Action
+                                    Call-to-Action Button
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={labelClass}>CTA Button Text</label>
+                                        <label className={labelClass}>Button Title</label>
                                         <input
                                             name="ctaText"
                                             value={formData.ctaText}
                                             onChange={handleChange}
+                                            placeholder="e.g. View Menu, Book a Table, Order Now"
                                             className={inputClass}
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>CTA Link</label>
+                                        <label className={labelClass}>Button Link</label>
                                         <input
                                             name="ctaLink"
                                             value={formData.ctaLink}
                                             onChange={handleChange}
-                                            placeholder="/menu or https://..."
+                                            placeholder="e.g. /menu  or  #visit  or  https://..."
                                             className={inputClass}
                                         />
                                     </div>
@@ -588,7 +589,7 @@ const AdsManagement = () => {
                                             onChange={handleChange}
                                             className={inputClass}
                                         />
-                                        <p className="text-[11px] text-zinc-400 mt-1">0 = no auto-close</p>
+                                        <p className="text-[11px] text-zinc-400 mt-1">0 = stays open until guest closes it</p>
                                     </div>
                                     <div className="flex items-end pb-1">
                                         <label className="flex items-center gap-3 cursor-pointer">
@@ -610,38 +611,38 @@ const AdsManagement = () => {
                             {/* Targeting & Schedule */}
                             <div className={cardClass}>
                                 <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Targeting &amp; Schedule
+                                    Event Time &amp; Visibility
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={labelClass}>Frequency *</label>
+                                        <label className={labelClass}>How Often to Show *</label>
                                         <select
                                             name="frequency"
                                             value={formData.frequency}
                                             onChange={handleChange}
                                             className={inputClass}
                                         >
-                                            <option value="session">Per Session</option>
-                                            <option value="once">Once Ever</option>
-                                            <option value="daily">Once Daily</option>
-                                            <option value="always">Every Visit</option>
+                                            <option value="session">Once per visit</option>
+                                            <option value="once">Once ever (per device)</option>
+                                            <option value="daily">Once per day</option>
+                                            <option value="always">Every time guest opens</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Target Audience *</label>
+                                        <label className={labelClass}>Who Sees It *</label>
                                         <select
                                             name="targetAudience"
                                             value={formData.targetAudience}
                                             onChange={handleChange}
                                             className={inputClass}
                                         >
-                                            <option value="all">All Visitors</option>
-                                            <option value="new">New Visitors</option>
-                                            <option value="returning">Returning Visitors</option>
+                                            <option value="all">All guests</option>
+                                            <option value="new">First-time visitors</option>
+                                            <option value="returning">Returning guests</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Start Date</label>
+                                        <label className={labelClass}>Visible From</label>
                                         <input
                                             type="datetime-local"
                                             name="startDate"
@@ -649,9 +650,10 @@ const AdsManagement = () => {
                                             onChange={handleChange}
                                             className={inputClass}
                                         />
+                                        <p className="text-[11px] text-zinc-400 mt-1">Leave empty to start immediately</p>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>End Date</label>
+                                        <label className={labelClass}>Visible Until</label>
                                         <input
                                             type="datetime-local"
                                             name="endDate"
@@ -659,6 +661,7 @@ const AdsManagement = () => {
                                             onChange={handleChange}
                                             className={inputClass}
                                         />
+                                        <p className="text-[11px] text-zinc-400 mt-1">Leave empty for no end date</p>
                                     </div>
                                 </div>
                             </div>
@@ -666,11 +669,11 @@ const AdsManagement = () => {
                             {/* Appearance */}
                             <div className={cardClass}>
                                 <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Appearance &amp; Animation
+                                    Colours &amp; Animation
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={labelClass}>Position</label>
+                                        <label className={labelClass}>Position on Screen</label>
                                         <select
                                             name="position"
                                             value={formData.position}
@@ -695,9 +698,10 @@ const AdsManagement = () => {
                                             onChange={handleChange}
                                             className={inputClass}
                                         />
+                                        <p className="text-[11px] text-zinc-400 mt-1">Higher = shown first if multiple events</p>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Background Color</label>
+                                        <label className={labelClass}>Background Colour</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="color"
@@ -719,7 +723,7 @@ const AdsManagement = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Text Color</label>
+                                        <label className={labelClass}>Text Colour</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="color"
@@ -738,7 +742,7 @@ const AdsManagement = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Border Radius</label>
+                                        <label className={labelClass}>Corner Roundness</label>
                                         <input
                                             type="number"
                                             name="borderRadius"
@@ -750,7 +754,7 @@ const AdsManagement = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Animation Type</label>
+                                        <label className={labelClass}>Animation Style</label>
                                         <select
                                             name="animationType"
                                             value={formData.animationType}
@@ -763,7 +767,7 @@ const AdsManagement = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Animation Duration (ms)</label>
+                                        <label className={labelClass}>Animation Speed (ms)</label>
                                         <input
                                             type="number"
                                             name="animationDuration"
@@ -780,7 +784,7 @@ const AdsManagement = () => {
                             {/* Status */}
                             <div className={cardClass}>
                                 <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Status
+                                    Publish Status
                                 </h4>
                                 <select
                                     name="status"
@@ -788,9 +792,9 @@ const AdsManagement = () => {
                                     onChange={handleChange}
                                     className={inputClass}
                                 >
-                                    <option value="draft">Draft — not shown to users</option>
-                                    <option value="published">Published</option>
-                                    <option value="archived">Archived</option>
+                                    <option value="draft">Draft — guests will not see this yet</option>
+                                    <option value="published">Published — live for guests</option>
+                                    <option value="archived">Archived — hidden</option>
                                 </select>
                             </div>
 
@@ -808,7 +812,7 @@ const AdsManagement = () => {
                                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-black hover:brightness-95 disabled:opacity-60 transition-all"
                                 >
                                     <Save size={16} />
-                                    {saving ? 'Saving...' : editingAd ? 'Update Ad' : 'Create Ad'}
+                                    {saving ? 'Saving...' : editingAd ? 'Update Event' : 'Create Event Ad'}
                                 </button>
                             </div>
                         </form>

@@ -15,7 +15,7 @@ const AdSchema = new mongoose.Schema({
         default: 'popup',
         required: true,
     },
-    ctaText: { type: String, trim: true, default: 'Learn More' },
+    ctaText: { type: String, trim: true, default: 'View Menu' },
     ctaLink: { type: String, trim: true, default: '' },
     autoCloseSeconds: { type: Number, min: 0, max: 300, default: 0 },
     showCloseButton: { type: Boolean, default: true },

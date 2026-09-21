@@ -65,7 +65,7 @@ export async function POST(request) {
             mediaUrl: (body.mediaUrl || '').trim(),
             category: body.category || 'offer',
             adType: body.adType || 'popup',
-            ctaText: (body.ctaText || 'Learn More').trim(),
+            ctaText: (body.ctaText || 'View Menu').trim(),
             ctaLink: (body.ctaLink || '').trim(),
             autoCloseSeconds: Number(body.autoCloseSeconds) || 0,
             showCloseButton: body.showCloseButton !== false,

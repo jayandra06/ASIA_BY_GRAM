@@ -51,6 +51,9 @@ const AdsManagement = () => {
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [activeTab, setActiveTab] = useState('ads'); // ads | leads
+    const [leads, setLeads] = useState([]);
+    const [leadsLoading, setLeadsLoading] = useState(false);
 
     const authHeaders = () => ({
         'Content-Type': 'application/json',
@@ -69,10 +72,36 @@ const AdsManagement = () => {
         }
     };
 
+    const fetchLeads = async () => {
+        setLeadsLoading(true);
+        try {
+            const res = await fetch('/api/leads', { headers: authHeaders() });
+            if (res.ok) setLeads(await res.json());
+        } catch (error) {
+            console.error('Error fetching leads:', error);
+        } finally {
+            setLeadsLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchAds();
+        fetchLeads();
     }, []);
 
+    useEffect(() => {
+        if (activeTab === 'leads') fetchLeads();
+    }, [activeTab]);
+
+    const fillRegisterLink = () => {
+        const event = (formData.title || 'Event').trim();
+        const link = `/register?event=${encodeURIComponent(event)}`;
+        setFormData((prev) => ({
+            ...prev,
+            ctaLink: link,
+            ctaText: prev.ctaText === 'View Menu' || !prev.ctaText ? 'Register Now' : prev.ctaText,
+        }));
+    };
     const openModal = (ad = null) => {
         if (ad) {
             setEditingAd(ad);
@@ -270,6 +299,93 @@ const AdsManagement = () => {
                 </button>
             </div>
 
+            <div className="flex gap-2 border-b border-zinc-200">
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('ads')}
+                    className={`px-4 py-2.5 text-sm font-bold transition-colors border-b-2 -mb-px ${
+                        activeTab === 'ads'
+                            ? 'border-primary text-zinc-900'
+                            : 'border-transparent text-zinc-400 hover:text-zinc-700'
+                    }`}
+                >
+                    Event Ads
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('leads')}
+                    className={`px-4 py-2.5 text-sm font-bold transition-colors border-b-2 -mb-px ${
+                        activeTab === 'leads'
+                            ? 'border-primary text-zinc-900'
+                            : 'border-transparent text-zinc-400 hover:text-zinc-700'
+                    }`}
+                >
+                    Form Registrations ({leads.length})
+                </button>
+            </div>
+
+            {activeTab === 'leads' ? (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <p className="text-sm text-zinc-500">
+                            Guests who submitted name, phone &amp; age via the <code className="text-xs bg-zinc-100 px-1 rounded">/register</code> form
+                        </p>
+                        <button onClick={fetchLeads} className="text-sm text-primary hover:underline">
+                            Refresh
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th className="p-4">Name</th>
+                                    <th className="p-4">Phone</th>
+                                    <th className="p-4">Age</th>
+                                    <th className="p-4">Event</th>
+                                    <th className="p-4">Submitted</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
+                                {leadsLoading ? (
+                                    <tr>
+                                        <td colSpan="5" className="p-8 text-center text-zinc-400">
+                                            Loading registrations...
+                                        </td>
+                                    </tr>
+                                ) : leads.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="p-8 text-center text-zinc-400">
+                                            No form submissions yet. Set CTA link to{' '}
+                                            <code className="text-xs bg-zinc-100 px-1 rounded">/register?event=Your Event</code>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    leads.map((lead) => (
+                                        <tr key={lead._id} className="hover:bg-zinc-50">
+                                            <td className="p-4 font-bold text-zinc-900">{lead.name}</td>
+                                            <td className="p-4">{lead.phone}</td>
+                                            <td className="p-4">{lead.age}</td>
+                                            <td className="p-4">{lead.eventName || '—'}</td>
+                                            <td className="p-4 whitespace-nowrap text-xs">
+                                                {lead.createdAt
+                                                    ? new Date(lead.createdAt).toLocaleString('en-IN', {
+                                                          day: '2-digit',
+                                                          month: 'short',
+                                                          year: 'numeric',
+                                                          hour: '2-digit',
+                                                          minute: '2-digit',
+                                                      })
+                                                    : '—'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Events</p>
@@ -564,19 +680,31 @@ const AdsManagement = () => {
                                             name="ctaText"
                                             value={formData.ctaText}
                                             onChange={handleChange}
-                                            placeholder="e.g. View Menu, Book a Table, Order Now"
+                                            placeholder="e.g. Register Now, View Menu, Book a Table"
                                             className={inputClass}
                                         />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Button Link</label>
+                                        <label className={labelClass}>Button Link (CTA)</label>
                                         <input
                                             name="ctaLink"
                                             value={formData.ctaLink}
                                             onChange={handleChange}
-                                            placeholder="e.g. /menu  or  #visit  or  https://..."
+                                            placeholder="/register?event=Weekend Ramen Special"
                                             className={inputClass}
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={fillRegisterLink}
+                                            className="mt-1.5 text-xs font-bold text-primary hover:underline"
+                                        >
+                                            Use registration form link →
+                                        </button>
+                                        <p className="text-[11px] text-zinc-400 mt-1">
+                                            Guests land on a page with Name, Phone &amp; Age. Paste{' '}
+                                            <code className="bg-zinc-100 px-1 rounded">/register</code> or click the
+                                            button above.
+                                        </p>
                                     </div>
                                     <div>
                                         <label className={labelClass}>Auto-close Timer (seconds)</label>
@@ -818,6 +946,8 @@ const AdsManagement = () => {
                         </form>
                     </div>
                 </div>
+            )}
+            </>
             )}
         </div>
     );

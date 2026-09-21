@@ -6,6 +6,7 @@ import { ArrowLeft, Search, ChevronRight, ChevronLeft, ChevronDown, ShoppingCart
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import ChessCompetitionPopup from '../../src/components/ui/ChessCompetitionPopup';
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&q=80&w=800";
 
@@ -130,7 +131,7 @@ function DishImageLightbox({ dish, onClose }) {
     );
 }
 
-const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp }) => {
+const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp, showCompetitionPopup = false }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDietary, setSelectedDietary] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -393,6 +394,7 @@ const MobileMenu = ({ tableNumber, menuItems = [], categories: categoriesProp })
             </div>
 
             <DishImageLightbox dish={selectedDish} onClose={() => setSelectedDish(null)} />
+            {showCompetitionPopup && <ChessCompetitionPopup tableNumber={tableNumber} />}
         </div>
     );
 };
@@ -463,7 +465,14 @@ function MenuContent() {
     }
 
     if (tableNumber || isMobile) {
-        return <MobileMenu tableNumber={tableNumber} menuItems={menuItems} categories={categories} />;
+        return (
+            <MobileMenu
+                tableNumber={tableNumber}
+                menuItems={menuItems}
+                categories={categories}
+                showCompetitionPopup={Boolean(tableNumber)}
+            />
+        );
     }
 
     const dietaryOptions = ['All', 'Veg', 'Non-Veg'];

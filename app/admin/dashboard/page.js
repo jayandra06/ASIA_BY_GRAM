@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, CalendarDays, LogOut, Plus, Trash2, Edit2, Search, X, Check, QrCode, Printer, Copy, Upload, Download, Save, ClipboardList, Trophy, Megaphone } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../../src/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import imageCompression from 'browser-image-compression';
 import QuatrefoilBackground from '../../../src/components/ui/QuatrefoilBackground';
 import SparticlesEffect from '../../../src/components/ui/SparticlesEffect';
+import AdsManagement from '../../../src/components/admin/AdsManagement';
 
 // --- Sub-components ---
 
@@ -2316,6 +2317,243 @@ const QRCodeManagement = () => {
 
 // --- Main Page Component ---
 
+const CompetitionManagement = () => {
+    const [registrations, setRegistrations] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+
+    const fetchRegistrations = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/competition', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (res.ok) setRegistrations(await res.json());
+        } catch (error) {
+            console.error('Error fetching competition registrations:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updatePaymentStatus = async (id, paymentStatus) => {
+        try {
+            const res = await fetch(`/api/competition/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify({ paymentStatus }),
+            });
+            if (res.ok) {
+                setRegistrations((prev) =>
+                    prev.map((r) => (r._id === id ? { ...r, paymentStatus } : r))
+                );
+            } else {
+                alert('Failed to update payment status');
+            }
+        } catch (error) {
+            console.error('Error updating payment status:', error);
+            alert('Error updating payment status');
+        }
+    };
+
+    const deleteRegistration = async (id) => {
+        if (!window.confirm('Delete this registration?')) return;
+        try {
+            const res = await fetch(`/api/competition/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (res.ok) {
+                setRegistrations((prev) => prev.filter((r) => r._id !== id));
+            } else {
+                alert('Failed to delete registration');
+            }
+        } catch (error) {
+            console.error('Error deleting registration:', error);
+            alert('Error deleting registration');
+        }
+    };
+
+    useEffect(() => {
+        fetchRegistrations();
+    }, []);
+
+    const filtered = registrations.filter((r) => {
+        const q = search.trim().toLowerCase();
+        const matchesSearch =
+            !q ||
+            r.name?.toLowerCase().includes(q) ||
+            r.phone?.toLowerCase().includes(q) ||
+            r.email?.toLowerCase().includes(q);
+        const matchesStatus = statusFilter === 'All' || r.paymentStatus === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+
+    const paidCount = registrations.filter((r) => r.paymentStatus === 'Paid').length;
+    const pendingCount = registrations.filter((r) => r.paymentStatus === 'Pending').length;
+
+    if (isLoading) return <div className="p-6 text-zinc-500">Loading chess registrations...</div>;
+
+    return (
+        <div className="p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Chess Competition</h2>
+                    <p className="text-sm text-zinc-500 mt-1">
+                        Qualifiers Oct 1–10 · Entry ₹500 · Prize ₹15,000
+                    </p>
+                </div>
+                <button onClick={fetchRegistrations} className="text-sm text-primary hover:text-primary-dark underline self-start md:self-auto">
+                    Refresh Data
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Registrations</p>
+                    <p className="text-3xl font-bold text-zinc-900 mt-1">{registrations.length}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Paid</p>
+                    <p className="text-3xl font-bold text-green-600 mt-1">{paidCount}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Pending Payment</p>
+                    <p className="text-3xl font-bold text-amber-600 mt-1">{pendingCount}</p>
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search by name, phone, email..."
+                        className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-3 py-2.5 text-sm outline-none focus:border-primary"
+                    />
+                </div>
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                >
+                    <option value="All">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Refunded">Refunded</option>
+                </select>
+            </div>
+
+            <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th className="p-4">Player</th>
+                            <th className="p-4">Contact</th>
+                            <th className="p-4">Age / Level</th>
+                            <th className="p-4">Table</th>
+                            <th className="p-4">Registered</th>
+                            <th className="p-4">Payment</th>
+                            <th className="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
+                        {filtered.length === 0 ? (
+                            <tr>
+                                <td colSpan="7" className="p-8 text-center text-zinc-400">
+                                    No competition registrations yet.
+                                </td>
+                            </tr>
+                        ) : (
+                            filtered.map((reg) => (
+                                <tr key={reg._id} className="hover:bg-zinc-50 transition-colors">
+                                    <td className="p-4">
+                                        <div className="font-bold text-zinc-900">{reg.name}</div>
+                                        {reg.notes && (
+                                            <div className="text-xs text-zinc-400 italic mt-0.5 max-w-[180px] truncate" title={reg.notes}>
+                                                {reg.notes}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="p-4">
+                                        <div>{reg.phone}</div>
+                                        {reg.email && <div className="text-xs text-zinc-400">{reg.email}</div>}
+                                    </td>
+                                    <td className="p-4">
+                                        <div>{reg.age ? `${reg.age} yrs` : '—'}</div>
+                                        <div className="text-xs text-zinc-400">{reg.experience || 'Beginner'}</div>
+                                    </td>
+                                    <td className="p-4">{reg.tableNumber || '—'}</td>
+                                    <td className="p-4 whitespace-nowrap">
+                                        {reg.createdAt
+                                            ? new Date(reg.createdAt).toLocaleString('en-IN', {
+                                                  day: '2-digit',
+                                                  month: 'short',
+                                                  year: 'numeric',
+                                                  hour: '2-digit',
+                                                  minute: '2-digit',
+                                              })
+                                            : '—'}
+                                    </td>
+                                    <td className="p-4">
+                                        <span
+                                            className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                                                reg.paymentStatus === 'Paid'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : reg.paymentStatus === 'Refunded'
+                                                      ? 'bg-red-100 text-red-700'
+                                                      : 'bg-yellow-100 text-yellow-700'
+                                            }`}
+                                        >
+                                            {reg.paymentStatus || 'Pending'}
+                                        </span>
+                                        <div className="text-[10px] text-zinc-400 mt-1">₹{reg.entryFee || 500}</div>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex gap-2 flex-wrap">
+                                            {reg.paymentStatus !== 'Paid' && (
+                                                <button
+                                                    onClick={() => updatePaymentStatus(reg._id, 'Paid')}
+                                                    className="p-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors"
+                                                    title="Mark as Paid"
+                                                >
+                                                    <Check size={16} />
+                                                </button>
+                                            )}
+                                            {reg.paymentStatus === 'Paid' && (
+                                                <button
+                                                    onClick={() => updatePaymentStatus(reg._id, 'Pending')}
+                                                    className="px-2 py-1 text-[10px] font-bold uppercase bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100"
+                                                    title="Mark Pending"
+                                                >
+                                                    Undo
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => deleteRegistration(reg._id)}
+                                                className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
 const AdminDashboardPage = () => {
     const [activeView, setActiveView] = useState('welcome');
     const { user, logout } = useAuth();
@@ -2353,6 +2591,8 @@ const AdminDashboardPage = () => {
                         <button onClick={() => setActiveView('menu')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'menu' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><UtensilsCrossed size={20} /> Menu Management</button>
                         <button onClick={() => setActiveView('reservations')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'reservations' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><CalendarDays size={20} /> Table Allocation</button>
                         <button onClick={() => setActiveView('orders')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'orders' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><ClipboardList size={20} /> Orders</button>
+                        <button onClick={() => setActiveView('competition')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'competition' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><Trophy size={20} /> Chess Competition</button>
+                        <button onClick={() => setActiveView('ads')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'ads' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><Megaphone size={20} /> Ads Management</button>
                         <button onClick={() => setActiveView('qr')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${activeView === 'qr' ? 'bg-primary text-black font-bold' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'}`}><QrCode size={20} /> QR Management</button>
                     </nav>
                     <div className="p-4 border-t border-zinc-100 min-w-[256px]">
@@ -2371,6 +2611,8 @@ const AdminDashboardPage = () => {
                     {activeView === 'menu' && <MenuManagement />}
                     {activeView === 'reservations' && <TableAllocation />}
                     {activeView === 'orders' && <OrdersManagement />}
+                    {activeView === 'competition' && <CompetitionManagement />}
+                    {activeView === 'ads' && <AdsManagement />}
                     {activeView === 'qr' && <QRCodeManagement />}
                 </motion.div>
             </div>

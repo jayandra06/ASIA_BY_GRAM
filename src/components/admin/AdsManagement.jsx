@@ -1,0 +1,822 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, Edit2, Search, X, Save, Megaphone, Upload } from 'lucide-react';
+import { storage } from '../../firebaseConfig.js';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
+
+const EMPTY_FORM = {
+    title: '',
+    content: '',
+    mediaUrl: '',
+    category: 'offer',
+    adType: 'popup',
+    ctaText: 'Learn More',
+    ctaLink: '',
+    autoCloseSeconds: 0,
+    showCloseButton: true,
+    frequency: 'session',
+    targetAudience: 'all',
+    placement: 'both',
+    startDate: '',
+    endDate: '',
+    position: 'center',
+    priority: 5,
+    backgroundColor: '#ffffff',
+    textColor: '#000000',
+    borderRadius: 12,
+    animationType: 'fade',
+    animationDuration: 500,
+    status: 'draft',
+};
+
+const toLocalInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const AdsManagement = () => {
+    const [ads, setAds] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [typeFilter, setTypeFilter] = useState('All');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingAd, setEditingAd] = useState(null);
+    const [formData, setFormData] = useState(EMPTY_FORM);
+    const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    const authHeaders = () => ({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+
+    const fetchAds = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/ads', { headers: authHeaders() });
+            if (res.ok) setAds(await res.json());
+        } catch (error) {
+            console.error('Error fetching ads:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAds();
+    }, []);
+
+    const openModal = (ad = null) => {
+        if (ad) {
+            setEditingAd(ad);
+            setFormData({
+                title: ad.title || '',
+                content: ad.content || '',
+                mediaUrl: ad.mediaUrl || '',
+                category: ad.category || 'offer',
+                adType: ad.adType || 'popup',
+                ctaText: ad.ctaText || 'Learn More',
+                ctaLink: ad.ctaLink || '',
+                autoCloseSeconds: ad.autoCloseSeconds ?? 0,
+                showCloseButton: ad.showCloseButton !== false,
+                frequency: ad.frequency || 'session',
+                targetAudience: ad.targetAudience || 'all',
+                placement: ad.placement || 'both',
+                startDate: toLocalInput(ad.startDate),
+                endDate: toLocalInput(ad.endDate),
+                position: ad.position || 'center',
+                priority: ad.priority ?? 5,
+                backgroundColor: ad.backgroundColor || '#ffffff',
+                textColor: ad.textColor || '#000000',
+                borderRadius: ad.borderRadius ?? 12,
+                animationType: ad.animationType || 'fade',
+                animationDuration: ad.animationDuration || 500,
+                status: ad.status || 'draft',
+            });
+        } else {
+            setEditingAd(null);
+            setFormData(EMPTY_FORM);
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value,
+        }));
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        setUploadProgress(0);
+
+        try {
+            const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1600, useWebWorker: true, fileType: 'image/webp' };
+            const compressedFile = await imageCompression(file, options);
+            const storageRef = ref(storage, `ads/${file.name.split('.')[0]}-${Date.now()}.webp`);
+            const uploadTask = uploadBytesResumable(storageRef, compressedFile, {
+                cacheControl: 'public,max-age=31536000',
+            });
+
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                },
+                (error) => {
+                    console.error('Upload failed', error);
+                    alert('Image upload failed');
+                    setUploading(false);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        setFormData((prev) => ({ ...prev, mediaUrl: downloadURL }));
+                        setUploading(false);
+                    });
+                }
+            );
+        } catch (error) {
+            console.error('Compression failed', error);
+            alert('Image compression failed');
+            setUploading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.content.trim()) {
+            alert('Ad content is required');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const payload = {
+                ...formData,
+                autoCloseSeconds: Number(formData.autoCloseSeconds) || 0,
+                priority: Number(formData.priority) || 5,
+                borderRadius: Number(formData.borderRadius) || 0,
+                animationDuration: Number(formData.animationDuration) || 500,
+                startDate: formData.startDate || null,
+                endDate: formData.endDate || null,
+            };
+
+            const url = editingAd ? `/api/ads/${editingAd._id}` : '/api/ads';
+            const method = editingAd ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: authHeaders(),
+                body: JSON.stringify(payload),
+            });
+
+            if (res.ok) {
+                await fetchAds();
+                setIsModalOpen(false);
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to save ad');
+            }
+        } catch (error) {
+            console.error('Error saving ad:', error);
+            alert('Error saving ad');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const deleteAd = async (id) => {
+        if (!window.confirm('Delete this ad?')) return;
+        try {
+            const res = await fetch(`/api/ads/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders(),
+            });
+            if (res.ok) {
+                setAds((prev) => prev.filter((a) => a._id !== id));
+            } else {
+                alert('Failed to delete ad');
+            }
+        } catch (error) {
+            console.error('Error deleting ad:', error);
+            alert('Error deleting ad');
+        }
+    };
+
+    const toggleStatus = async (ad) => {
+        const next = ad.status === 'published' ? 'draft' : 'published';
+        try {
+            const res = await fetch(`/api/ads/${ad._id}`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ status: next }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setAds((prev) => prev.map((a) => (a._id === ad._id ? updated : a)));
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    };
+
+    const filtered = ads.filter((ad) => {
+        const q = search.trim().toLowerCase();
+        const matchesSearch =
+            !q ||
+            ad.title?.toLowerCase().includes(q) ||
+            ad.content?.toLowerCase().includes(q) ||
+            ad.category?.toLowerCase().includes(q);
+        const matchesStatus = statusFilter === 'All' || ad.status === statusFilter;
+        const matchesType = typeFilter === 'All' || ad.adType === typeFilter;
+        return matchesSearch && matchesStatus && matchesType;
+    });
+
+    const publishedCount = ads.filter((a) => a.status === 'published').length;
+    const draftCount = ads.filter((a) => a.status === 'draft').length;
+
+    const inputClass =
+        'w-full bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary text-zinc-900';
+    const labelClass = 'block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5';
+    const cardClass = 'bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4';
+
+    if (isLoading) return <div className="p-6 text-zinc-500">Loading ads...</div>;
+
+    return (
+        <div className="p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Ads Management</h2>
+                    <p className="text-sm text-zinc-500 mt-1">
+                        Manage offers, competitions &amp; promos for homepage and QR menu
+                    </p>
+                </div>
+                <button
+                    onClick={() => openModal()}
+                    className="inline-flex items-center gap-2 bg-primary text-black font-bold px-4 py-2.5 rounded-lg text-sm hover:brightness-95 transition-all self-start md:self-auto"
+                >
+                    <Plus size={18} /> Create Ad
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Ads</p>
+                    <p className="text-3xl font-bold text-zinc-900 mt-1">{ads.length}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Published</p>
+                    <p className="text-3xl font-bold text-green-600 mt-1">{publishedCount}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Drafts</p>
+                    <p className="text-3xl font-bold text-amber-600 mt-1">{draftCount}</p>
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search ads..."
+                        className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-3 py-2.5 text-sm outline-none focus:border-primary"
+                    />
+                </div>
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                >
+                    <option value="All">All Status</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                </select>
+                <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                >
+                    <option value="All">All Types</option>
+                    <option value="popup">Popup</option>
+                    <option value="banner">Banner</option>
+                    <option value="toast">Toast</option>
+                    <option value="badge">Badge</option>
+                    <option value="flyer">Flyer</option>
+                    <option value="floating">Floating Button</option>
+                </select>
+            </div>
+
+            <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th className="p-4">Ad</th>
+                            <th className="p-4">Type</th>
+                            <th className="p-4">Placement</th>
+                            <th className="p-4">Priority</th>
+                            <th className="p-4">Schedule</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
+                        {filtered.length === 0 ? (
+                            <tr>
+                                <td colSpan="7" className="p-8 text-center text-zinc-400">
+                                    No ads yet. Create one to show offers on homepage &amp; QR menu.
+                                </td>
+                            </tr>
+                        ) : (
+                            filtered.map((ad) => (
+                                <tr key={ad._id} className="hover:bg-zinc-50 transition-colors">
+                                    <td className="p-4">
+                                        <div className="flex items-start gap-3">
+                                            {ad.mediaUrl ? (
+                                                <img
+                                                    src={ad.mediaUrl}
+                                                    alt=""
+                                                    className="w-12 h-12 rounded-lg object-cover border border-zinc-100 flex-shrink-0"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                                                    <Megaphone size={18} className="text-zinc-400" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div className="font-bold text-zinc-900">
+                                                    {ad.title || ad.category || 'Untitled'}
+                                                </div>
+                                                <div className="text-xs text-zinc-400 mt-0.5 max-w-[220px] truncate">
+                                                    {ad.content}
+                                                </div>
+                                                <div className="text-[10px] uppercase tracking-wider text-primary font-bold mt-1">
+                                                    {ad.category}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 capitalize">{ad.adType}</td>
+                                    <td className="p-4 capitalize">{ad.placement}</td>
+                                    <td className="p-4">{ad.priority}</td>
+                                    <td className="p-4 whitespace-nowrap text-xs">
+                                        {ad.startDate || ad.endDate ? (
+                                            <>
+                                                <div>
+                                                    {ad.startDate
+                                                        ? new Date(ad.startDate).toLocaleDateString('en-IN')
+                                                        : '—'}
+                                                </div>
+                                                <div className="text-zinc-400">
+                                                    →{' '}
+                                                    {ad.endDate
+                                                        ? new Date(ad.endDate).toLocaleDateString('en-IN')
+                                                        : '—'}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            'Always'
+                                        )}
+                                    </td>
+                                    <td className="p-4">
+                                        <button
+                                            onClick={() => toggleStatus(ad)}
+                                            className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                                                ad.status === 'published'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : ad.status === 'archived'
+                                                      ? 'bg-zinc-100 text-zinc-500'
+                                                      : 'bg-yellow-100 text-yellow-700'
+                                            }`}
+                                            title="Toggle publish"
+                                        >
+                                            {ad.status}
+                                        </button>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => openModal(ad)}
+                                                className="p-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                                title="Edit"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => deleteAd(ad._id)}
+                                                className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/50 backdrop-blur-sm">
+                    <div className="relative w-full max-w-3xl bg-zinc-50 rounded-2xl shadow-2xl mb-10">
+                        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white rounded-t-2xl">
+                            <h3 className="text-lg font-bold text-zinc-900">
+                                {editingAd ? 'Edit Ad' : 'Create Ad'}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                            {/* Basic Information */}
+                            <div className={cardClass}>
+                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                                    Basic Information
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>Title (internal)</label>
+                                        <input
+                                            name="title"
+                                            value={formData.title}
+                                            onChange={handleChange}
+                                            placeholder="e.g. German A1 Offer"
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Category *</label>
+                                        <select
+                                            name="category"
+                                            value={formData.category}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="offer">Offer</option>
+                                            <option value="competition">Competition</option>
+                                            <option value="general">General</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Ad Type *</label>
+                                        <select
+                                            name="adType"
+                                            value={formData.adType}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="popup">Popup — Center modal</option>
+                                            <option value="banner">Banner — Top sticky strip</option>
+                                            <option value="toast">Toast — Bottom-right notice</option>
+                                            <option value="badge">Badge — Small glowing dot</option>
+                                            <option value="flyer">Flyer — Image card</option>
+                                            <option value="floating">Floating Button</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Placement *</label>
+                                        <select
+                                            name="placement"
+                                            value={formData.placement}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="both">Homepage + QR Menu</option>
+                                            <option value="homepage">Homepage only</option>
+                                            <option value="menu">QR Menu only</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Ad Content *</label>
+                                    <textarea
+                                        name="content"
+                                        value={formData.content}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        required
+                                        placeholder="🔥 New offer starting soon! Limited seats available."
+                                        className={inputClass}
+                                    />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Image</label>
+                                    <div className="flex flex-col sm:flex-row gap-3 items-start">
+                                        <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-sm font-medium cursor-pointer transition-colors">
+                                            <Upload size={16} />
+                                            {uploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload Image'}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                                disabled={uploading}
+                                            />
+                                        </label>
+                                        <input
+                                            name="mediaUrl"
+                                            value={formData.mediaUrl}
+                                            onChange={handleChange}
+                                            placeholder="Or paste image URL"
+                                            className={`${inputClass} flex-1`}
+                                        />
+                                    </div>
+                                    {formData.mediaUrl && (
+                                        <img
+                                            src={formData.mediaUrl}
+                                            alt="Preview"
+                                            className="mt-3 h-28 rounded-lg object-cover border border-zinc-200"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* CTA */}
+                            <div className={cardClass}>
+                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                                    Call-to-Action
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>CTA Button Text</label>
+                                        <input
+                                            name="ctaText"
+                                            value={formData.ctaText}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>CTA Link</label>
+                                        <input
+                                            name="ctaLink"
+                                            value={formData.ctaLink}
+                                            onChange={handleChange}
+                                            placeholder="/menu or https://..."
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Auto-close Timer (seconds)</label>
+                                        <input
+                                            type="number"
+                                            name="autoCloseSeconds"
+                                            min={0}
+                                            max={300}
+                                            value={formData.autoCloseSeconds}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                        <p className="text-[11px] text-zinc-400 mt-1">0 = no auto-close</p>
+                                    </div>
+                                    <div className="flex items-end pb-1">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="showCloseButton"
+                                                checked={formData.showCloseButton}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 accent-primary"
+                                            />
+                                            <span className="text-sm text-zinc-700 font-medium">
+                                                Show close button (X)
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Targeting & Schedule */}
+                            <div className={cardClass}>
+                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                                    Targeting &amp; Schedule
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>Frequency *</label>
+                                        <select
+                                            name="frequency"
+                                            value={formData.frequency}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="session">Per Session</option>
+                                            <option value="once">Once Ever</option>
+                                            <option value="daily">Once Daily</option>
+                                            <option value="always">Every Visit</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Target Audience *</label>
+                                        <select
+                                            name="targetAudience"
+                                            value={formData.targetAudience}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="all">All Visitors</option>
+                                            <option value="new">New Visitors</option>
+                                            <option value="returning">Returning Visitors</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Start Date</label>
+                                        <input
+                                            type="datetime-local"
+                                            name="startDate"
+                                            value={formData.startDate}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>End Date</label>
+                                        <input
+                                            type="datetime-local"
+                                            name="endDate"
+                                            value={formData.endDate}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Appearance */}
+                            <div className={cardClass}>
+                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                                    Appearance &amp; Animation
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>Position</label>
+                                        <select
+                                            name="position"
+                                            value={formData.position}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="center">Center</option>
+                                            <option value="top">Top</option>
+                                            <option value="bottom-right">Bottom Right</option>
+                                            <option value="bottom-left">Bottom Left</option>
+                                            <option value="top-right">Top Right</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Priority (1–10)</label>
+                                        <input
+                                            type="number"
+                                            name="priority"
+                                            min={1}
+                                            max={10}
+                                            value={formData.priority}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Background Color</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                value={formData.backgroundColor}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        backgroundColor: e.target.value,
+                                                    }))
+                                                }
+                                                className="w-12 h-10 rounded border border-zinc-200 cursor-pointer"
+                                            />
+                                            <input
+                                                name="backgroundColor"
+                                                value={formData.backgroundColor}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Text Color</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                value={formData.textColor}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({ ...p, textColor: e.target.value }))
+                                                }
+                                                className="w-12 h-10 rounded border border-zinc-200 cursor-pointer"
+                                            />
+                                            <input
+                                                name="textColor"
+                                                value={formData.textColor}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Border Radius</label>
+                                        <input
+                                            type="number"
+                                            name="borderRadius"
+                                            min={0}
+                                            max={48}
+                                            value={formData.borderRadius}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Animation Type</label>
+                                        <select
+                                            name="animationType"
+                                            value={formData.animationType}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        >
+                                            <option value="fade">Fade In</option>
+                                            <option value="slide">Slide In</option>
+                                            <option value="scale">Scale In</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Animation Duration (ms)</label>
+                                        <input
+                                            type="number"
+                                            name="animationDuration"
+                                            min={100}
+                                            max={2000}
+                                            value={formData.animationDuration}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className={cardClass}>
+                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
+                                    Status
+                                </h4>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                >
+                                    <option value="draft">Draft — not shown to users</option>
+                                    <option value="published">Published</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving || uploading}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-black hover:brightness-95 disabled:opacity-60 transition-all"
+                                >
+                                    <Save size={16} />
+                                    {saving ? 'Saving...' : editingAd ? 'Update Ad' : 'Create Ad'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdsManagement;

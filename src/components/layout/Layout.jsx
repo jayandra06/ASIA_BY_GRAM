@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import GlobalBackground from '../ui/GlobalBackground';
 import SparticlesEffect from '../ui/SparticlesEffect';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import AdsDisplay from '../ui/AdsDisplay';
 
 const Layout = ({ children }) => {
     const pathname = usePathname();
@@ -48,6 +49,11 @@ const Layout = ({ children }) => {
             </ErrorBoundary>
             {!isAdminRoute && <Navbar />}
             {!isAdminRoute && <SideNav />}
+            {!isAdminRoute && (
+                <ErrorBoundary>
+                    <AdsDisplay />
+                </ErrorBoundary>
+            )}
             <main className="relative z-10">
                 <ErrorBoundary>
                     {children}

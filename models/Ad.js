@@ -17,6 +17,8 @@ const AdSchema = new mongoose.Schema({
     },
     ctaText: { type: String, trim: true, default: 'View Menu' },
     ctaLink: { type: String, trim: true, default: '' },
+    entryFee: { type: String, trim: true, default: '' },
+    prize: { type: String, trim: true, default: '' },
     autoCloseSeconds: { type: Number, min: 0, max: 300, default: 0 },
     showCloseButton: { type: Boolean, default: true },
     frequency: {

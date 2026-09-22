@@ -32,7 +32,7 @@ export async function PUT(request, { params }) {
 
         const updates = {};
         const fields = [
-            'title', 'content', 'mediaUrl', 'category', 'adType', 'ctaText', 'ctaLink',
+            'title', 'content', 'mediaUrl', 'category', 'adType', 'ctaText', 'ctaLink', 'entryFee', 'prize',
             'autoCloseSeconds', 'showCloseButton', 'frequency', 'targetAudience', 'placement',
             'startDate', 'endDate', 'position', 'priority', 'backgroundColor', 'textColor',
             'borderRadius', 'animationType', 'animationDuration', 'status',
@@ -44,7 +44,7 @@ export async function PUT(request, { params }) {
                     updates[key] = body[key] ? new Date(body[key]) : null;
                 } else if (key === 'content') {
                     updates[key] = String(body[key]).trim();
-                } else if (typeof body[key] === 'string' && ['title', 'mediaUrl', 'ctaText', 'ctaLink'].includes(key)) {
+                } else if (typeof body[key] === 'string' && ['title', 'mediaUrl', 'ctaText', 'ctaLink', 'entryFee', 'prize'].includes(key)) {
                     updates[key] = body[key].trim();
                 } else {
                     updates[key] = body[key];
@@ -81,6 +81,10 @@ export async function PUT(request, { params }) {
             headers: { 'Content-Type': 'application/json' },
         });
     }
+}
+
+export async function PATCH(request, context) {
+    return PUT(request, context);
 }
 
 export async function DELETE(request, { params }) {

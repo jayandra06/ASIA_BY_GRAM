@@ -152,7 +152,7 @@ const AdsManagement = () => {
         setUploadProgress(0);
 
         try {
-            const options = { maxSizeMB: 0.4, maxWidthOrHeight: 1600, useWebWorker: true, fileType: 'image/webp' };
+            const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
             const compressedFile = await imageCompression(file, options);
             const storageRef = ref(storage, `ads/${file.name.split('.')[0]}-${Date.now()}.webp`);
             const uploadTask = uploadBytesResumable(storageRef, compressedFile, {
@@ -276,9 +276,9 @@ const AdsManagement = () => {
     const draftCount = ads.filter((a) => a.status === 'draft').length;
 
     const inputClass =
-        'w-full bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary text-zinc-900';
-    const labelClass = 'block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5';
-    const cardClass = 'bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-4';
+        'w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary text-zinc-900';
+    const labelClass = 'block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1';
+    const cardClass = 'bg-white border border-zinc-200 rounded-xl p-3.5 shadow-sm space-y-2.5';
 
     if (isLoading) return <div className="p-6 text-zinc-500">Loading restaurant events...</div>;
 
@@ -549,395 +549,393 @@ const AdsManagement = () => {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/50 backdrop-blur-sm">
-                    <div className="relative w-full max-w-3xl bg-zinc-50 rounded-2xl shadow-2xl mb-10">
-                        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white rounded-t-2xl">
-                            <h3 className="text-lg font-bold text-zinc-900">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/50 backdrop-blur-sm overflow-hidden">
+                    <div className="relative flex flex-col w-full max-w-6xl max-h-[min(92dvh,820px)] bg-zinc-50 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden">
+                        <div className="shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-zinc-200 bg-white">
+                            <h3 className="text-base font-bold text-zinc-900">
                                 {editingAd ? 'Edit Event Ad' : 'Create Event Ad'}
                             </h3>
                             <button
                                 type="button"
                                 onClick={() => setIsModalOpen(false)}
-                                className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-400"
+                                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400"
                             >
-                                <X size={20} />
+                                <X size={18} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                            {/* Basic Information */}
-                            <div className={cardClass}>
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Event Details
-                                </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClass}>Event Name *</label>
-                                        <input
-                                            name="title"
-                                            value={formData.title}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Weekend Ramen Special"
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Event Category *</label>
-                                        <select
-                                            name="category"
-                                            value={formData.category}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="offer">Food Offer / Special</option>
-                                            <option value="competition">Restaurant Event / Competition</option>
-                                            <option value="general">General Promo</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Advertisement Type *</label>
-                                        <select
-                                            name="adType"
-                                            value={formData.adType}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="popup">Popup — Center modal</option>
-                                            <option value="banner">Banner — Top sticky strip</option>
-                                            <option value="toast">Toast — Bottom-right notice</option>
-                                            <option value="badge">Badge — Small glowing dot</option>
-                                            <option value="flyer">Flyer — Poster card</option>
-                                            <option value="floating">Floating Button</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Where to Show *</label>
-                                        <select
-                                            name="placement"
-                                            value={formData.placement}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="both">Homepage + Table QR Menu</option>
-                                            <option value="homepage">Homepage only</option>
-                                            <option value="menu">Table QR Menu only</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Event Description *</label>
-                                    <textarea
-                                        name="content"
-                                        value={formData.content}
-                                        onChange={handleChange}
-                                        rows={3}
-                                        required
-                                        placeholder="e.g. Try our new spicy ramen bowl this weekend — dine-in only. Limited bowls daily!"
-                                        className={inputClass}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Event Poster</label>
-                                    <div className="flex flex-col sm:flex-row gap-3 items-start">
-                                        <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-sm font-medium cursor-pointer transition-colors">
-                                            <Upload size={16} />
-                                            {uploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload Poster'}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleImageUpload}
-                                                className="hidden"
-                                                disabled={uploading}
-                                            />
-                                        </label>
-                                        <input
-                                            name="mediaUrl"
-                                            value={formData.mediaUrl}
-                                            onChange={handleChange}
-                                            placeholder="Or paste poster image URL"
-                                            className={`${inputClass} flex-1`}
-                                        />
-                                    </div>
-                                    {formData.mediaUrl && (
-                                        <img
-                                            src={formData.mediaUrl}
-                                            alt="Event poster preview"
-                                            className="mt-3 h-28 rounded-lg object-cover border border-zinc-200"
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* CTA */}
-                            <div className={cardClass}>
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Call-to-Action Button
-                                </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClass}>Button Title</label>
-                                        <input
-                                            name="ctaText"
-                                            value={formData.ctaText}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Register Now, View Menu, Book a Table"
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Button Link (CTA)</label>
-                                        <input
-                                            name="ctaLink"
-                                            value={formData.ctaLink}
-                                            onChange={handleChange}
-                                            placeholder="/register?event=Weekend Ramen Special"
-                                            className={inputClass}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={fillRegisterLink}
-                                            className="mt-1.5 text-xs font-bold text-primary hover:underline"
-                                        >
-                                            Use registration form link →
-                                        </button>
-                                        <p className="text-[11px] text-zinc-400 mt-1">
-                                            Guests land on a page with Name, Phone &amp; Age. Paste{' '}
-                                            <code className="bg-zinc-100 px-1 rounded">/register</code> or click the
-                                            button above.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Auto-close Timer (seconds)</label>
-                                        <input
-                                            type="number"
-                                            name="autoCloseSeconds"
-                                            min={0}
-                                            max={300}
-                                            value={formData.autoCloseSeconds}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
-                                        <p className="text-[11px] text-zinc-400 mt-1">0 = stays open until guest closes it</p>
-                                    </div>
-                                    <div className="flex items-end pb-1">
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                name="showCloseButton"
-                                                checked={formData.showCloseButton}
+                        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                            <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 h-full lg:overflow-hidden">
+                                    {/* Left: Event Details */}
+                                    <div className={`${cardClass} lg:overflow-hidden lg:min-h-0`}>
+                                        <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                                            Event Details
+                                        </h4>
+                                        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2.5">
+                                            <div>
+                                                <label className={labelClass}>Event Name *</label>
+                                                <input
+                                                    name="title"
+                                                    value={formData.title}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Weekend Ramen Special"
+                                                    className={inputClass}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Event Category *</label>
+                                                <select
+                                                    name="category"
+                                                    value={formData.category}
+                                                    onChange={handleChange}
+                                                    className={inputClass}
+                                                >
+                                                    <option value="offer">Food Offer / Special</option>
+                                                    <option value="competition">Restaurant Event / Competition</option>
+                                                    <option value="general">General Promo</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Advertisement Type *</label>
+                                                <select
+                                                    name="adType"
+                                                    value={formData.adType}
+                                                    onChange={handleChange}
+                                                    className={inputClass}
+                                                >
+                                                    <option value="popup">Popup — Center modal</option>
+                                                    <option value="banner">Banner — Top sticky strip</option>
+                                                    <option value="toast">Toast — Bottom-right notice</option>
+                                                    <option value="badge">Badge — Small glowing dot</option>
+                                                    <option value="flyer">Flyer — Poster card</option>
+                                                    <option value="floating">Floating Button</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Where to Show *</label>
+                                                <select
+                                                    name="placement"
+                                                    value={formData.placement}
+                                                    onChange={handleChange}
+                                                    className={inputClass}
+                                                >
+                                                    <option value="both">Homepage + Table QR Menu</option>
+                                                    <option value="homepage">Homepage only</option>
+                                                    <option value="menu">Table QR Menu only</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Event Description *</label>
+                                            <textarea
+                                                name="content"
+                                                value={formData.content}
                                                 onChange={handleChange}
-                                                className="w-4 h-4 accent-primary"
-                                            />
-                                            <span className="text-sm text-zinc-700 font-medium">
-                                                Show close button (X)
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Targeting & Schedule */}
-                            <div className={cardClass}>
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Event Time &amp; Visibility
-                                </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClass}>How Often to Show *</label>
-                                        <select
-                                            name="frequency"
-                                            value={formData.frequency}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="session">Once per visit</option>
-                                            <option value="once">Once ever (per device)</option>
-                                            <option value="daily">Once per day</option>
-                                            <option value="always">Every time guest opens</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Who Sees It *</label>
-                                        <select
-                                            name="targetAudience"
-                                            value={formData.targetAudience}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="all">All guests</option>
-                                            <option value="new">First-time visitors</option>
-                                            <option value="returning">Returning guests</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Visible From</label>
-                                        <input
-                                            type="datetime-local"
-                                            name="startDate"
-                                            value={formData.startDate}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
-                                        <p className="text-[11px] text-zinc-400 mt-1">Leave empty to start immediately</p>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Visible Until</label>
-                                        <input
-                                            type="datetime-local"
-                                            name="endDate"
-                                            value={formData.endDate}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
-                                        <p className="text-[11px] text-zinc-400 mt-1">Leave empty for no end date</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Appearance */}
-                            <div className={cardClass}>
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Colours &amp; Animation
-                                </h4>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClass}>Position on Screen</label>
-                                        <select
-                                            name="position"
-                                            value={formData.position}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="center">Center</option>
-                                            <option value="top">Top</option>
-                                            <option value="bottom-right">Bottom Right</option>
-                                            <option value="bottom-left">Bottom Left</option>
-                                            <option value="top-right">Top Right</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Priority (1–10)</label>
-                                        <input
-                                            type="number"
-                                            name="priority"
-                                            min={1}
-                                            max={10}
-                                            value={formData.priority}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
-                                        <p className="text-[11px] text-zinc-400 mt-1">Higher = shown first if multiple events</p>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Background Colour</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="color"
-                                                value={formData.backgroundColor}
-                                                onChange={(e) =>
-                                                    setFormData((p) => ({
-                                                        ...p,
-                                                        backgroundColor: e.target.value,
-                                                    }))
-                                                }
-                                                className="w-12 h-10 rounded border border-zinc-200 cursor-pointer"
-                                            />
-                                            <input
-                                                name="backgroundColor"
-                                                value={formData.backgroundColor}
-                                                onChange={handleChange}
+                                                rows={2}
+                                                required
+                                                placeholder="e.g. Try our new spicy ramen bowl this weekend — dine-in only."
                                                 className={inputClass}
                                             />
                                         </div>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Text Colour</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="color"
-                                                value={formData.textColor}
-                                                onChange={(e) =>
-                                                    setFormData((p) => ({ ...p, textColor: e.target.value }))
-                                                }
-                                                className="w-12 h-10 rounded border border-zinc-200 cursor-pointer"
-                                            />
-                                            <input
-                                                name="textColor"
-                                                value={formData.textColor}
-                                                onChange={handleChange}
-                                                className={inputClass}
-                                            />
+                                        <div>
+                                            <label className={labelClass}>Event Poster</label>
+                                            <div className="flex gap-2 items-center">
+                                                <label className="inline-flex shrink-0 items-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-xs font-medium cursor-pointer transition-colors">
+                                                    <Upload size={14} />
+                                                    {uploading ? `${Math.round(uploadProgress)}%` : 'Upload'}
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handleImageUpload}
+                                                        className="hidden"
+                                                        disabled={uploading}
+                                                    />
+                                                </label>
+                                                <input
+                                                    name="mediaUrl"
+                                                    value={formData.mediaUrl}
+                                                    onChange={handleChange}
+                                                    placeholder="Or paste poster image URL"
+                                                    className={`${inputClass} flex-1`}
+                                                />
+                                                {formData.mediaUrl && (
+                                                    <img
+                                                        src={formData.mediaUrl}
+                                                        alt="Event poster preview"
+                                                        className="h-10 w-10 shrink-0 rounded-md object-cover border border-zinc-200"
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className={labelClass}>Corner Roundness</label>
-                                        <input
-                                            type="number"
-                                            name="borderRadius"
-                                            min={0}
-                                            max={48}
-                                            value={formData.borderRadius}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Animation Style</label>
-                                        <select
-                                            name="animationType"
-                                            value={formData.animationType}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        >
-                                            <option value="fade">Fade In</option>
-                                            <option value="slide">Slide In</option>
-                                            <option value="scale">Scale In</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Animation Speed (ms)</label>
-                                        <input
-                                            type="number"
-                                            name="animationDuration"
-                                            min={100}
-                                            max={2000}
-                                            value={formData.animationDuration}
-                                            onChange={handleChange}
-                                            className={inputClass}
-                                        />
+
+                                    {/* Right column stack */}
+                                    <div className="flex flex-col gap-3 lg:min-h-0 lg:overflow-hidden">
+                                        {/* CTA */}
+                                        <div className={cardClass}>
+                                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                                                Call-to-Action Button
+                                            </h4>
+                                            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2.5">
+                                                <div>
+                                                    <label className={labelClass}>Button Title</label>
+                                                    <input
+                                                        name="ctaText"
+                                                        value={formData.ctaText}
+                                                        onChange={handleChange}
+                                                        placeholder="e.g. Register Now"
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Button Link (CTA)</label>
+                                                    <input
+                                                        name="ctaLink"
+                                                        value={formData.ctaLink}
+                                                        onChange={handleChange}
+                                                        placeholder="/register?event=..."
+                                                        className={inputClass}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={fillRegisterLink}
+                                                        className="mt-1 text-[11px] font-bold text-primary hover:underline"
+                                                    >
+                                                        Use registration form link →
+                                                    </button>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Auto-close Timer (sec)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="autoCloseSeconds"
+                                                        min={0}
+                                                        max={300}
+                                                        value={formData.autoCloseSeconds}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                                <div className="flex items-end pb-1">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="showCloseButton"
+                                                            checked={formData.showCloseButton}
+                                                            onChange={handleChange}
+                                                            className="w-4 h-4 accent-primary"
+                                                        />
+                                                        <span className="text-xs text-zinc-700 font-medium">
+                                                            Show close button (X)
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Targeting & Schedule */}
+                                        <div className={cardClass}>
+                                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                                                Event Time &amp; Visibility
+                                            </h4>
+                                            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2.5">
+                                                <div>
+                                                    <label className={labelClass}>How Often to Show *</label>
+                                                    <select
+                                                        name="frequency"
+                                                        value={formData.frequency}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="session">Once per visit</option>
+                                                        <option value="once">Once ever (per device)</option>
+                                                        <option value="daily">Once per day</option>
+                                                        <option value="always">Every time guest opens</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Who Sees It *</label>
+                                                    <select
+                                                        name="targetAudience"
+                                                        value={formData.targetAudience}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="all">All guests</option>
+                                                        <option value="new">First-time visitors</option>
+                                                        <option value="returning">Returning guests</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Visible From</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        name="startDate"
+                                                        value={formData.startDate}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Visible Until</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        name="endDate"
+                                                        value={formData.endDate}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Appearance + Status */}
+                                        <div className={`${cardClass} flex-1`}>
+                                            <div className="flex items-center justify-between gap-3">
+                                                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                                                    Colours &amp; Animation
+                                                </h4>
+                                                <div className="flex items-center gap-2 min-w-[180px]">
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 shrink-0">
+                                                        Status
+                                                    </label>
+                                                    <select
+                                                        name="status"
+                                                        value={formData.status}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="draft">Draft</option>
+                                                        <option value="published">Published</option>
+                                                        <option value="archived">Archived</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-2.5">
+                                                <div>
+                                                    <label className={labelClass}>Position</label>
+                                                    <select
+                                                        name="position"
+                                                        value={formData.position}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="center">Center</option>
+                                                        <option value="top">Top</option>
+                                                        <option value="bottom-right">Bottom Right</option>
+                                                        <option value="bottom-left">Bottom Left</option>
+                                                        <option value="top-right">Top Right</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Priority (1–10)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="priority"
+                                                        min={1}
+                                                        max={10}
+                                                        value={formData.priority}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Background</label>
+                                                    <div className="flex gap-1.5">
+                                                        <input
+                                                            type="color"
+                                                            value={formData.backgroundColor}
+                                                            onChange={(e) =>
+                                                                setFormData((p) => ({
+                                                                    ...p,
+                                                                    backgroundColor: e.target.value,
+                                                                }))
+                                                            }
+                                                            className="w-9 h-9 shrink-0 rounded border border-zinc-200 cursor-pointer"
+                                                        />
+                                                        <input
+                                                            name="backgroundColor"
+                                                            value={formData.backgroundColor}
+                                                            onChange={handleChange}
+                                                            className={inputClass}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Text Colour</label>
+                                                    <div className="flex gap-1.5">
+                                                        <input
+                                                            type="color"
+                                                            value={formData.textColor}
+                                                            onChange={(e) =>
+                                                                setFormData((p) => ({ ...p, textColor: e.target.value }))
+                                                            }
+                                                            className="w-9 h-9 shrink-0 rounded border border-zinc-200 cursor-pointer"
+                                                        />
+                                                        <input
+                                                            name="textColor"
+                                                            value={formData.textColor}
+                                                            onChange={handleChange}
+                                                            className={inputClass}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Corner Roundness</label>
+                                                    <input
+                                                        type="number"
+                                                        name="borderRadius"
+                                                        min={0}
+                                                        max={48}
+                                                        value={formData.borderRadius}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Animation Style</label>
+                                                    <select
+                                                        name="animationType"
+                                                        value={formData.animationType}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="fade">Fade In</option>
+                                                        <option value="slide">Slide In</option>
+                                                        <option value="scale">Scale In</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Animation Speed (ms)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="animationDuration"
+                                                        min={100}
+                                                        max={2000}
+                                                        value={formData.animationDuration}
+                                                        onChange={handleChange}
+                                                        className={inputClass}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Status */}
-                            <div className={cardClass}>
-                                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                                    Publish Status
-                                </h4>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleChange}
-                                    className={inputClass}
-                                >
-                                    <option value="draft">Draft — guests will not see this yet</option>
-                                    <option value="published">Published — live for guests</option>
-                                    <option value="archived">Archived — hidden</option>
-                                </select>
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-2">
+                            <div className="shrink-0 flex justify-end gap-3 px-5 py-3 border-t border-zinc-200 bg-white">
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors"
+                                    className="px-5 py-2 rounded-lg text-sm font-medium text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving || uploading}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-black hover:brightness-95 disabled:opacity-60 transition-all"
+                                    className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold bg-primary text-black hover:brightness-95 disabled:opacity-60 transition-all"
                                 >
                                     <Save size={16} />
                                     {saving ? 'Saving...' : editingAd ? 'Update Event' : 'Create Event Ad'}

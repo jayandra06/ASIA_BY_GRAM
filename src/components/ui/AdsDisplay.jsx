@@ -103,6 +103,60 @@ function CtaLink({ ad, className, onClick }) {
     );
 }
 
+/** Detect poster orientation so any size/aspect can fit without cropping. */
+function useImageFit(src) {
+    const [fit, setFit] = useState({
+        ready: !src,
+        orientation: 'none',
+        ratio: 1,
+    });
+
+    useEffect(() => {
+        if (!src) {
+            setFit({ ready: true, orientation: 'none', ratio: 1 });
+            return undefined;
+        }
+
+        let cancelled = false;
+        const img = new Image();
+        img.onload = () => {
+            if (cancelled) return;
+            const w = img.naturalWidth || 1;
+            const h = img.naturalHeight || 1;
+            const ratio = w / h;
+            setFit({
+                ready: true,
+                orientation: ratio > 1.08 ? 'landscape' : ratio < 0.92 ? 'portrait' : 'square',
+                ratio,
+            });
+        };
+        img.onerror = () => {
+            if (!cancelled) setFit({ ready: true, orientation: 'square', ratio: 1 });
+        };
+        img.src = src;
+
+        return () => {
+            cancelled = true;
+        };
+    }, [src]);
+
+    return fit;
+}
+
+/** Full poster visible — never crops; scales to the container bounds. */
+function FitImage({ src, alt = '', className = '', style }) {
+    if (!src) return null;
+    return (
+        <img
+            src={src}
+            alt={alt}
+            className={`block max-w-full max-h-full w-auto h-auto object-contain ${className}`}
+            style={style}
+            draggable={false}
+        />
+    );
+}
+
 function BannerAd({ ad, onClose }) {
     const anim = getAnimation(ad);
     return (
@@ -116,11 +170,9 @@ function BannerAd({ ad, onClose }) {
         >
             <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 pr-10 relative">
                 {ad.mediaUrl && (
-                    <img
-                        src={ad.mediaUrl}
-                        alt=""
-                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 hidden sm:block"
-                    />
+                    <div className="w-10 h-10 rounded-lg bg-black/5 flex items-center justify-center overflow-hidden flex-shrink-0 hidden sm:flex">
+                        <FitImage src={ad.mediaUrl} className="rounded-lg" />
+                    </div>
                 )}
                 <div className="flex-1 min-w-0">
                     <p className="text-sm sm:text-base font-medium leading-snug">{ad.content}</p>
@@ -147,53 +199,133 @@ function BannerAd({ ad, onClose }) {
     );
 }
 
+function useScrollLock(active = true) {
+    useEffect(() => {
+        if (!active) return undefined;
+
+        const body = document.body;
+        const html = document.documentElement;
+        const scrollY = window.scrollY;
+        const prev = {
+            bodyOverflow: body.style.overflow,
+            htmlOverflow: html.style.overflow,
+            bodyPosition: body.style.position,
+            bodyTop: body.style.top,
+            bodyLeft: body.style.left,
+            bodyRight: body.style.right,
+            bodyWidth: body.style.width,
+            htmlOverscroll: html.style.overscrollBehavior,
+        };
+
+        body.style.overflow = 'hidden';
+        html.style.overflow = 'hidden';
+        html.style.overscrollBehavior = 'none';
+        body.style.position = 'fixed';
+        body.style.top = `-${scrollY}px`;
+        body.style.left = '0';
+        body.style.right = '0';
+        body.style.width = '100%';
+
+        return () => {
+            body.style.overflow = prev.bodyOverflow;
+            html.style.overflow = prev.htmlOverflow;
+            html.style.overscrollBehavior = prev.htmlOverscroll;
+            body.style.position = prev.bodyPosition;
+            body.style.top = prev.bodyTop;
+            body.style.left = prev.bodyLeft;
+            body.style.right = prev.bodyRight;
+            body.style.width = prev.bodyWidth;
+            window.scrollTo(0, scrollY);
+        };
+    }, [active]);
+}
+
 function PopupAd({ ad, onClose }) {
     const anim = getAnimation(ad);
     const radius = ad.borderRadius ?? 12;
+    const fit = useImageFit(ad.mediaUrl);
+    const hasMedia = Boolean(ad.mediaUrl);
+    const isPortrait = fit.orientation === 'portrait' || fit.orientation === 'square';
+    const isLandscape = fit.orientation === 'landscape';
+
+    useScrollLock(true);
+
+    // Mobile: stacked card that scrolls as one unit.
+    // Desktop: landscape side-by-side; whole card still scrolls if needed.
+    const shellClass = hasMedia
+        ? 'relative z-10 w-full sm:max-w-[min(92vw,860px)] max-h-[min(90dvh,720px)] overflow-y-auto overscroll-contain shadow-2xl flex flex-col sm:flex-row rounded-t-2xl sm:rounded-2xl'
+        : 'relative z-10 w-full sm:max-w-md max-h-[min(90dvh,720px)] overflow-y-auto overscroll-contain shadow-2xl flex flex-col rounded-t-2xl sm:rounded-2xl';
+
+    const mediaPaneClass = [
+        'relative flex items-center justify-center bg-black/[0.04] shrink-0',
+        isPortrait ? 'w-full sm:w-[46%]' : isLandscape ? 'w-full sm:w-[58%]' : 'w-full sm:w-1/2',
+    ].join(' ');
+
+    const imgMaxClass = isPortrait
+        ? 'max-h-[min(55dvh,420px)] sm:max-h-[min(80dvh,560px)]'
+        : 'max-h-[min(42dvh,320px)] sm:max-h-[min(80dvh,560px)]';
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-3 sm:p-6">
+        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-6">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={ad.showCloseButton !== false ? onClose : undefined}
+                onWheel={(e) => e.preventDefault()}
+                onTouchMove={(e) => e.preventDefault()}
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                style={{ touchAction: 'none' }}
             />
             <motion.div
                 {...anim}
-                className="relative w-full max-w-md overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto"
+                className={shellClass}
                 style={{
                     backgroundColor: ad.backgroundColor || '#ffffff',
                     color: ad.textColor || '#000000',
-                    borderRadius: radius,
+                    WebkitOverflowScrolling: 'touch',
                 }}
+                onClick={(e) => e.stopPropagation()}
             >
                 {ad.showCloseButton !== false && (
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-                        aria-label="Close"
-                    >
-                        <X size={18} />
-                    </button>
-                )}
-                {ad.mediaUrl && (
-                    <div className="w-full aspect-[16/10] overflow-hidden">
-                        <img src={ad.mediaUrl} alt="" className="w-full h-full object-cover" />
+                    <div className="sticky top-0 z-20 flex justify-end p-2 sm:p-3 pointer-events-none sm:absolute sm:inset-x-0 sm:top-0">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="pointer-events-auto p-2.5 sm:p-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors touch-manipulation"
+                            aria-label="Close"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
                 )}
-                <div className="p-6 space-y-4">
+
+                {hasMedia && (
+                    <div className={mediaPaneClass}>
+                        <div className="w-full flex items-center justify-center px-2 pt-1 pb-1 sm:p-3 sm:pt-10">
+                            <FitImage
+                                src={ad.mediaUrl}
+                                alt={ad.title || 'Event poster'}
+                                className={imgMaxClass}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex-1 min-w-0 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 sm:pt-10 flex flex-col justify-center gap-2.5 sm:gap-3">
                     {ad.title && (
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-60">{ad.title}</p>
+                        <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest opacity-60 shrink-0 pr-8">
+                            {ad.title}
+                        </p>
                     )}
-                    <p className="text-lg font-semibold leading-relaxed whitespace-pre-wrap">{ad.content}</p>
+                    <p className="text-sm sm:text-lg font-semibold leading-snug sm:leading-relaxed whitespace-pre-wrap">
+                        {ad.content}
+                    </p>
                     {ad.ctaText && ad.ctaLink && (
                         <CtaLink
                             ad={ad}
                             onClick={onClose}
-                            className="inline-flex items-center justify-center w-full py-3 px-4 font-bold text-sm uppercase tracking-wider bg-[#FFC107] text-black hover:bg-[#FFD54F] transition-colors"
+                            className="inline-flex items-center justify-center w-full py-3.5 sm:py-3 px-4 font-bold text-sm uppercase tracking-wider bg-[#FFC107] text-black hover:bg-[#FFD54F] transition-colors shrink-0 touch-manipulation"
                             style={{ borderRadius: Math.min(radius, 12) }}
                         />
                     )}
@@ -211,18 +343,22 @@ function ToastAd({ ad, onClose }) {
     return (
         <motion.div
             {...anim}
-            className={`fixed z-[100] bottom-4 ${isLeft ? 'left-4' : 'right-4'} w-[min(100%-2rem,360px)] shadow-xl border border-black/5 overflow-hidden`}
+            className={`fixed z-[100] bottom-[max(1rem,env(safe-area-inset-bottom))] ${
+                isLeft ? 'left-3 sm:left-4' : 'right-3 sm:right-4 left-3 sm:left-auto'
+            } w-auto sm:w-[min(100%-2rem,360px)] max-w-[360px] shadow-xl border border-black/5 overflow-hidden`}
             style={{
                 backgroundColor: ad.backgroundColor || '#ffffff',
                 color: ad.textColor || '#000000',
                 borderRadius: radius,
             }}
         >
-            <div className="flex gap-3 p-4 relative">
+            <div className="flex gap-3 p-3 sm:p-4 relative">
                 {ad.mediaUrl ? (
-                    <img src={ad.mediaUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-black/5 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <FitImage src={ad.mediaUrl} className="rounded-lg" />
+                    </div>
                 ) : (
-                    <div className="w-14 h-14 rounded-lg bg-black/5 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-black/5 flex items-center justify-center flex-shrink-0">
                         <Megaphone size={22} className="opacity-50" />
                     </div>
                 )}
@@ -232,7 +368,7 @@ function ToastAd({ ad, onClose }) {
                         <CtaLink
                             ad={ad}
                             onClick={onClose}
-                            className="inline-block mt-2 text-xs font-bold uppercase tracking-wider underline underline-offset-2"
+                            className="inline-block mt-2 text-xs font-bold uppercase tracking-wider underline underline-offset-2 touch-manipulation"
                         />
                     )}
                 </div>
@@ -240,7 +376,7 @@ function ToastAd({ ad, onClose }) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-black/10"
+                        className="absolute top-2 right-2 p-2 rounded-md hover:bg-black/10 touch-manipulation"
                         aria-label="Close"
                     >
                         <X size={14} />
@@ -254,11 +390,15 @@ function ToastAd({ ad, onClose }) {
 function FlyerAd({ ad, onClose }) {
     const anim = getAnimation(ad);
     const radius = ad.borderRadius ?? 12;
+    const fit = useImageFit(ad.mediaUrl);
+    const isPortrait = fit.orientation === 'portrait';
 
     return (
         <motion.div
             {...anim}
-            className="fixed z-[100] bottom-4 right-4 w-[min(100%-2rem,280px)] shadow-2xl overflow-hidden border border-black/10"
+            className={`fixed z-[100] left-3 right-3 sm:left-auto bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4 shadow-2xl overflow-hidden border border-black/10 mx-auto sm:mx-0 ${
+                isPortrait ? 'sm:w-[300px] max-w-[360px]' : 'sm:w-[340px] max-w-[380px]'
+            }`}
             style={{
                 backgroundColor: ad.backgroundColor || '#ffffff',
                 color: ad.textColor || '#000000',
@@ -269,22 +409,32 @@ function FlyerAd({ ad, onClose }) {
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60"
+                    className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 touch-manipulation"
                     aria-label="Close"
                 >
                     <X size={14} />
                 </button>
             )}
             {ad.mediaUrl && (
-                <img src={ad.mediaUrl} alt="" className="w-full aspect-[4/3] object-cover" />
+                <div className="w-full bg-black/[0.04] flex items-center justify-center overflow-hidden px-2 pt-2">
+                    <FitImage
+                        src={ad.mediaUrl}
+                        alt={ad.title || ''}
+                        className={
+                            isPortrait
+                                ? 'max-h-[min(40dvh,220px)]'
+                                : 'max-h-[min(32dvh,160px)]'
+                        }
+                    />
+                </div>
             )}
-            <div className="p-4 space-y-2">
+            <div className="p-3 sm:p-4 space-y-2">
                 <p className="text-sm font-semibold leading-snug">{ad.content}</p>
                 {ad.ctaText && ad.ctaLink && (
                     <CtaLink
                         ad={ad}
                         onClick={onClose}
-                        className="inline-block text-xs font-bold uppercase tracking-wider text-[#B45309] underline"
+                        className="inline-block text-xs font-bold uppercase tracking-wider text-[#B45309] underline touch-manipulation"
                     />
                 )}
             </div>
@@ -300,12 +450,12 @@ function FloatingAd({ ad, onClose, onExpand }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             onClick={onExpand}
-            className="fixed z-[100] bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center animate-pulse"
+            className="fixed z-[100] bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center animate-pulse overflow-hidden"
             style={{ backgroundColor: ad.backgroundColor || '#FFC107', color: ad.textColor || '#000' }}
             aria-label="Open offer"
         >
             {ad.mediaUrl ? (
-                <img src={ad.mediaUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                <FitImage src={ad.mediaUrl} className="rounded-full" />
             ) : (
                 <Megaphone size={22} />
             )}

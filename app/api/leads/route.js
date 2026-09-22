@@ -1,5 +1,6 @@
 import dbConnect from '../../../lib/db';
 import EventLead from '../../../models/EventLead';
+import { notifyRegistrationWhatsApp } from '../../../lib/whatsapp';
 
 export async function GET(request) {
     try {
@@ -33,6 +34,7 @@ export async function POST(request) {
         const age = Number(body.age);
         const eventName = (body.eventName || '').trim();
         const adId = body.adId ? String(body.adId) : '';
+        const source = body.source || 'register';
 
         if (!name || !phone || !age) {
             return new Response(JSON.stringify({ error: 'Name, phone and age are required' }), {
@@ -76,12 +78,22 @@ export async function POST(request) {
             age,
             eventName,
             adId,
-            source: body.source || 'register',
+            source,
         });
 
         await lead.save();
 
-        return new Response(JSON.stringify(lead), {
+        // Best-effort WhatsApp — never block a successful registration
+        const whatsapp = await notifyRegistrationWhatsApp({
+            type: 'event',
+            eventName: eventName || 'Event registration',
+            name,
+            phone,
+            age,
+            extra: { source, adId },
+        });
+
+        return new Response(JSON.stringify({ ...lead.toObject(), whatsapp }), {
             status: 201,
             headers: { 'Content-Type': 'application/json' },
         });

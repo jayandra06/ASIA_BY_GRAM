@@ -1,5 +1,6 @@
 import dbConnect from '../../../lib/db';
 import CompetitionRegistration from '../../../models/CompetitionRegistration';
+import { notifyRegistrationWhatsApp } from '../../../lib/whatsapp';
 
 export async function GET() {
     try {
@@ -49,6 +50,8 @@ export async function POST(request) {
             });
         }
 
+        const competition = body.competition || 'Chess Championship 2026';
+
         const registration = new CompetitionRegistration({
             name,
             phone,
@@ -59,12 +62,26 @@ export async function POST(request) {
             tableNumber: body.tableNumber ? String(body.tableNumber) : '',
             entryFee: 500,
             paymentStatus: 'Pending',
-            competition: 'Chess Championship 2026',
+            competition,
         });
 
         await registration.save();
 
-        return new Response(JSON.stringify(registration), {
+        const whatsapp = await notifyRegistrationWhatsApp({
+            type: 'competition',
+            eventName: competition,
+            name,
+            phone,
+            age: registration.age,
+            extra: {
+                experience: registration.experience,
+                email: registration.email,
+                tableNumber: registration.tableNumber,
+                source: 'competition',
+            },
+        });
+
+        return new Response(JSON.stringify({ ...registration.toObject(), whatsapp }), {
             status: 201,
             headers: { 'Content-Type': 'application/json' },
         });

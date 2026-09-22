@@ -98,7 +98,8 @@ function RegisterForm() {
                             <h2 className="text-xl font-bold text-zinc-900">You’re registered!</h2>
                             <p className="text-sm text-zinc-500">
                                 Thanks{formData.name ? `, ${formData.name.split(' ')[0]}` : ''}. We’ve saved your
-                                details{eventFromQuery ? ` for ${eventFromQuery}` : ''}.
+                                details{eventFromQuery ? ` for ${eventFromQuery}` : ''}. Our team has been notified
+                                on WhatsApp and will get in touch soon.
                             </p>
                             <div className="flex flex-col gap-2 pt-2">
                                 <Link

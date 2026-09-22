@@ -307,7 +307,8 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                                 </div>
                                 <h3 className="text-2xl font-bold text-white">You&apos;re Registered!</h3>
                                 <p className="text-sm text-zinc-400 leading-relaxed">
-                                    Thanks for joining the Chess Championship. Please pay the ₹500 entry fee at the counter to confirm your spot. Qualifiers: Oct 1–10.
+                                    Thanks for joining the Chess Championship. Our team has been notified on WhatsApp.
+                                    Please pay the ₹500 entry fee at the counter to confirm your spot. Qualifiers: Oct 1–10.
                                 </p>
                                 <button
                                     type="button"

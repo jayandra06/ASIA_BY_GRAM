@@ -199,46 +199,7 @@ function BannerAd({ ad, onClose }) {
     );
 }
 
-function useScrollLock(active = true) {
-    useEffect(() => {
-        if (!active) return undefined;
 
-        const body = document.body;
-        const html = document.documentElement;
-        const scrollY = window.scrollY;
-        const prev = {
-            bodyOverflow: body.style.overflow,
-            htmlOverflow: html.style.overflow,
-            bodyPosition: body.style.position,
-            bodyTop: body.style.top,
-            bodyLeft: body.style.left,
-            bodyRight: body.style.right,
-            bodyWidth: body.style.width,
-            htmlOverscroll: html.style.overscrollBehavior,
-        };
-
-        body.style.overflow = 'hidden';
-        html.style.overflow = 'hidden';
-        html.style.overscrollBehavior = 'none';
-        body.style.position = 'fixed';
-        body.style.top = `-${scrollY}px`;
-        body.style.left = '0';
-        body.style.right = '0';
-        body.style.width = '100%';
-
-        return () => {
-            body.style.overflow = prev.bodyOverflow;
-            html.style.overflow = prev.htmlOverflow;
-            html.style.overscrollBehavior = prev.htmlOverscroll;
-            body.style.position = prev.bodyPosition;
-            body.style.top = prev.bodyTop;
-            body.style.left = prev.bodyLeft;
-            body.style.right = prev.bodyRight;
-            body.style.width = prev.bodyWidth;
-            window.scrollTo(0, scrollY);
-        };
-    }, [active]);
-}
 
 function PopupAd({ ad, onClose }) {
     const anim = getAnimation(ad);
@@ -247,8 +208,6 @@ function PopupAd({ ad, onClose }) {
     const hasMedia = Boolean(ad.mediaUrl);
     const isPortrait = fit.orientation === 'portrait' || fit.orientation === 'square';
     const isLandscape = fit.orientation === 'landscape';
-
-    useScrollLock(true);
 
     // Mobile: stacked card that scrolls as one unit.
     // Desktop: landscape side-by-side; whole card still scrolls if needed.
@@ -272,10 +231,7 @@ function PopupAd({ ad, onClose }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={ad.showCloseButton !== false ? onClose : undefined}
-                onWheel={(e) => e.preventDefault()}
-                onTouchMove={(e) => e.preventDefault()}
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                style={{ touchAction: 'none' }}
             />
             <motion.div
                 {...anim}

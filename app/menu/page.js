@@ -79,6 +79,8 @@ function DishImageLightbox({ dish, onClose }) {
         return () => {
             document.body.style.overflow = '';
             window.removeEventListener('keydown', onKey);
+            window.dispatchEvent(new Event('resize'));
+            window.dispatchEvent(new Event('scroll'));
         };
     }, [dish, onClose]);
 
@@ -91,6 +93,9 @@ function DishImageLightbox({ dish, onClose }) {
                     exit={{ opacity: 0 }}
                     onClick={onClose}
                     className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+                    data-lenis-prevent="true"
+                    data-lenis-prevent-wheel="true"
+                    data-lenis-prevent-touch="true"
                 >
                     <button
                         type="button"
@@ -107,6 +112,9 @@ function DishImageLightbox({ dish, onClose }) {
                         exit={{ opacity: 0, scale: 0.92 }}
                         onClick={(e) => e.stopPropagation()}
                         className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl"
+                        data-lenis-prevent="true"
+                        data-lenis-prevent-wheel="true"
+                        data-lenis-prevent-touch="true"
                     >
                         <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-black">
                             <img

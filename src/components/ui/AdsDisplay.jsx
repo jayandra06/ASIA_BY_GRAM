@@ -209,6 +209,20 @@ function PopupAd({ ad, onClose }) {
     const isPortrait = fit.orientation === 'portrait' || fit.orientation === 'square';
     const isLandscape = fit.orientation === 'landscape';
 
+    useEffect(() => {
+        return () => {
+            if (typeof document !== 'undefined') {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                window.dispatchEvent(new Event('resize'));
+                window.dispatchEvent(new Event('scroll'));
+            }
+        };
+    }, []);
+
     // Mobile: stacked card that scrolls as one unit.
     // Desktop: landscape side-by-side; whole card still scrolls if needed.
     const shellClass = hasMedia
@@ -225,11 +239,16 @@ function PopupAd({ ad, onClose }) {
         : 'max-h-[min(42dvh,320px)] sm:max-h-[min(80dvh,560px)]';
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-6">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-6"
+            data-lenis-prevent="true"
+            data-lenis-prevent-wheel="true"
+            data-lenis-prevent-touch="true"
+        >
+            <div
                 onClick={ad.showCloseButton !== false ? onClose : undefined}
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
@@ -242,6 +261,9 @@ function PopupAd({ ad, onClose }) {
                     WebkitOverflowScrolling: 'touch',
                 }}
                 onClick={(e) => e.stopPropagation()}
+                data-lenis-prevent="true"
+                data-lenis-prevent-wheel="true"
+                data-lenis-prevent-touch="true"
             >
                 {ad.showCloseButton !== false && (
                     <div className="sticky top-0 z-20 flex justify-end p-2 sm:p-3 pointer-events-none sm:absolute sm:inset-x-0 sm:top-0">
@@ -287,7 +309,7 @@ function PopupAd({ ad, onClose }) {
                     )}
                 </div>
             </motion.div>
-        </div>
+        </motion.div>
     );
 }
 

@@ -84,10 +84,28 @@ const ReservationModal = ({ isOpen, onClose }) => {
         exit: { opacity: 0 }
     };
 
+    useEffect(() => {
+        if (!isOpen) return;
+        return () => {
+            if (typeof document !== 'undefined') {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                document.body.style.position = '';
+                window.dispatchEvent(new Event('resize'));
+                window.dispatchEvent(new Event('scroll'));
+            }
+        };
+    }, [isOpen]);
+
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6"
+                    data-lenis-prevent="true"
+                    data-lenis-prevent-wheel="true"
+                    data-lenis-prevent-touch="true"
+                >
                     <motion.div
                         variants={overlayVariants}
                         initial="hidden"
@@ -103,6 +121,9 @@ const ReservationModal = ({ isOpen, onClose }) => {
                         animate="visible"
                         exit="exit"
                         className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+                        data-lenis-prevent="true"
+                        data-lenis-prevent-wheel="true"
+                        data-lenis-prevent-touch="true"
                     >
                         {/* Header */}
                         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50 sticky top-0 z-10 backdrop-blur-md">

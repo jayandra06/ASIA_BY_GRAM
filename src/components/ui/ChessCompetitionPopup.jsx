@@ -80,10 +80,27 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
         }
     };
 
+    useEffect(() => {
+        return () => {
+            if (typeof document !== 'undefined') {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                document.body.style.position = '';
+                window.dispatchEvent(new Event('resize'));
+                window.dispatchEvent(new Event('scroll'));
+            }
+        };
+    }, []);
+
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-3 sm:p-6">
+                <div
+                    className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-3 sm:p-6"
+                    data-lenis-prevent="true"
+                    data-lenis-prevent-wheel="true"
+                    data-lenis-prevent-touch="true"
+                >
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -98,6 +115,9 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                         exit={{ opacity: 0, y: 30, scale: 0.96 }}
                         transition={{ type: 'spring', damping: 26, stiffness: 320 }}
                         className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto"
+                        data-lenis-prevent="true"
+                        data-lenis-prevent-wheel="true"
+                        data-lenis-prevent-touch="true"
                     >
                         <button
                             type="button"

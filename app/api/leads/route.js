@@ -1,5 +1,6 @@
 import dbConnect from '../../../lib/db';
 import EventLead from '../../../models/EventLead';
+import CompetitionRegistration from '../../../models/CompetitionRegistration';
 import { notifyRegistrationWhatsApp } from '../../../lib/whatsapp';
 
 export async function GET(request) {
@@ -82,6 +83,28 @@ export async function POST(request) {
         });
 
         await lead.save();
+
+        // If this event is a chess competition or general competition, auto-sync to CompetitionRegistration
+        if (/chess|competition/i.test(eventName)) {
+            try {
+                const existingComp = await CompetitionRegistration.findOne({ phone });
+                if (!existingComp) {
+                    const compReg = new CompetitionRegistration({
+                        name,
+                        phone,
+                        age,
+                        competition: eventName || 'Chess Championship 2026',
+                        experience: 'Beginner',
+                        notes: `Registered via event link (${eventName})`,
+                        entryFee: 500,
+                        paymentStatus: 'Pending',
+                    });
+                    await compReg.save();
+                }
+            } catch (syncErr) {
+                console.error('Error auto-syncing lead to CompetitionRegistration:', syncErr);
+            }
+        }
 
         // Best-effort WhatsApp — never block a successful registration
         const whatsapp = await notifyRegistrationWhatsApp({

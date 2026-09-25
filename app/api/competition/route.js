@@ -1,10 +1,38 @@
 import dbConnect from '../../../lib/db';
 import CompetitionRegistration from '../../../models/CompetitionRegistration';
+import EventLead from '../../../models/EventLead';
 import { notifyRegistrationWhatsApp } from '../../../lib/whatsapp';
 
 export async function GET() {
     try {
         await dbConnect();
+
+        // Auto-sync any existing event leads for chess/competition that are missing in CompetitionRegistration
+        try {
+            const chessLeads = await EventLead.find({
+                eventName: { $regex: /chess|competition/i }
+            }).lean();
+
+            for (const lead of chessLeads) {
+                const existing = await CompetitionRegistration.findOne({ phone: lead.phone });
+                if (!existing) {
+                    await CompetitionRegistration.create({
+                        name: lead.name,
+                        phone: lead.phone,
+                        age: lead.age,
+                        competition: lead.eventName || 'Chess Championship 2026',
+                        experience: 'Beginner',
+                        notes: `Registered via event form (${lead.eventName || 'Chess'})`,
+                        entryFee: 500,
+                        paymentStatus: 'Pending',
+                        createdAt: lead.createdAt || new Date(),
+                    });
+                }
+            }
+        } catch (syncErr) {
+            console.error('Error auto-syncing chess leads to competition:', syncErr);
+        }
+
         const registrations = await CompetitionRegistration.find({})
             .sort({ createdAt: -1 })
             .lean();

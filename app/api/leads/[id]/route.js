@@ -18,6 +18,9 @@ export async function PATCH(request, { params }) {
         if (body.paymentNotes !== undefined) {
             allowed.paymentNotes = String(body.paymentNotes).trim();
         }
+        if (body.utr !== undefined) {
+            allowed.utr = String(body.utr).trim();
+        }
 
         if (Object.keys(allowed).length === 0) {
             return new Response(JSON.stringify({ error: 'No valid fields to update' }), {

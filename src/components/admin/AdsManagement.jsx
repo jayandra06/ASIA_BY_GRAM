@@ -526,6 +526,14 @@ const AdsManagement = () => {
                                                             ₹{lead.entryFee}
                                                         </span>
                                                     )}
+                                                    {lead.utr && (
+                                                        <span
+                                                            className="text-[10px] text-zinc-600 font-mono bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200"
+                                                            title={`UPI UTR: ${lead.utr}`}
+                                                        >
+                                                            UTR: {lead.utr}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="p-4">

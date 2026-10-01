@@ -321,15 +321,34 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                         )}
 
                         {view === 'success' && (
-                            <div className="p-8 text-center space-y-4">
-                                <div className="mx-auto w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center">
-                                    <CheckCircle2 size={36} className="text-green-400" />
+                            <div className="p-6 sm:p-8 text-center space-y-4">
+                                <div className="mx-auto w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center">
+                                    <CheckCircle2 size={32} className="text-green-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold text-white">You&apos;re Registered!</h3>
-                                <p className="text-sm text-zinc-400 leading-relaxed">
-                                    Thanks for joining the Chess Championship. Our team has been notified on WhatsApp.
-                                    Please pay the ₹500 entry fee at the counter to confirm your spot. Qualifiers: Oct 1–10.
+                                <h3 className="text-xl font-bold text-white">You&apos;re Registered!</h3>
+                                <p className="text-xs text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                                    Thanks for joining the Chess Championship. Please pay the ₹500 entry fee using the scanner below to confirm your spot.
                                 </p>
+
+                                {/* Asia By Gram QR Scanner */}
+                                <div className="bg-white rounded-xl p-3 max-w-[220px] mx-auto shadow-lg space-y-1.5">
+                                    <img
+                                        src="/asia-by-gram-qr.jpg"
+                                        alt="Asia By Gram UPI Scanner"
+                                        className="w-full h-auto object-contain rounded"
+                                    />
+                                    <p className="text-[10px] text-zinc-700 font-mono font-bold">
+                                        asiabygram@kotak
+                                    </p>
+                                </div>
+
+                                <a
+                                    href="upi://pay?pa=asiabygram@kotak&pn=ASIA%20BY%20GRAM&am=500&cu=INR&tn=Chess%20Championship"
+                                    className="w-full py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors border border-white/20"
+                                >
+                                    Pay ₹500 via UPI App (GPay / PhonePe)
+                                </a>
+
                                 <button
                                     type="button"
                                     onClick={close}

@@ -118,6 +118,8 @@ export async function POST(request) {
         const paymentStatus = body.paymentStatus && ['Pending', 'Paid', 'Refunded', 'Free'].includes(body.paymentStatus)
             ? body.paymentStatus
             : 'Pending';
+        const utr = (body.utr || '').trim();
+        const paymentNotes = (body.paymentNotes || (utr ? `UPI UTR: ${utr}` : '')).trim();
 
         const lead = new EventLead({
             name,
@@ -128,6 +130,8 @@ export async function POST(request) {
             source,
             entryFee,
             paymentStatus,
+            paymentNotes,
+            utr,
         });
 
         await lead.save();
@@ -143,7 +147,7 @@ export async function POST(request) {
                         age,
                         competition: eventName || 'Chess Championship 2026',
                         experience: 'Beginner',
-                        notes: `Registered via event link (${eventName})`,
+                        notes: `Registered via event link (${eventName})${utr ? ` | UTR: ${utr}` : ''}`,
                         entryFee: 500,
                         paymentStatus: 'Pending',
                     });
@@ -161,7 +165,7 @@ export async function POST(request) {
             name,
             phone,
             age,
-            extra: { source, adId },
+            extra: { source, adId, entryFee, utr },
         });
 
         return new Response(JSON.stringify({ ...lead.toObject(), whatsapp }), {

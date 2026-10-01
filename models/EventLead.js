@@ -14,6 +14,7 @@ const EventLeadSchema = new mongoose.Schema({
     },
     entryFee: { type: Number, default: 0 },
     paymentNotes: { type: String, trim: true, default: '' },
+    utr: { type: String, trim: true, default: '' },
 }, { timestamps: true });
 
 EventLeadSchema.index({ phone: 1, eventName: 1 });

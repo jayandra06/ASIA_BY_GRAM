@@ -13,7 +13,48 @@ export async function GET(request) {
         if (eventName) query.eventName = eventName;
 
         const leads = await EventLead.find(query).sort({ createdAt: -1 }).lean();
-        return new Response(JSON.stringify(leads), {
+
+        // Cross-check paymentStatus and entryFee with CompetitionRegistration if applicable
+        const phones = leads.map((l) => l.phone).filter(Boolean);
+        const compMap = new Map();
+        if (phones.length > 0) {
+            try {
+                const comps = await CompetitionRegistration.find({ phone: { $in: phones } }).lean();
+                for (const c of comps) {
+                    if (c.phone && !compMap.has(c.phone)) {
+                        compMap.set(c.phone, c);
+                    }
+                }
+            } catch (cErr) {
+                console.error('Error fetching linked competition records:', cErr);
+            }
+        }
+
+        const enrichedLeads = leads.map((lead) => {
+            const comp = compMap.get(lead.phone);
+            const isChessOrComp = /chess|competition/i.test(lead.eventName || '');
+            const paymentStatus =
+                lead.paymentStatus && lead.paymentStatus !== 'Pending'
+                    ? lead.paymentStatus
+                    : comp?.paymentStatus || lead.paymentStatus || 'Pending';
+
+            const entryFee =
+                lead.entryFee !== undefined && lead.entryFee !== null && lead.entryFee > 0
+                    ? lead.entryFee
+                    : comp?.entryFee !== undefined
+                      ? comp.entryFee
+                      : isChessOrComp
+                        ? 500
+                        : 0;
+
+            return {
+                ...lead,
+                paymentStatus,
+                entryFee,
+            };
+        });
+
+        return new Response(JSON.stringify(enrichedLeads), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -73,6 +114,11 @@ export async function POST(request) {
             );
         }
 
+        const entryFee = body.entryFee !== undefined ? Number(body.entryFee) : (/chess|competition/i.test(eventName) ? 500 : 0);
+        const paymentStatus = body.paymentStatus && ['Pending', 'Paid', 'Refunded', 'Free'].includes(body.paymentStatus)
+            ? body.paymentStatus
+            : 'Pending';
+
         const lead = new EventLead({
             name,
             phone,
@@ -80,6 +126,8 @@ export async function POST(request) {
             eventName,
             adId,
             source,
+            entryFee,
+            paymentStatus,
         });
 
         await lead.save();

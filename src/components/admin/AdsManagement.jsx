@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Search, X, Save, Megaphone, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, X, Save, Megaphone, Upload, Check } from 'lucide-react';
 import { storage } from '../../firebaseConfig.js';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
@@ -81,6 +81,49 @@ const AdsManagement = () => {
             console.error('Error fetching leads:', error);
         } finally {
             setLeadsLoading(false);
+        }
+    };
+
+    const [leadsSearch, setLeadsSearch] = useState('');
+    const [leadsPaymentFilter, setLeadsPaymentFilter] = useState('All');
+
+    const deleteLead = async (id, name = 'this guest') => {
+        if (!window.confirm(`Delete registration for "${name}"? This cannot be undone.`)) return;
+        try {
+            const res = await fetch(`/api/leads/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders(),
+            });
+            if (res.ok) {
+                setLeads((prev) => prev.filter((l) => l._id !== id));
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to delete registration');
+            }
+        } catch (error) {
+            console.error('Error deleting registration:', error);
+            alert('Error deleting registration');
+        }
+    };
+
+    const updateLeadPayment = async (id, paymentStatus) => {
+        try {
+            const res = await fetch(`/api/leads/${id}`, {
+                method: 'PATCH',
+                headers: authHeaders(),
+                body: JSON.stringify({ paymentStatus }),
+            });
+            if (res.ok) {
+                setLeads((prev) =>
+                    prev.map((l) => (l._id === id ? { ...l, paymentStatus } : l))
+                );
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to update payment status');
+            }
+        } catch (error) {
+            console.error('Error updating payment status:', error);
+            alert('Error updating payment status');
         }
     };
 
@@ -277,6 +320,22 @@ const AdsManagement = () => {
     const publishedCount = ads.filter((a) => a.status === 'published').length;
     const draftCount = ads.filter((a) => a.status === 'draft').length;
 
+    const filteredLeads = leads.filter((lead) => {
+        const q = leadsSearch.trim().toLowerCase();
+        const matchesSearch =
+            !q ||
+            lead.name?.toLowerCase().includes(q) ||
+            lead.phone?.toLowerCase().includes(q) ||
+            lead.eventName?.toLowerCase().includes(q);
+        const matchesPayment =
+            leadsPaymentFilter === 'All' ||
+            (lead.paymentStatus || 'Pending') === leadsPaymentFilter;
+        return matchesSearch && matchesPayment;
+    });
+
+    const paidLeadsCount = leads.filter((l) => l.paymentStatus === 'Paid').length;
+    const pendingLeadsCount = leads.filter((l) => (l.paymentStatus || 'Pending') === 'Pending').length;
+
     const inputClass =
         'w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary text-zinc-900';
     const labelClass = 'block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1';
@@ -326,14 +385,63 @@ const AdsManagement = () => {
 
             {activeTab === 'leads' ? (
                 <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <p className="text-sm text-zinc-500">
-                            Guests who submitted name, phone &amp; age via the <code className="text-xs bg-zinc-100 px-1 rounded">/register</code> form
-                        </p>
-                        <button onClick={fetchLeads} className="text-sm text-primary hover:underline">
-                            Refresh
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <p className="text-sm text-zinc-500">
+                                Guests who submitted name, phone &amp; age via the <code className="text-xs bg-zinc-100 px-1 rounded">/register</code> form
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={fetchLeads}
+                            className="text-sm font-semibold text-primary hover:underline self-start sm:self-auto"
+                        >
+                            Refresh Data
                         </button>
                     </div>
+
+                    {/* Leads Metric Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Registrations</p>
+                            <p className="text-3xl font-bold text-zinc-900 mt-1">{leads.length}</p>
+                        </div>
+                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Paid</p>
+                            <p className="text-3xl font-bold text-green-600 mt-1">{paidLeadsCount}</p>
+                        </div>
+                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Pending Payment</p>
+                            <p className="text-3xl font-bold text-amber-600 mt-1">{pendingLeadsCount}</p>
+                        </div>
+                    </div>
+
+                    {/* Search & Filter */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                            <input
+                                type="text"
+                                value={leadsSearch}
+                                onChange={(e) => setLeadsSearch(e.target.value)}
+                                placeholder="Search by name, phone, or event..."
+                                className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-3 py-2.5 text-sm outline-none focus:border-primary"
+                            />
+                        </div>
+                        <select
+                            value={leadsPaymentFilter}
+                            onChange={(e) => setLeadsPaymentFilter(e.target.value)}
+                            className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                        >
+                            <option value="All">All Payment Status</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Refunded">Refunded</option>
+                            <option value="Free">Free</option>
+                        </select>
+                    </div>
+
+                    {/* Registrations Table */}
                     <div className="overflow-x-auto bg-white border border-zinc-200 rounded-xl shadow-sm">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-zinc-500 text-xs uppercase tracking-wider">
@@ -343,29 +451,50 @@ const AdsManagement = () => {
                                     <th className="p-4">Age</th>
                                     <th className="p-4">Event</th>
                                     <th className="p-4">Submitted</th>
+                                    <th className="p-4">Payment</th>
+                                    <th className="p-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100 text-sm text-zinc-600">
                                 {leadsLoading ? (
                                     <tr>
-                                        <td colSpan="5" className="p-8 text-center text-zinc-400">
+                                        <td colSpan="7" className="p-8 text-center text-zinc-400">
                                             Loading registrations...
                                         </td>
                                     </tr>
-                                ) : leads.length === 0 ? (
+                                ) : filteredLeads.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" className="p-8 text-center text-zinc-400">
-                                            No form submissions yet. Set CTA link to{' '}
-                                            <code className="text-xs bg-zinc-100 px-1 rounded">/register?event=Your Event</code>
+                                        <td colSpan="7" className="p-8 text-center text-zinc-400">
+                                            {leads.length === 0
+                                                ? 'No form submissions yet. Set CTA link to /register?event=Your Event'
+                                                : 'No registrations matching your filters.'}
                                         </td>
                                     </tr>
                                 ) : (
-                                    leads.map((lead) => (
-                                        <tr key={lead._id} className="hover:bg-zinc-50">
-                                            <td className="p-4 font-bold text-zinc-900">{lead.name}</td>
-                                            <td className="p-4">{lead.phone}</td>
-                                            <td className="p-4">{lead.age}</td>
-                                            <td className="p-4">{lead.eventName || '—'}</td>
+                                    filteredLeads.map((lead) => (
+                                        <tr key={lead._id} className="hover:bg-zinc-50 transition-colors">
+                                            <td className="p-4">
+                                                <div className="font-bold text-zinc-900">{lead.name}</div>
+                                                {lead.source && lead.source !== 'register' && (
+                                                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider">
+                                                        via {lead.source}
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-4">
+                                                <a
+                                                    href={`tel:${lead.phone}`}
+                                                    className="hover:text-primary transition-colors font-medium"
+                                                >
+                                                    {lead.phone}
+                                                </a>
+                                            </td>
+                                            <td className="p-4">{lead.age ? `${lead.age} yrs` : '—'}</td>
+                                            <td className="p-4">
+                                                <span className="font-medium text-zinc-800">
+                                                    {lead.eventName || 'General'}
+                                                </span>
+                                            </td>
                                             <td className="p-4 whitespace-nowrap text-xs">
                                                 {lead.createdAt
                                                     ? new Date(lead.createdAt).toLocaleString('en-IN', {
@@ -376,6 +505,60 @@ const AdsManagement = () => {
                                                         minute: '2-digit',
                                                     })
                                                     : '—'}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex flex-col gap-1 items-start">
+                                                    <span
+                                                        className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                                                            lead.paymentStatus === 'Paid'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : lead.paymentStatus === 'Refunded'
+                                                                  ? 'bg-red-100 text-red-700'
+                                                                  : lead.paymentStatus === 'Free'
+                                                                    ? 'bg-blue-100 text-blue-700'
+                                                                    : 'bg-yellow-100 text-yellow-700'
+                                                        }`}
+                                                    >
+                                                        {lead.paymentStatus || 'Pending'}
+                                                    </span>
+                                                    {lead.entryFee > 0 && (
+                                                        <span className="text-[11px] font-semibold text-zinc-500">
+                                                            ₹{lead.entryFee}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    {lead.paymentStatus !== 'Paid' ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateLeadPayment(lead._id, 'Paid')}
+                                                            className="p-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors flex items-center gap-1 text-xs font-semibold"
+                                                            title="Mark as Paid"
+                                                        >
+                                                            <Check size={16} />
+                                                            <span className="hidden sm:inline">Mark Paid</span>
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateLeadPayment(lead._id, 'Pending')}
+                                                            className="px-2.5 py-1.5 text-xs font-bold uppercase bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100 transition-colors"
+                                                            title="Mark Pending"
+                                                        >
+                                                            Undo
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteLead(lead._id, lead.name)}
+                                                        className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                                        title="Delete registration"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

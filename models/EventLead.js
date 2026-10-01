@@ -7,6 +7,13 @@ const EventLeadSchema = new mongoose.Schema({
     eventName: { type: String, trim: true, default: '' },
     adId: { type: String, trim: true, default: '' },
     source: { type: String, trim: true, default: 'register' },
+    paymentStatus: {
+        type: String,
+        enum: ['Pending', 'Paid', 'Refunded', 'Free'],
+        default: 'Pending',
+    },
+    entryFee: { type: Number, default: 0 },
+    paymentNotes: { type: String, trim: true, default: '' },
 }, { timestamps: true });
 
 EventLeadSchema.index({ phone: 1, eventName: 1 });

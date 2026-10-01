@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Search, X, Save, Megaphone, Upload, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, X, Save, Megaphone, Upload, Check, Download, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { storage } from '../../firebaseConfig.js';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
@@ -125,6 +126,56 @@ const AdsManagement = () => {
             console.error('Error updating payment status:', error);
             alert('Error updating payment status');
         }
+    };
+
+    const exportToExcel = (exportAll = false) => {
+        const dataToExport = exportAll ? leads : filteredLeads;
+        if (!dataToExport || dataToExport.length === 0) {
+            alert('No registration data available to export.');
+            return;
+        }
+
+        const rows = dataToExport.map((lead, idx) => ({
+            'S.No': idx + 1,
+            'Name': lead.name || '—',
+            'Phone': lead.phone || '—',
+            'Age': lead.age || '—',
+            'Event': lead.eventName || 'General Event',
+            'Payment Status': lead.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid',
+            'Entry Fee (INR)': lead.entryFee || 500,
+            'UPI UTR / Reference': lead.utr || '—',
+            'Submitted Date': lead.createdAt
+                ? new Date(lead.createdAt).toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                  })
+                : '—',
+            'Source': lead.source || 'register',
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [
+            { wch: 6 },
+            { wch: 22 },
+            { wch: 16 },
+            { wch: 8 },
+            { wch: 24 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 24 },
+            { wch: 22 },
+            { wch: 12 },
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Form Registrations');
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        XLSX.writeFile(wb, `Asia_By_Gram_Form_Registrations_${dateStr}.xlsx`);
     };
 
     useEffect(() => {
@@ -326,15 +377,21 @@ const AdsManagement = () => {
             !q ||
             lead.name?.toLowerCase().includes(q) ||
             lead.phone?.toLowerCase().includes(q) ||
-            lead.eventName?.toLowerCase().includes(q);
+            lead.eventName?.toLowerCase().includes(q) ||
+            lead.utr?.toLowerCase().includes(q);
+
+        const isPaid = lead.paymentStatus === 'Paid';
         const matchesPayment =
             leadsPaymentFilter === 'All' ||
-            (lead.paymentStatus || 'Pending') === leadsPaymentFilter;
+            (leadsPaymentFilter === 'Paid' && isPaid) ||
+            (leadsPaymentFilter === 'Unpaid' && !isPaid) ||
+            lead.paymentStatus === leadsPaymentFilter;
+
         return matchesSearch && matchesPayment;
     });
 
     const paidLeadsCount = leads.filter((l) => l.paymentStatus === 'Paid').length;
-    const pendingLeadsCount = leads.filter((l) => (l.paymentStatus || 'Pending') === 'Pending').length;
+    const unpaidLeadsCount = leads.filter((l) => l.paymentStatus !== 'Paid').length;
 
     const inputClass =
         'w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary text-zinc-900';
@@ -385,57 +442,167 @@ const AdsManagement = () => {
 
             {activeTab === 'leads' ? (
                 <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <p className="text-sm text-zinc-500">
                                 Guests who submitted name, phone &amp; age via the <code className="text-xs bg-zinc-100 px-1 rounded">/register</code> form
                             </p>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => exportToExcel(false)}
+                                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3.5 py-2 rounded-lg text-xs shadow-sm transition-all cursor-pointer"
+                                title="Download currently filtered registrations as an Excel spreadsheet (.xlsx)"
+                            >
+                                <FileSpreadsheet size={15} />
+                                <span>Export Excel ({filteredLeads.length})</span>
+                            </button>
+                            {filteredLeads.length !== leads.length && (
+                                <button
+                                    type="button"
+                                    onClick={() => exportToExcel(true)}
+                                    className="inline-flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-semibold px-2.5 py-2 rounded-lg text-xs transition-all cursor-pointer"
+                                    title="Export all registrations regardless of current filter"
+                                >
+                                    <Download size={13} />
+                                    <span>All ({leads.length})</span>
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={fetchLeads}
+                                className="text-xs font-semibold text-primary hover:underline px-2 py-2 cursor-pointer"
+                            >
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Leads Metric Cards (Interactive 1-click filters) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <button
                             type="button"
-                            onClick={fetchLeads}
-                            className="text-sm font-semibold text-primary hover:underline self-start sm:self-auto"
+                            onClick={() => setLeadsPaymentFilter('All')}
+                            className={`text-left bg-white border rounded-xl p-4 shadow-sm transition-all hover:border-zinc-400 cursor-pointer ${
+                                leadsPaymentFilter === 'All'
+                                    ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                                    : 'border-zinc-200'
+                            }`}
                         >
-                            Refresh Data
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Registrations</p>
+                                {leadsPaymentFilter === 'All' && (
+                                    <span className="text-[10px] bg-primary/20 text-zinc-900 font-bold px-1.5 py-0.5 rounded">
+                                        Active Filter
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-3xl font-bold text-zinc-900 mt-1">{leads.length}</p>
+                            <p className="text-[11px] text-zinc-400 mt-1">Click to view all</p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setLeadsPaymentFilter('Paid')}
+                            className={`text-left bg-white border rounded-xl p-4 shadow-sm transition-all hover:border-green-400 cursor-pointer ${
+                                leadsPaymentFilter === 'Paid'
+                                    ? 'border-green-500 ring-2 ring-green-500/20 bg-green-50/40'
+                                    : 'border-zinc-200'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs uppercase tracking-wider text-green-700 font-bold">Paid Guests</p>
+                                {leadsPaymentFilter === 'Paid' && (
+                                    <span className="text-[10px] bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded">
+                                        Active Filter
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-3xl font-bold text-green-600 mt-1">{paidLeadsCount}</p>
+                            <p className="text-[11px] text-zinc-400 mt-1">Verified payment (₹500)</p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setLeadsPaymentFilter('Unpaid')}
+                            className={`text-left bg-white border rounded-xl p-4 shadow-sm transition-all hover:border-amber-400 cursor-pointer ${
+                                leadsPaymentFilter === 'Unpaid'
+                                    ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/40'
+                                    : 'border-zinc-200'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs uppercase tracking-wider text-amber-700 font-bold">Unpaid Guests</p>
+                                {leadsPaymentFilter === 'Unpaid' && (
+                                    <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">
+                                        Active Filter
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-3xl font-bold text-amber-600 mt-1">{unpaidLeadsCount}</p>
+                            <p className="text-[11px] text-zinc-400 mt-1">Pending payment verification</p>
                         </button>
                     </div>
 
-                    {/* Leads Metric Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Total Registrations</p>
-                            <p className="text-3xl font-bold text-zinc-900 mt-1">{leads.length}</p>
-                        </div>
-                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Paid</p>
-                            <p className="text-3xl font-bold text-green-600 mt-1">{paidLeadsCount}</p>
-                        </div>
-                        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                            <p className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Pending Payment</p>
-                            <p className="text-3xl font-bold text-amber-600 mt-1">{pendingLeadsCount}</p>
-                        </div>
-                    </div>
-
-                    {/* Search & Filter */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Search & Filter Pills + Dropdown */}
+                    <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
                             <input
                                 type="text"
                                 value={leadsSearch}
                                 onChange={(e) => setLeadsSearch(e.target.value)}
-                                placeholder="Search by name, phone, or event..."
+                                placeholder="Search by name, phone, event, or UTR..."
                                 className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-3 py-2.5 text-sm outline-none focus:border-primary"
                             />
                         </div>
+
+                        {/* Quick filter pills */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+                            <button
+                                type="button"
+                                onClick={() => setLeadsPaymentFilter('All')}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                                    leadsPaymentFilter === 'All'
+                                        ? 'bg-zinc-900 text-white'
+                                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                }`}
+                            >
+                                All ({leads.length})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLeadsPaymentFilter('Paid')}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                                    leadsPaymentFilter === 'Paid'
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                }`}
+                            >
+                                Paid ({paidLeadsCount})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLeadsPaymentFilter('Unpaid')}
+                                className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                                    leadsPaymentFilter === 'Unpaid'
+                                        ? 'bg-amber-600 text-white'
+                                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                                }`}
+                            >
+                                Unpaid ({unpaidLeadsCount})
+                            </button>
+                        </div>
+
                         <select
                             value={leadsPaymentFilter}
                             onChange={(e) => setLeadsPaymentFilter(e.target.value)}
                             className="bg-white border border-zinc-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
                         >
-                            <option value="All">All Payment Status</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Pending">Pending</option>
+                            <option value="All">All ({leads.length})</option>
+                            <option value="Paid">Paid ({paidLeadsCount})</option>
+                            <option value="Unpaid">Unpaid ({unpaidLeadsCount})</option>
                             <option value="Refunded">Refunded</option>
                             <option value="Free">Free</option>
                         </select>
@@ -509,26 +676,31 @@ const AdsManagement = () => {
                                             <td className="p-4">
                                                 <div className="flex flex-col gap-1 items-start">
                                                     <span
-                                                        className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                                                        className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 ${
                                                             lead.paymentStatus === 'Paid'
-                                                                ? 'bg-green-100 text-green-700'
+                                                                ? 'bg-green-100 text-green-700 border border-green-200'
                                                                 : lead.paymentStatus === 'Refunded'
-                                                                  ? 'bg-red-100 text-red-700'
+                                                                  ? 'bg-red-100 text-red-700 border border-red-200'
                                                                   : lead.paymentStatus === 'Free'
-                                                                    ? 'bg-blue-100 text-blue-700'
-                                                                    : 'bg-yellow-100 text-yellow-700'
+                                                                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                                                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
                                                         }`}
                                                     >
-                                                        {lead.paymentStatus || 'Pending'}
+                                                        <span
+                                                            className={`w-1.5 h-1.5 rounded-full ${
+                                                                lead.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-amber-500'
+                                                            }`}
+                                                        />
+                                                        {lead.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'}
                                                     </span>
                                                     {lead.entryFee > 0 && (
-                                                        <span className="text-[11px] font-semibold text-zinc-500">
-                                                            ₹{lead.entryFee}
+                                                        <span className="text-[11px] font-semibold text-zinc-600">
+                                                            Fee: ₹{lead.entryFee}
                                                         </span>
                                                     )}
                                                     {lead.utr && (
                                                         <span
-                                                            className="text-[10px] text-zinc-600 font-mono bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200"
+                                                            className="text-[10px] text-zinc-700 font-mono bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200"
                                                             title={`UPI UTR: ${lead.utr}`}
                                                         >
                                                             UTR: {lead.utr}
@@ -542,26 +714,26 @@ const AdsManagement = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => updateLeadPayment(lead._id, 'Paid')}
-                                                            className="p-2 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors flex items-center gap-1 text-xs font-semibold"
-                                                            title="Mark as Paid"
+                                                            className="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+                                                            title="Mark registration as Paid"
                                                         >
-                                                            <Check size={16} />
-                                                            <span className="hidden sm:inline">Mark Paid</span>
+                                                            <Check size={14} />
+                                                            <span>Mark Paid</span>
                                                         </button>
                                                     ) : (
                                                         <button
                                                             type="button"
                                                             onClick={() => updateLeadPayment(lead._id, 'Pending')}
-                                                            className="px-2.5 py-1.5 text-xs font-bold uppercase bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100 transition-colors"
-                                                            title="Mark Pending"
+                                                            className="px-2.5 py-1.5 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                                                            title="Mark registration as Unpaid"
                                                         >
-                                                            Undo
+                                                            Mark Unpaid
                                                         </button>
                                                     )}
                                                     <button
                                                         type="button"
                                                         onClick={() => deleteLead(lead._id, lead.name)}
-                                                        className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                                        className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                                         title="Delete registration"
                                                     >
                                                         <Trash2 size={16} />

@@ -349,6 +349,24 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                                     Pay ₹500 via UPI App (GPay / PhonePe)
                                 </a>
 
+                                {/* WhatsApp screenshot notice */}
+                                <div className="bg-emerald-950/70 border border-emerald-500/30 rounded-xl p-2.5 text-center space-y-1">
+                                    <p className="text-[11px] font-bold text-emerald-300">
+                                        After payment, send screenshot to WhatsApp:
+                                    </p>
+                                    <p className="text-xs font-bold text-white font-mono">
+                                        +91 8309057182
+                                    </p>
+                                    <a
+                                        href="https://wa.me/918309057182?text=Hi%20Asia%20By%20Gram%2C%20I%20have%20paid%20the%20%E2%82%B9500%20entry%20fee%20for%20Chess%20Championship."
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors"
+                                    >
+                                        Send Screenshot on WhatsApp →
+                                    </a>
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={close}

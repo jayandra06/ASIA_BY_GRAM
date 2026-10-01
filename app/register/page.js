@@ -17,6 +17,7 @@ import {
     Smartphone,
     CreditCard,
     ShieldCheck,
+    MessageCircle,
 } from 'lucide-react';
 
 function RegisterForm() {
@@ -193,6 +194,33 @@ function RegisterForm() {
                                         Pending Admin Verification
                                     </span>
                                 </div>
+                            </div>
+
+                            {/* WhatsApp Verification Card */}
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center space-y-2.5">
+                                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white shadow-sm">
+                                    <MessageCircle size={20} />
+                                </div>
+                                <h3 className="text-sm font-bold text-emerald-950 uppercase tracking-wider">
+                                    Send Screenshot on WhatsApp
+                                </h3>
+                                <p className="text-xs text-emerald-800 leading-relaxed">
+                                    After payment, please send your payment screenshot to WhatsApp:
+                                </p>
+                                <p className="text-base font-bold text-emerald-950 font-mono tracking-wide">
+                                    +91 8309057182
+                                </p>
+                                <a
+                                    href={`https://wa.me/918309057182?text=${encodeURIComponent(
+                                        `Hi Asia By Gram, I have registered for ${eventFromQuery || 'Event'}.\nName: ${formData.name}\nPhone: ${formData.phone}\nEntry Fee: ₹${entryFee}${formData.utr ? `\nUTR: ${formData.utr}` : ''}\n\nHere is my payment screenshot:`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-2 transition-colors shadow-md shadow-emerald-200/50"
+                                >
+                                    <MessageCircle size={16} />
+                                    Send Screenshot to WhatsApp (+91 8309057182)
+                                </a>
                             </div>
 
                             <div className="flex flex-col gap-2 pt-2">
@@ -413,6 +441,29 @@ function RegisterForm() {
                                             <Smartphone size={14} />
                                             Pay ₹{entryFee} using UPI App (PhonePe / GPay / Paytm)
                                         </a>
+
+                                        {/* After payment WhatsApp instructions */}
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-left space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-emerald-950 font-bold text-xs">
+                                                <MessageCircle size={15} className="text-emerald-600 shrink-0" />
+                                                <span>After payment, send screenshot to WhatsApp:</span>
+                                            </div>
+                                            <div className="flex items-center justify-between pt-0.5">
+                                                <span className="font-mono font-bold text-emerald-900 text-xs">
+                                                    +91 8309057182
+                                                </span>
+                                                <a
+                                                    href={`https://wa.me/918309057182?text=${encodeURIComponent(
+                                                        `Hi Asia By Gram, I am registering for ${eventFromQuery || 'Event'}.\nName: ${formData.name}\nPhone: ${formData.phone}\nEntry Fee: ₹${entryFee}`
+                                                    )}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition-colors shadow-sm"
+                                                >
+                                                    Send Screenshot →
+                                                </a>
+                                            </div>
+                                        </div>
 
                                         <p className="text-[11px] text-zinc-400">
                                             Accepted on Google Pay, PhonePe, Paytm, BHIM &amp; all UPI apps.

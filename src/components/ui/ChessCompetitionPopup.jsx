@@ -163,7 +163,7 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                                         <h2 className="text-2xl sm:text-3xl font-display font-bold text-white leading-tight">
                                             Chess Championship
                                         </h2>
-                                        <p className="mt-1 text-primary font-bold tracking-wide text-sm">₹15,000 Cash Prize</p>
+                                        <p className="mt-1 text-primary font-bold tracking-wide text-sm">₹10,000 Cash Prize</p>
                                         <p className="mt-3 text-zinc-300 text-sm max-w-[280px] leading-relaxed">
                                             Battle it out at Asia By Gram. Qualifiers open — claim your seat at the board.
                                         </p>
@@ -185,7 +185,7 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                                         <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
                                             <Trophy size={16} className="mx-auto text-primary mb-1.5" />
                                             <p className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Prize</p>
-                                            <p className="text-xs text-white font-semibold mt-0.5">₹15,000</p>
+                                            <p className="text-xs text-white font-semibold mt-0.5">₹10,000</p>
                                         </div>
                                     </div>
 
@@ -294,7 +294,7 @@ const ChessCompetitionPopup = ({ tableNumber = '' }) => {
                                 </div>
 
                                 <p className="text-[11px] text-zinc-500 leading-relaxed">
-                                    Pay the ₹500 entry fee at the counter after registering. Prize pool: ₹15,000.
+                                    Pay the ₹500 entry fee at the counter after registering. Prize pool: ₹10,000.
                                 </p>
 
                                 <div className="flex gap-3 pt-1">

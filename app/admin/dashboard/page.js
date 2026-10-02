@@ -2404,7 +2404,7 @@ const CompetitionManagement = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-zinc-900 uppercase tracking-wider">Chess Competition</h2>
                     <p className="text-sm text-zinc-500 mt-1">
-                        Qualifiers Oct 1–10 · Entry ₹500 · Prize ₹15,000
+                        Qualifiers Oct 1–10 · Entry ₹500 · Prize ₹10,000
                     </p>
                 </div>
                 <button onClick={fetchRegistrations} className="text-sm text-primary hover:text-primary-dark underline self-start md:self-auto">

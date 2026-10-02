@@ -1003,7 +1003,7 @@ const AdsManagement = () => {
                                                             name="prize"
                                                             value={formData.prize}
                                                             onChange={handleChange}
-                                                            placeholder="e.g. ₹5,000 Cash Prize or Gift Voucher"
+                                                            placeholder="e.g. ₹10,000 Cash Prize or Gift Voucher"
                                                             className={inputClass}
                                                         />
                                                     </div>
